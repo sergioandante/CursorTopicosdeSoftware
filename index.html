@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cursor AI - Premium Dashboard Template</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="glass-background"></div>
+
+    <nav class="navbar">
+        <div class="logo">
+            <span class="logo-icon">✨</span>
+            <span class="logo-text">Cursor<span>AI</span></span>
+        </div>
+        <div class="nav-links">
+            <a href="#" class="active">Dashboard</a>
+            <a href="#">Proyectos</a>
+            <a href="#">Analítica</a>
+            <a href="#">Ajustes</a>
+        </div>
+        <div class="user-profile">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=sergio" alt="Avatar" class="avatar">
+        </div>
+    </nav>
+
+    <main class="container">
+        <header class="page-header">
+            <div>
+                <h1>Bienvenido, Sergio</h1>
+                <p class="subtitle">Aquí tienes un resumen de tus aplicaciones generadas por IA.</p>
+            </div>
+            <button class="btn-primary" id="deployBtn">🚀 Desplegar App</button>
+        </header>
+
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue">⚡</div>
+                <div class="stat-info">
+                    <h3>Procesos IA</h3>
+                    <p class="stat-value">1,248</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple">🔮</div>
+                <div class="stat-info">
+                    <h3>Predicciones</h3>
+                    <p class="stat-value">98.2%</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">💾</div>
+                <div class="stat-info">
+                    <h3>Datos Libres</h3>
+                    <p class="stat-value">4.2 GB</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="main-content">
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>Actividad de Generación</h2>
+                    <span class="badge">Últimos 7 días</span>
+                </div>
+                <div class="chart-container">
+                    <!-- Placeholder visual para gráfica -->
+                    <div class="bar-chart">
+                        <div class="bar" style="height: 40%"></div>
+                        <div class="bar" style="height: 70%"></div>
+                        <div class="bar" style="height: 55%"></div>
+                        <div class="bar" style="height: 90%"></div>
+                        <div class="bar" style="height: 45%"></div>
+                        <div class="bar" style="height: 65%"></div>
+                        <div class="bar" style="height: 80%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card projects-card">
+                <div class="card-header">
+                    <h2>Proyectos Recientes</h2>
+                </div>
+                <ul class="project-list">
+                    <li>
+                        <span class="dot blue"></span>
+                        <div class="project-meta">
+                            <strong>App de Finanzas</strong>
+                            <small>Desplegado hace 2h</small>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="dot purple"></span>
+                        <div class="project-meta">
+                            <strong>Análisis Predictivo</strong>
+                            <small>Desplegado hace 5h</small>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="dot green"></span>
+                        <div class="project-meta">
+                            <strong>E-commerce Generator</strong>
+                            <small>En proceso...</small>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <div id="toast" class="toast">¡Despliegue iniciado con éxito! 🚀</div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
