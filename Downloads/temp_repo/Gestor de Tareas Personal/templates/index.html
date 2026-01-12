@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if tareas %}
+    <div class="tareas-list">
+        {% for tarea in tareas %}
+        <div class="tarea-item {% if tarea.completada %}completada{% endif %}" style="
+            background: {% if tarea.completada %}#f0f0f0{% else %}#f8f9fa{% endif %};
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border-left: 5px solid {% if tarea.completada %}#28a745{% else %}#667eea{% endif %};
+            transition: all 0.3s;
+        ">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <h3 style="
+                        color: #333;
+                        margin-bottom: 10px;
+                        text-decoration: {% if tarea.completada %}line-through{% else %}none{% endif %};
+                        opacity: {% if tarea.completada %}0.6{% else %}1{% endif %};
+                    ">
+                        {{ tarea.titulo }}
+                    </h3>
+                    {% if tarea.descripcion %}
+                    <p style="
+                        color: #666;
+                        margin-bottom: 10px;
+                        text-decoration: {% if tarea.completada %}line-through{% else %}none{% endif %};
+                    ">
+                        {{ tarea.descripcion }}
+                    </p>
+                    {% endif %}
+                    <small style="color: #999;">
+                        Creada: {{ tarea.fecha_creacion }}
+                    </small>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <a href="{{ url_for('completar_tarea', tarea_id=tarea.id) }}" 
+                       class="btn {% if tarea.completada %}btn-secondary{% else %}btn-success{% endif %}"
+                       style="text-decoration: none;">
+                        {% if tarea.completada %}Desmarcar{% else %}Completar{% endif %}
+                    </a>
+                    <a href="{{ url_for('eliminar_tarea', tarea_id=tarea.id) }}" 
+                       class="btn btn-danger"
+                       onclick="return confirm('¿Estás seguro de que quieres eliminar esta tarea?');"
+                       style="text-decoration: none;">
+                        Eliminar
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div style="text-align: center; padding: 40px; color: #999;">
+        <p style="font-size: 18px; margin-bottom: 20px;">No hay tareas todavía.</p>
+        <a href="{{ url_for('agregar_tarea') }}" class="btn btn-primary" style="text-decoration: none;">
+            Crear primera tarea
+        </a>
+    </div>
+{% endif %}
+{% endblock %}
