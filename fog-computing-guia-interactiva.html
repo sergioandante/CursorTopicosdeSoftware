@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fog Computing — Guía visual interactiva (Caps. 1–3)</title>
+<style>
+:root{--cloud:#4f5bd5;--cloudbg:#e8eaff;--fog:#0e9f8e;--fogbg:#d9f4ef;--thing:#d9780a;--thingbg:#fdebd0;--bad:#d64545;--badbg:#fde4e4;--good:#2a9455;--goodbg:#dcf2e5;--ink:#1c2433;--muted:#5b6678;--bg:#f3f5fa;--card:#fff;--line:#dbe1ec;--r:14px;color-scheme:light}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 18px}
+header.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding-top:8px;padding-bottom:8px}
+.brand{font-weight:800;font-size:17px}.brand small{font-weight:500;color:var(--muted);margin-left:6px}
+#tabs{display:flex;gap:4px;flex-wrap:wrap}
+#tabs button{border:0;background:transparent;padding:7px 13px;border-radius:999px;font:600 14px system-ui;color:var(--muted);cursor:pointer}
+#tabs button:hover{background:#eef1f8}
+#tabs button.on{background:var(--ink);color:#fff}
+.prog{margin-left:auto;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.pbar{width:110px;height:8px;border-radius:9px;background:#e4e8f1;overflow:hidden}.pbar i{display:block;height:100%;width:0;background:var(--good);transition:width .4s}
+main{padding:22px 0 80px}
+.tab{display:none}.tab.on{display:block}
+h1{font-size:clamp(26px,4.5vw,40px);line-height:1.15;margin:.2em 0 .3em}
+h2.ch{font-size:clamp(22px,3.4vw,30px);margin:.2em 0}
+.chhead{border-radius:var(--r);padding:22px 24px;color:#fff;margin-bottom:18px}
+.chhead p{margin:.3em 0 0;opacity:.95;max-width:760px}
+.c1{background:linear-gradient(120deg,#0e9f8e,#2b7fd1)}.c2{background:linear-gradient(120deg,#4f5bd5,#8b5cf6)}.c3{background:linear-gradient(120deg,#d9780a,#d64545)}
+.goals{background:#fff;border:1px dashed #b9c3d8;border-radius:var(--r);padding:12px 18px;margin-bottom:18px}
+.goals b{display:block;margin-bottom:2px}.goals ul{margin:4px 0 0;padding-left:20px}
+.lesson{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin:0 0 22px;box-shadow:0 1px 2px rgba(20,30,60,.04)}
+.lesson>h3{margin:0 0 6px;font-size:21px;display:flex;align-items:center;gap:10px}
+.lesson>h3 .num{background:var(--ink);color:#fff;font-size:12.5px;border-radius:8px;padding:2px 8px;font-weight:700}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 10px}
+.tag{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 10px;background:#eef1f8;color:#43506a}
+.tag.sim{background:var(--fogbg);color:#08695d}.tag.pred{background:var(--thingbg);color:#8a4a05}.tag.chk{background:var(--cloudbg);color:#323da5}.tag.vis{background:#f3e8ff;color:#6b2fb3}
+.key{border-left:5px solid var(--fog);background:var(--fogbg);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.key b.t,.misc b.t,.ana b.t{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.misc{border-left:5px solid var(--bad);background:var(--badbg);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.ana{border-left:5px solid var(--thing);background:var(--thingbg);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.key p,.misc p,.ana p{margin:0}
+.viz{margin:12px 0;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fbfcfe}
+.gsvg{width:100%;height:auto;display:block;max-width:100%}
+.ctrls{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;margin:8px 0}
+.ctrls label{font-size:14px;display:flex;flex-direction:column;gap:2px;min-width:200px}
+.ctrls label.inl{flex-direction:row;align-items:center;gap:6px;min-width:0}
+input[type=range]{width:100%;accent-color:var(--fog)}
+.btn{border:0;background:var(--ink);color:#fff;border-radius:10px;padding:8px 15px;font:600 14px system-ui;cursor:pointer}
+.btn:hover{filter:brightness(1.2)}.btn.ghost{background:#e6eaf3;color:var(--ink)}.btn.fog{background:var(--fog)}.btn[disabled]{opacity:.45;cursor:default}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.predict{background:var(--thingbg);border-radius:10px;padding:8px 12px;margin:8px 0;font-size:14.5px}
+.predict label{margin-left:12px;cursor:pointer}
+.out{margin-top:8px;font-size:14.5px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+.stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}.stat b{display:block;font-size:22px;line-height:1.1}.stat span{font-size:12px;color:var(--muted)}
+.note{font-size:14px;background:#eef1f8;border-radius:10px;padding:8px 12px;margin-top:6px}
+.ginfo{font-size:14.5px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--fog);border-radius:8px;padding:8px 12px;margin-top:8px;min-height:44px}
+.gctl{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}.gctl .cnt{font-size:13px;color:var(--muted)}
+/* svg graph */
+.n rect{fill:#fff;stroke:#a9b4ca;stroke-width:1.5;transition:all .25s}
+.n.cloud rect{fill:var(--cloudbg);stroke:var(--cloud)}.n.fog rect{fill:var(--fogbg);stroke:var(--fog)}.n.thing rect{fill:var(--thingbg);stroke:var(--thing)}
+.n.user rect{fill:#f3e8ff;stroke:#8b5cf6}.n.bad rect{fill:var(--badbg);stroke:var(--bad)}.n.good rect{fill:var(--goodbg);stroke:var(--good)}.n.ml rect{fill:#fff3c4;stroke:#c49000}
+.n.group rect{fill:rgba(255,255,255,.55);stroke-dasharray:6 4;stroke:#98a3b8}
+.n text{font-size:12.5px;fill:var(--ink);text-anchor:middle;pointer-events:none}.n text.gl{text-anchor:start;font-weight:700;fill:#5b6678;font-size:12px}
+.n.clk{cursor:pointer}.n.clk:hover rect{stroke-width:2.6}
+.n.on rect{stroke-width:3.4;filter:drop-shadow(0 2px 5px rgba(0,0,0,.28))}.n.dim{opacity:.32}
+.e{fill:none;stroke:#98a3b8;stroke-width:1.7}.e.dash{stroke-dasharray:6 4}.e.on{stroke:var(--fog);stroke-width:3.2}.e.dim{opacity:.25}
+.elab{font-size:11.5px;fill:#5b6678;text-anchor:middle;paint-order:stroke;stroke:#fbfcfe;stroke-width:4px}
+/* tiers */
+.band{stroke-width:1.5;stroke-dasharray:7 5;fill:none}.bandc{stroke:var(--cloud);fill:rgba(79,91,213,.05)}.bandf{stroke:var(--fog);fill:rgba(14,159,142,.06)}.bandt{stroke:var(--thing);fill:rgba(217,120,10,.06)}
+.svgt{font-size:13px;fill:var(--ink)}.svgs{font-size:11.5px;fill:#5b6678}
+.lnk{stroke:#98a3b8;stroke-width:2}.lnk.cut{stroke:var(--bad);stroke-dasharray:5 5}
+/* layers */
+.stack{display:flex;flex-direction:column;gap:6px}
+.layer{display:grid;grid-template-columns:34px 190px 1fr;gap:10px;align-items:center;border:2px solid var(--line);background:#fff;border-radius:10px;padding:6px 10px;transition:all .3s;font-size:14px}
+.layer .no{font-weight:800;color:var(--muted)}
+.layer.on{border-color:var(--fog);background:var(--fogbg);transform:translateX(6px)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;min-height:36px;align-items:center}
+.chip{background:#fff;border:1px solid var(--line);border-radius:8px;padding:3px 9px;font:600 13px ui-monospace,Menlo,Consolas,monospace}.chip.w{background:var(--badbg);border-color:var(--bad)}.chip.s{background:#f1f3f8;color:#4a5670}.chip.g{background:var(--goodbg);border-color:var(--good)}
+/* canvases */
+canvas.cv{width:100%;height:380px;display:block;border:1px solid var(--line);border-radius:10px;background:#fff;touch-action:none}
+canvas.cv.short{height:200px}
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.twocol{grid-template-columns:1fr}.layer{grid-template-columns:28px 1fr}.layer .fx{grid-column:1/-1}}
+/* quiz */
+.qz{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;background:#fff}
+.qz p.q{margin:0 0 8px;font-weight:700}
+.qz .o{display:block;width:100%;text-align:left;background:#f6f8fc;border:1.5px solid var(--line);border-radius:9px;padding:8px 12px;margin:5px 0;font:inherit;cursor:pointer}
+.qz .o:hover{border-color:#8a96b0}.qz .o.ok{background:var(--goodbg);border-color:var(--good)}.qz .o.no{background:var(--badbg);border-color:var(--bad)}
+.qz .why{display:none;font-size:14px;margin-top:6px;color:#344058}.qz.done .why{display:block}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:10px 0}
+.flip{perspective:900px;min-height:150px;cursor:pointer}
+.flip .in{position:relative;width:100%;height:100%;min-height:150px;transition:transform .5s;transform-style:preserve-3d}
+.flip.f .in{transform:rotateY(180deg)}
+.flip .fa,.flip .fb{position:absolute;inset:0;border-radius:12px;padding:12px 14px;backface-visibility:hidden;border:1px solid var(--line);overflow:auto;font-size:14px}
+.flip .fa{background:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;font-weight:700;font-size:16px}
+.flip .fa small{font-weight:500;color:var(--muted);margin-top:6px}
+.flip .fb{background:var(--fogbg);transform:rotateY(180deg)}
+/* game */
+.task{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:6px 0;background:#fff}
+.task .tx{flex:1 1 280px;font-size:14.5px}.task .ch{display:flex;gap:6px}
+.task button{border:1.5px solid var(--line);background:#f6f8fc;border-radius:8px;padding:5px 11px;font:600 13px system-ui;cursor:pointer}
+.task button.ok{background:var(--goodbg);border-color:var(--good)}.task button.no{background:var(--badbg);border-color:var(--bad)}
+.task .fb{flex-basis:100%;font-size:13.5px;color:#344058;display:none}.task.done .fb{display:block}
+/* meters */
+.meter{display:grid;grid-template-columns:200px 1fr 42px;gap:8px;align-items:center;margin:5px 0;font-size:14px}
+.meter .bar{height:14px;background:#e9edf5;border-radius:9px;overflow:hidden}.meter .bar i{display:block;height:100%;border-radius:9px;transition:width .5s}
+@media(max-width:600px){.meter{grid-template-columns:1fr 1fr 38px}}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.seg button{border:0;background:transparent;padding:8px 14px;font:600 14px system-ui;cursor:pointer}.seg button.on{background:var(--ink);color:#fff}
+/* timeline */
+.tl{display:flex;overflow-x:auto;gap:0;padding:10px 4px 6px;scroll-snap-type:x proximity}
+.tl .ev{flex:0 0 auto;min-width:92px;text-align:center;cursor:pointer;scroll-snap-align:center;position:relative;padding-top:20px}
+.tl .ev:before{content:"";position:absolute;top:9px;left:0;right:0;height:3px;background:#cfd6e5}
+.tl .ev i{position:absolute;top:2px;left:50%;margin-left:-8px;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid #8a96b0}
+.tl .ev.on i{background:var(--fog);border-color:var(--fog);transform:scale(1.25)}
+.tl .ev b{display:block;font-size:14px}.tl .ev span{font-size:11.5px;color:var(--muted)}
+.tdetail{background:#fff;border:1px solid var(--line);border-left:5px solid var(--fog);border-radius:10px;padding:10px 14px;min-height:70px}
+/* ml tables */
+table.q{border-collapse:collapse;font:12.5px ui-monospace,Menlo,monospace}table.q td,table.q th{border:1px solid #fff;padding:4px 6px;text-align:center;min-width:42px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin:6px 0}.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.tpl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+.tree5{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:8px 0}
+.tcard{border:2px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;background:#fff;transition:all .25s}.tcard b{display:block}.tcard.bad{border-color:var(--bad);background:var(--badbg)}.tcard.good{border-color:var(--good);background:var(--goodbg)}.tcard.off{opacity:.35}
+.tcard button{margin-top:4px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
+.lanes{display:flex;gap:6px;margin:8px 0}.lanes .b{flex:1;text-align:center;border:2px solid var(--line);border-radius:10px;padding:10px 0;font-size:13px;background:#fff;position:relative}
+.lanes .b.jam{background:var(--badbg);border-color:var(--bad)}.lanes .b.pick{outline:3px solid var(--cloud)}.lanes .b.okp{background:var(--goodbg);border-color:var(--good)}
+.sel{display:flex;flex-direction:column;gap:6px;margin:8px 0}.sel button{text-align:left;background:#f6f8fc;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;cursor:pointer}.sel button:hover{border-color:var(--fog)}
+.crumbs{font-size:13px;color:var(--muted);margin:4px 0}
+.fcard{min-height:170px}
+.fcard .fa{font-size:18px}
+footer{color:var(--muted);font-size:13px;text-align:center;padding:30px 0}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:20px;align-items:center}
+@media(max-width:800px){.hero{grid-template-columns:1fr}}
+.journey{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:14px 0}
+.jc{border-radius:14px;padding:16px;color:#fff;cursor:pointer;transition:transform .2s}.jc:hover{transform:translateY(-3px)}.jc h4{margin:0 0 4px;font-size:18px}.jc p{margin:0;font-size:14px;opacity:.95}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand">🌫️ Fog Computing<small>Guía visual · Capítulos 1–3</small></div>
+  <nav id="tabs">
+    <button data-t="inicio">Inicio</button><button data-t="cap1">① Presente y futuro</button><button data-t="cap2">② Fundamentos</button><button data-t="cap3">③ Machine Learning</button><button data-t="repaso">★ Repaso</button>
+  </nav>
+  <div class="prog"><span id="progtxt">0/0</span><div class="pbar"><i id="progbar"></i></div></div>
+</div></header>
+
+<main class="wrap">
+
+<!-- ================= INICIO ================= -->
+<section class="tab" id="t-inicio">
+  <div class="hero">
+    <div>
+      <h1>Entiende el <em>Fog Computing</em> viendo cómo funciona</h1>
+      <p>Esta guía convierte los tres primeros capítulos de <i>Fog Computing: Concepts, Frameworks and Applications</i> en <b>diagramas animados, simulaciones y retos</b>. No necesitas saber nada previo: cada idea se ve, se toca y se comprueba.</p>
+      <div class="btns"><button class="btn fog" data-go="cap1">Empezar por el Capítulo 1 →</button></div>
+    </div>
+    <svg viewBox="0 0 400 260" class="gsvg" id="heroSvg" aria-label="Nube, fog y dispositivos">
+      <rect x="20" y="10" width="360" height="62" rx="14" class="band bandc"/><text x="34" y="30" class="svgt" font-weight="700">☁ Nube</text><text x="34" y="52" class="svgs">análisis profundo, histórico, entrenamiento</text>
+      <rect x="20" y="100" width="360" height="62" rx="14" class="band bandf"/><text x="34" y="120" class="svgt" font-weight="700">🌫 Fog</text><text x="34" y="142" class="svgs">decide rápido, filtra, cerca del dato</text>
+      <rect x="20" y="190" width="360" height="62" rx="14" class="band bandt"/><text x="34" y="210" class="svgt" font-weight="700">📡 Cosas / dispositivos</text><text x="34" y="232" class="svgs">sensores, cámaras, móviles, vehículos</text>
+      <g id="heroPk"></g>
+    </svg>
+  </div>
+  <div class="journey">
+    <div class="jc" style="background:linear-gradient(120deg,#0e9f8e,#2b7fd1)" data-go="cap1"><h4>① Presente y futuro</h4><p>Qué es fog, la arquitectura de 3 niveles y 6 capas, taxonomía, aplicaciones en agricultura y salud.</p></div>
+    <div class="jc" style="background:linear-gradient(120deg,#4f5bd5,#8b5cf6)" data-go="cap2"><h4>② Fundamentos</h4><p>Fog vs nube vs edge, línea de tiempo, por qué IoT lo necesita y dónde procesar cada tarea.</p></div>
+    <div class="jc" style="background:linear-gradient(120deg,#d9780a,#d64545)" data-go="cap3"><h4>③ ML en Fog</h4><p>SVM, árboles, bosques, KNN, regresión, K-means y aprendizaje por refuerzo — todo jugable.</p></div>
+  </div>
+  <div class="lesson">
+    <h3>🧠 Cómo está diseñada esta guía (técnicas de aprendizaje)</h3>
+    <div class="cards">
+      <div class="key"><b class="t">🎯 Predice → prueba</b><p>Antes de cada simulación se te pide una predicción. Equivocarte y corregirte fija mucho mejor la idea.</p></div>
+      <div class="key"><b class="t">👁 Doble codificación</b><p>Cada concepto aparece como texto <i>y</i> como diagrama o animación. Los colores son constantes: <b style="color:var(--cloud)">nube</b>, <b style="color:var(--fog)">fog</b>, <b style="color:var(--thing)">dispositivos</b>.</p></div>
+      <div class="key"><b class="t">🔁 Ejemplos resueltos paso a paso</b><p>Los flujos se recorren con «Siguiente» para ver qué le pasa a un dato en cada etapa.</p></div>
+      <div class="key"><b class="t">✅ Recuperación activa</b><p>Preguntas, clasificaciones y tarjetas de repaso al final. Tu progreso se guarda en este navegador.</p></div>
+    </div>
+    <div class="ana"><b class="t">Analogía para todo el curso</b><p>La <b>nube</b> es la oficina central en otra ciudad: potente, pero lejos. El <b>fog</b> es la sucursal de tu barrio: resuelve al instante lo cotidiano y solo manda a la central un resumen. Los <b>dispositivos</b> son los clientes que llegan al mostrador.</p></div>
+  </div>
+</section>
+
+<!-- ================= CAP 1 ================= -->
+<section class="tab" id="t-cap1">
+  <div class="chhead c1"><h2 class="ch">Capítulo 1 · Fog Computing: presente y futuro</h2><p>Por qué existe el fog, cómo está construido (infraestructura, plataforma, aplicación) y dónde ya se usa.</p></div>
+  <div class="goals"><b>🎯 Al terminar podrás…</b><ul><li>Explicar con tus palabras qué problema de la nube resuelve el fog.</li><li>Dibujar la arquitectura de 3 niveles y nombrar sus 3 interfaces.</li><li>Seguir un dato por las 6 capas de un nodo fog.</li><li>Describir la taxonomía y 4 arquitecturas reales (CVP, bus, eWALL, FIT).</li></ul></div>
+
+  <div class="lesson" id="l11"><h3><span class="num">1.1</span> El problema: la nube está lejos</h3>
+    <div class="tags"><span class="tag vis">Visual</span><span class="tag pred">Predice</span><span class="tag sim">Simulación</span></div>
+    <p>La nube ahorró costes de centros de datos propios, pero tiene <b>alta latencia</b>, no conoce la <b>ubicación</b> del dispositivo y los datos deben hacer muchos «saltos» de ida y vuelta. El fog nace como <b>intermediario entre la nube y los nodos</b>: calcula en el suelo las tareas que se pueden resolver cerca.</p>
+    <div class="key"><b class="t">Definición (Yi et al.)</b><p>«Una arquitectura de cómputo <b>geográficamente distribuida</b> con un conjunto de recursos formado por uno o más dispositivos heterogéneos ubicuamente conectados <b>en el borde de la red</b>, no necesariamente respaldados por la nube, que colaboran para ofrecer cómputo, almacenamiento y comunicación elásticos en proximidad.»</p></div>
+    <h4>🏁 Simulación: la carrera de la latencia</h4>
+    <p>Un dispositivo necesita una respuesta. Compara enviarla a un <b>nodo fog cercano (1 salto)</b> o a la <b>nube (varios saltos)</b>. La nube calcula 10× más rápido, pero la red cuenta. ¿Cuándo gana cada uno?</p>
+    <div class="viz" id="race"></div>
+    <div class="misc"><b class="t">Error común</b><p>«El fog siempre es más rápido.» No: es más rápido en la <i>red</i>. Si la tarea es muy pesada, el cómputo potente de la nube compensa la distancia. Prueba subir la complejidad al máximo.</p></div>
+  </div>
+
+  <div class="lesson" id="l12"><h3><span class="num">1.2</span> Arquitectura de 3 niveles (Fig. 1.1)</h3>
+    <div class="tags"><span class="tag vis">Visual</span><span class="tag sim">Simulación</span></div>
+    <p><b>Nivel 1 – Cosas/dispositivos:</b> smartphones, sensores, PCs. <b>Nivel 2 – Fog:</b> switches, gateways, routers. <b>Nivel 3 – Nube:</b> centros de datos. Los dispositivos <i>no hablan directo con la nube</i>: primero con el fog, que preprocesa y almacena. Tres interfaces los unen: <b>Fog–Dispositivos</b>, <b>Fog–Fog</b> y <b>Fog–Nube</b> (esta última pasa por un <i>cloud gateway</i>).</p>
+    <p><b>🧪 Prueba esto:</b> (1) deja correr el tráfico con fog activo y mira cuántos paquetes llegan a la nube; (2) <b>desactiva el fog</b> y lanza una ráfaga; (3) <b>corta el enlace a la nube</b> con y sin fog.</p>
+    <div class="viz" id="tiers"></div>
+    <div class="ana"><b class="t">Lo que acabas de ver</b><p>El fog actúa como <i>filtro y amortiguador</i>: agrega datos (menos tráfico), decide localmente (menos latencia) y guarda en cola cuando la nube no responde (más resiliencia).</p></div>
+  </div>
+
+  <div class="lesson" id="l13"><h3><span class="num">1.3</span> Las 6 capas de un nodo fog (Tabla 1.1)</h3>
+    <div class="tags"><span class="tag vis">Visual</span><span class="tag">Ejemplo resuelto</span></div>
+    <p>Mukherjee et al. describen seis capas. Sigue <b>10 lecturas de un sensor de temperatura</b> de abajo hacia arriba y observa qué hace cada capa con ellas.</p>
+    <div class="viz" id="layers"></div>
+  </div>
+
+  <div class="lesson" id="l14"><h3><span class="num">1.4</span> Evolución y taxonomía (Fig. 1.2)</h3>
+    <div class="tags"><span class="tag vis">Mapa mental</span><span class="tag">Explora</span></div>
+    <p>Fog se presentó hacia 2011–2012 (el cap. 1 dice 2011; el cap. 2 atribuye a Cisco 2012) y en 2015 se creó el <b>OpenFog Consortium</b> (Princeton + industria). Naha et al. lo ordenan en tres ramas. <b>Haz clic en cualquier caja</b> para leer qué significa.</p>
+    <div class="viz" id="taxo"></div>
+    <div class="key"><b class="t">Fog extiende a la nube con…</b><p><b>Movilidad</b> (protocolos como LISP) · <b>baja latencia y conciencia de ubicación</b> · <b>heterogeneidad</b> · <b>tiempo real</b> (menos procesamiento por lotes en la nube) · <b>federación de servicios</b>.</p></div>
+  </div>
+
+  <div class="lesson" id="l15"><h3><span class="num">1.5</span> Arquitecturas reales, paso a paso</h3>
+    <div class="tags"><span class="tag vis">Diagramas animados</span><span class="tag sim">Simulación</span></div>
+    <p>Elige una arquitectura y pulsa <b>Siguiente</b>: se iluminan los componentes y viaja un paquete por cada enlace.</p>
+    <div class="seg" id="archSeg"></div>
+    <div class="viz" id="archBox"></div>
+    <div id="busSim" class="viz" style="display:none"></div>
+  </div>
+
+  <div class="lesson" id="l16"><h3><span class="num">1.6</span> Retos y futuro</h3>
+    <div class="tags"><span class="tag">Haz clic para voltear</span></div>
+    <p>Fog tiene apenas una década. Estos son los retos abiertos del capítulo (clic en cada tarjeta):</p>
+    <div class="cards" id="challenges1"></div>
+    <p>Aplicaciones que ya usan fog en producción: <b>monitoreo marino</b> (calidad del agua, arrecifes), <b>ganadería</b> (detectar cojera en vacas con ML) y <b>agricultura inteligente</b>.</p>
+  </div>
+
+  <div class="lesson" id="q1"><h3><span class="num">✓</span> Comprueba lo aprendido</h3><div id="quiz1"></div></div>
+</section>
+
+<!-- ================= CAP 2 ================= -->
+<section class="tab" id="t-cap2">
+  <div class="chhead c2"><h2 class="ch">Capítulo 2 · Fundamentos y panorama</h2><p>Cómo se relacionan nube, fog y edge, de dónde viene la idea y por qué el Internet de las Cosas la necesita.</p></div>
+  <div class="goals"><b>🎯 Al terminar podrás…</b><ul><li>Situar fog entre dispositivo y nube y comparar sus capacidades.</li><li>Recorrer la línea de tiempo 1990 → hoy.</li><li>Justificar con 5 argumentos por qué IoT necesita fog.</li><li>Decidir si una tarea va en el fog, en la nube o en ambos.</li></ul></div>
+
+  <div class="lesson" id="l21"><h3><span class="num">2.1</span> ¿Dónde está la niebla?</h3>
+    <div class="tags"><span class="tag vis">Visual</span><span class="tag sim">Interactivo</span></div>
+    <p>Fog es «un terreno medio entre la nube y los dispositivos»: parte de las aplicaciones corre en el borde de la red en un dispositivo inteligente y el resto en la nube (Fig. 2.1: sensores → elementos de red del borde → recursos cloud). Cambia <b>dónde se procesa</b> y mira cómo cambia el perfil.</p>
+    <div class="seg" id="whereSeg"></div>
+    <div class="viz" id="where"></div>
+    <div class="note">Valores <b>cualitativos e ilustrativos</b> (no son del libro) para comparar tendencias. El libro usa «fog» y «edge» casi como sinónimos; aquí «dispositivo» es el extremo y «fog» el nodo intermedio.</div>
+  </div>
+
+  <div class="lesson" id="l22"><h3><span class="num">2.2</span> Línea de tiempo</h3>
+    <div class="tags"><span class="tag vis">Interactivo</span></div>
+    <div class="viz"><div class="tl" id="tl"></div><div class="tdetail" id="tld"></div></div>
+  </div>
+
+  <div class="lesson" id="l23"><h3><span class="num">2.3</span> Los 3 objetivos y los dos planos</h3>
+    <div class="tags"><span class="tag vis">Visual</span></div>
+    <div class="cards">
+      <div class="key"><b class="t">Objetivo 1</b><p>Mejorar la eficiencia y reducir la cantidad de datos enviados a la nube para procesar, analizar y almacenar.</p></div>
+      <div class="key"><b class="t">Objetivo 2</b><p>Ubicar los datos <b>cerca del usuario final</b>.</p></div>
+      <div class="key"><b class="t">Objetivo 3</b><p>Dar <b>seguridad y consistencia</b> a la transmisión de datos hacia la nube.</p></div>
+    </div>
+    <div class="twocol">
+      <div class="viz"><b>Plano de control vs plano de datos</b>
+        <svg viewBox="0 0 380 210" class="gsvg"><rect x="10" y="10" width="360" height="62" rx="12" fill="#e8eaff" stroke="#4f5bd5"/><text x="24" y="34" class="svgt" font-weight="700">Plano de control</text><text x="24" y="54" class="svgs">políticas, orquestación, reglas</text>
+        <rect x="10" y="100" width="360" height="62" rx="12" fill="#d9f4ef" stroke="#0e9f8e"/><text x="24" y="124" class="svgt" font-weight="700">Plano de datos</text><text x="24" y="144" class="svgs">la mayor parte del procesamiento, en el dispositivo inteligente del borde</text>
+        <path d="M190 72v28" stroke="#4f5bd5" stroke-width="3" marker-end="url(#mk)"/><defs><marker id="mk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#4f5bd5"/></marker></defs>
+        <text x="200" y="92" class="svgs">reglas ↓</text><text x="190" y="190" class="svgs" text-anchor="middle">el fog procesa casi todo en el plano de datos</text></svg>
+      </div>
+      <div class="viz"><b>Datos procesados fuera del centro de datos / nube (Gartner)</b>
+        <svg viewBox="0 0 380 210" class="gsvg" id="gartner"></svg>
+        <div class="note" style="margin-top:4px">Además: ~<b>80 %</b> de los datos IoT se necesita dentro del entorno local; al nube solo suben agregados.</div></div>
+    </div>
+  </div>
+
+  <div class="lesson" id="l24"><h3><span class="num">2.4</span> ¿Por qué fog para IoT? 5 razones, 2 simulaciones</h3>
+    <div class="tags"><span class="tag pred">Predice</span><span class="tag sim">Simulación</span></div>
+    <div class="cards" id="reasons"></div>
+    <h4>⏱ Razón 1 · Latencia: la parada de emergencia</h4>
+    <p>Un brazo robótico avanza a <b>2 m/s</b>. Un sensor detecta a una persona. Si la decisión de parar viaja a la nube, el brazo sigue moviéndose todo ese tiempo. <b>Predice:</b> con 15 cm de margen y latencias típicas, ¿quién evita el choque?</p>
+    <div class="viz" id="robot"></div>
+    <h4>💰 Razones 2 y 4 · Coste y autonomía: filtrar y seguir funcionando</h4>
+    <p>Un sensor reporta temperatura cada segundo. <i>«20 °C cada segundo no interesa hasta que marca 40 °C.»</i> Pulsa 🔥 y luego <b>desconecta Internet</b>.</p>
+    <div class="viz" id="filter"></div>
+  </div>
+
+  <div class="lesson" id="l25"><h3><span class="num">2.5</span> Reto: ¿dónde procesarías cada tarea?</h3>
+    <div class="tags"><span class="tag chk">Clasificación activa</span></div>
+    <div class="viz" id="game"></div>
+  </div>
+
+  <div class="lesson" id="l26"><h3><span class="num">2.6</span> Ventajas, futuro y la conclusión clave</h3>
+    <div class="cards" id="adv"></div>
+    <div class="key"><b class="t">Conclusión del capítulo</b><p>«No hay fog sin una nube.» Fog no sustituye a la nube: se <b>complementan</b>. Lo que requiere mucho cómputo, autonomía de baja prioridad o histórico masivo va a la nube convencional; lo urgente y local, al fog.</p></div>
+    <p><b>Visión de futuro (Princeton Edge Lab, Mung Chiang):</b> el fog es esencial porque ① permite <b>cómputo continuo</b> y control digital-físico, ② ayuda a que las aplicaciones <b>satisfagan los requisitos del cliente</b>, ③ <b>agrupa recursos cercanos</b> y ④ permite <b>desarrollo rápido y escalado moderado</b>. Casos: Smart Grid, redes vehiculares, robots, petróleo y gas.</p>
+  </div>
+
+  <div class="lesson" id="q2"><h3><span class="num">✓</span> Comprueba lo aprendido</h3><div id="quiz2"></div></div>
+</section>
+
+<!-- ================= CAP 3 ================= -->
+<section class="tab" id="t-cap3">
+  <div class="chhead c3"><h2 class="ch">Capítulo 3 · Machine Learning en Fog Computing</h2><p>Cómo el ML ayuda al fog con recursos, exactitud y seguridad — y cada algoritmo, jugando con él.</p></div>
+  <div class="goals"><b>🎯 Al terminar podrás…</b><ul><li>Distinguir aprendizaje supervisado, no supervisado y por refuerzo.</li><li>Explicar con un experimento cómo funcionan SVM, árbol, bosque, KNN, regresión lineal, K-means y Q-learning.</li><li>Elegir la familia de algoritmos adecuada para un problema del fog.</li></ul></div>
+
+  <div class="lesson" id="l31"><h3><span class="num">3.1</span> ML como sistema entrada → salida</h3>
+    <div class="tags"><span class="tag vis">Visual</span><span class="tag sim">Interactivo</span></div>
+    <p>Fog reduce latencia, pero introduce problemas de <b>seguridad</b> y <b>gestión de recursos</b> en dispositivos limitados. El ML aprende de los datos sin ser programado explícitamente: toma una <b>entrada A</b> y la mapea a una <b>salida B</b> (Fig. 3.1). Ejemplo (Fig. 3.2): un detector de anomalías compara un patrón con un dataset etiquetado y responde normal / anormal.</p>
+    <div class="viz" id="io"></div>
+  </div>
+
+  <div class="lesson" id="l32"><h3><span class="num">3.2</span> Mapa de técnicas (Fig. 3.3)</h3>
+    <div class="tags"><span class="tag vis">Mapa</span><span class="tag">Explora</span></div>
+    <p>Haz clic en cada nodo para leer qué es y qué hace en un sistema fog.</p>
+    <div class="viz" id="mltree"></div>
+  </div>
+
+  <div class="lesson" id="l33"><h3><span class="num">3.3</span> Aprendizaje supervisado: entrenar y probar (Fig. 3.4)</h3>
+    <div class="tags"><span class="tag vis">Flujo animado</span></div>
+    <p>Hay <b>entradas (x)</b> y <b>salidas (y)</b> conocidas; el algoritmo aprende la función <b>y = f(x)</b>. Se hace en dos fases: <b>entrenamiento</b> (datos etiquetados) y <b>prueba</b> (datos nuevos). Se divide en <b>clasificación</b> (categorías: ataque / normal) y <b>regresión</b> (valores continuos: temperatura).</p>
+    <div class="viz" id="supflow"></div>
+  </div>
+
+  <div class="lesson" id="l34"><h3><span class="num">3.4</span> KNN: pregúntale a tus vecinos</h3>
+    <div class="tags"><span class="tag pred">Predice</span><span class="tag sim">Simulación</span></div>
+    <p>KNN clasifica un punto nuevo viendo los <b>k vecinos más cercanos</b> (distancia euclídea) y votando. En fog se usa para <b>detectar intrusos o nodos suplantados</b> y tráfico anómalo. <b>Haz clic o arrastra</b> en el gráfico para colocar un punto desconocido. <b>Predice</b> antes: ¿cambia el resultado al pasar de k=1 a k=9?</p>
+    <div class="viz"><canvas class="cv" id="knnCv"></canvas>
+      <div class="ctrls"><label>k (vecinos): <b id="knnKV">5</b><input type="range" id="knnK" min="1" max="15" value="5"></label><label class="inl"><input type="checkbox" id="knnReg" checked> Mostrar regiones de decisión</label></div>
+      <div class="legend"><span><i style="background:#4f5bd5"></i>Normal</span><span><i style="background:#d64545"></i>Ataque</span><span><i style="background:#222"></i>Punto a clasificar</span></div>
+      <div class="out" id="knnOut"></div></div>
+    <div class="ana"><b class="t">Observa</b><p>Con k=1 la frontera es irregular (se deja engañar por un único vecino raro). Con k grande se suaviza, pero demasiado grande ignora detalles locales.</p></div>
+  </div>
+
+  <div class="lesson" id="l35"><h3><span class="num">3.5</span> SVM: la frontera con más margen</h3>
+    <div class="tags"><span class="tag sim">Simulación</span></div>
+    <p>La SVM busca un <b>hiperplano</b> que separe las clases con la <b>máxima distancia (margen)</b> a los puntos más cercanos: los <b>vectores soporte</b>. Solo estos definen el modelo, por eso es compacto y apropiado para dispositivos con poca memoria (detección de intrusión y malware en fog; ataques en redes eléctricas inteligentes). <b>Mueve la recta a mano</b> o pulsa el botón.</p>
+    <div class="viz"><canvas class="cv" id="svmCv"></canvas>
+      <div class="ctrls"><label>Ángulo: <b id="svmAV">45</b>°<input type="range" id="svmA" min="0" max="359" value="20"></label><label>Posición (b): <b id="svmCV">0</b><input type="range" id="svmC" min="-14" max="14" step="0.05" value="0"></label><button class="btn fog" id="svmBest">✨ Maximizar margen</button></div>
+      <div class="out" id="svmOut"></div></div>
+  </div>
+
+  <div class="lesson" id="l36"><h3><span class="num">3.6</span> Árbol de decisión y Random Forest</h3>
+    <div class="tags"><span class="tag sim">Simulación</span><span class="tag vis">Árbol animado</span></div>
+    <p>Un <b>árbol</b> clasifica haciendo preguntas encadenadas: raíz → nodos de decisión → hojas (Fig. 3.5). Un <b>bosque aleatorio</b> entrena muchos árboles y <b>la clase más votada gana</b>. En fog detectan intrusiones, DDoS y nodos que se hacen pasar por otros. Mueve los controles: mira el camino del árbol y luego los votos del bosque.</p>
+    <div class="viz"><div class="ctrls" id="dtCtl"></div>
+      <div id="dtGraph"></div>
+      <h4 style="margin:14px 0 4px">🌲 Bosque de 5 árboles (votación)</h4>
+      <div class="tree5" id="rfCards"></div><div class="out" id="rfOut"></div></div>
+    <div class="ana"><b class="t">Prueba</b><p>Apaga el árbol que vota diferente al resto. Un solo árbol puede errar; la mayoría suele acertar. Ahora apaga 3 y mira qué pasa con la robustez.</p></div>
+  </div>
+
+  <div class="lesson" id="l37"><h3><span class="num">3.7</span> Regresión lineal: reparar datos perdidos</h3>
+    <div class="tags"><span class="tag sim">Simulación</span></div>
+    <p>La regresión lineal predice un valor (y) a partir de otro (x) con una recta. En fog IoT sirve para <b>predecir tendencias</b> y para <b>reparar valores faltantes</b> en un flujo de datos en tiempo real. <b>Haz clic en puntos</b> para «perderlos» y observa cómo la recta los reconstruye.</p>
+    <div class="viz"><canvas class="cv" id="regCv"></canvas>
+      <div class="ctrls"><label>Ruido del sensor: <b id="regNV">0.8</b><input type="range" id="regN" min="0" max="3" step="0.1" value="0.8"></label><button class="btn" id="regLose">Perder 30 % al azar</button><button class="btn ghost" id="regReset">Restaurar</button></div>
+      <div class="out" id="regOut"></div></div>
+  </div>
+
+  <div class="lesson" id="l38"><h3><span class="num">3.8</span> K-means: agrupar sin etiquetas y cazar lo raro</h3>
+    <div class="tags"><span class="tag sim">Simulación paso a paso</span></div>
+    <p>En el aprendizaje <b>no supervisado</b> solo hay entradas. K-means reparte los puntos en <b>k grupos</b> repitiendo: <b>① asignar</b> cada punto al centroide más cercano y <b>② mover</b> el centroide al promedio. Ej.: fraude en tarjetas (gasto bajo / normal / alto). <b>Pulsa «Paso»</b> varias veces; luego <b>haz clic</b> en el gráfico para probar una transacción nueva.</p>
+    <div class="viz"><canvas class="cv" id="kmCv"></canvas>
+      <div class="ctrls"><label>k (grupos): <b id="kmKV">3</b><input type="range" id="kmK" min="1" max="6" value="3"></label><button class="btn fog" id="kmStep">Paso ▶</button><button class="btn" id="kmRun">Ejecutar hasta converger</button><button class="btn ghost" id="kmReset">↺ Nueva semilla</button></div>
+      <div class="out" id="kmOut"></div></div>
+    <div class="misc"><b class="t">Ojo</b><p>Según el libro, K-means detecta comportamientos anómalos y ataques Sybil, pero es <b>menos eficaz que el supervisado</b> para ataques ya conocidos.</p></div>
+  </div>
+
+  <div class="lesson" id="l39"><h3><span class="num">3.9</span> Aprendizaje por refuerzo: esquivar un jammer</h3>
+    <div class="tags"><span class="tag pred">Predice</span><span class="tag sim">Simulación</span></div>
+    <p>Un <b>agente</b> aprende por <b>recompensa</b> al actuar en un entorno (Q-learning / Deep Q-network). Aplicación del libro: <b>anti-jamming</b> en redes inalámbricas fog — elegir la sub-banda libre de interferencia. Aquí hay 6 sub-bandas; un <i>jammer</i> barre 3 de ellas y avanza una por paso. El agente ve dónde está el jammer, elige canal y recibe <b>+1 / −1</b>. <b>Predice:</b> ¿cuántos pasos hacen falta para llegar a ~100 % de éxito? (el azar da ~50 %).</p>
+    <div class="viz"><div class="lanes" id="rlLanes"></div>
+      <div class="ctrls"><label>ε (exploración): <b id="rlEV">0.2</b><input type="range" id="rlE" min="0" max="1" step="0.05" value="0.2"></label><button class="btn fog" id="rl1">1 paso</button><button class="btn" id="rl100">Entrenar ×100</button><button class="btn" id="rl1000">×1000</button><button class="btn ghost" id="rlReset">↺ Olvidar</button></div>
+      <div class="twocol"><div><b>Tasa de éxito (media móvil de 50)</b><canvas class="cv short" id="rlCv"></canvas></div><div><b>Tabla Q (filas = posición del jammer, columnas = canal elegido)</b><div id="rlQ"></div></div></div>
+      <div class="out" id="rlOut"></div></div>
+  </div>
+
+  <div class="lesson" id="l3a"><h3><span class="num">3.10</span> ¿Qué algoritmo uso? Selector y práctica</h3>
+    <div class="tags"><span class="tag chk">Recuperación activa</span></div>
+    <div class="viz" id="selector"></div>
+    <h4>Ahora aplica el criterio</h4><div id="quiz3b"></div>
+  </div>
+
+  <div class="lesson" id="l3b"><h3><span class="num">3.11</span> ML dentro del fog: tres frentes y sus riesgos</h3>
+    <div class="seg" id="fmSeg"></div><div class="viz" id="fmBox"></div>
+    <h4>⚠ Retos (clic para voltear)</h4><div class="cards" id="challenges3"></div>
+  </div>
+
+  <div class="lesson" id="q3"><h3><span class="num">✓</span> Comprueba lo aprendido</h3><div id="quiz3"></div></div>
+</section>
+
+<!-- ================= REPASO ================= -->
+<section class="tab" id="t-repaso">
+  <div class="chhead" style="background:linear-gradient(120deg,#1c2433,#4a5670)"><h2 class="ch">★ Repaso integrador</h2><p>Une los tres capítulos en una sola arquitectura y practica con tarjetas de memoria.</p></div>
+  <div class="lesson"><h3>🔗 Todo junto: un nodo «smart fog»</h3>
+    <div class="tags"><span class="tag">Síntesis</span><span class="tag vis">Flujo animado</span></div>
+    <p>Los capítulos 1–3 unidos: dispositivos → fog (preprocesa y ejecuta ML cerca) → nube (agregados, almacenamiento, modelos). Los pasos 6–7 son una síntesis didáctica del enfoque de «smart fog» del capítulo 3.</p>
+    <div class="viz" id="finalG"></div></div>
+  <div class="lesson"><h3>🃏 Tarjetas de memoria</h3>
+    <p>Intenta responder <b>en voz alta</b> antes de voltear. Marca «Lo sabía» o «Repasar»: las que repasas vuelven a salir.</p>
+    <div class="viz" id="flash"></div></div>
+  <div class="lesson"><h3>📊 Tu progreso</h3><div id="scoreBox"></div></div>
+</section>
+
+<footer>Basado en los Caps. 1–3 de <i>Fog Computing: Concepts, Frameworks and Applications</i>. Las simulaciones son modelos didácticos simplificados.</footer>
+</main>
+
+<script>
+/* ================= UTILIDADES ================= */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(r){let u=0;while(!u)u=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*r())}
+const SV='http://www.w3.org/2000/svg';
+let store={};try{store=JSON.parse(localStorage.getItem('fogprog')||'{}')}catch(e){}
+function save(){try{localStorage.setItem('fogprog',JSON.stringify(store))}catch(e){}}
+const ALLQ=[];
+function updProg(){const n=ALLQ.length;const ok=ALLQ.filter(id=>store[id]===1).length;$('#progtxt').textContent=ok+'/'+n+' comprobaciones';$('#progbar').style.width=(n?ok/n*100:0)+'%';const sb=$('#scoreBox');if(sb)renderScore()}
+
+/* ================= TABS ================= */
+const TABS=['inicio','cap1','cap2','cap3','repaso'];
+function showTab(t){if(!TABS.includes(t))t='inicio';$$('.tab').forEach(s=>s.classList.toggle('on',s.id==='t-'+t));$$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));window.scrollTo(0,0);setTimeout(()=>window.dispatchEvent(new Event('resize')),30)}
+$$('#tabs button').forEach(b=>b.onclick=()=>{location.hash=b.dataset.t});
+$$('[data-go]').forEach(b=>b.onclick=()=>{location.hash=b.dataset.go});
+window.addEventListener('hashchange',()=>showTab(location.hash.slice(1)));
+
+/* ================= QUIZ ================= */
+function renderQuiz(el,items){
+  el.innerHTML='';
+  items.forEach(it=>{
+    if(!ALLQ.includes(it.id))ALLQ.push(it.id);
+    const d=document.createElement('div');d.className='qz';
+    d.innerHTML=`<p class="q">${it.q}</p>`+it.o.map((o,i)=>`<button class="o" data-i="${i}">${o}</button>`).join('')+`<div class="why"></div>`;
+    d.querySelectorAll('.o').forEach(b=>b.onclick=()=>{
+      if(d.classList.contains('done'))return;
+      const i=+b.dataset.i;const ok=i===it.a;
+      b.classList.add(ok?'ok':'no');
+      if(!ok)d.querySelectorAll('.o')[it.a].classList.add('ok');
+      d.classList.add('done');
+      d.querySelector('.why').innerHTML=(ok?'✅ <b>¡Correcto!</b> ':'❌ <b>No exactamente.</b> ')+it.w;
+      if(store[it.id]!==1){store[it.id]=ok?1:0;save()}
+      updProg();
+    });
+    el.appendChild(d);
+  });
+}
+
+/* ================= GRAPH (diagramas con pasos) ================= */
+let GID=0;
+function Graph(el,cfg){
+  const id=++GID,W=cfg.w,H=cfg.h,es=cfg.edgeStyle||'line';
+  const N={};cfg.nodes.forEach(n=>N[n.id]=n);
+  const bp=(n,tx,ty)=>{const dx=tx-n.x,dy=ty-n.y;if(!dx&&!dy)return[n.x,n.y];const s=Math.min((n.w/2)/Math.abs(dx),(n.h/2)/Math.abs(dy));return[n.x+dx*s,n.y+dy*s]};
+  let s=`<svg viewBox="0 0 ${W} ${H}" class="gsvg" role="img" aria-label="${cfg.label||'diagrama'}"><defs>
+   <marker id="ar${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#98a3b8"/></marker>
+   <marker id="ao${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0e9f8e"/></marker></defs>`;
+  const nodeSvg=n=>{
+    const lines=(n.label||'').split('\n'),lh=15,y0=n.y-(lines.length-1)*lh/2+1;
+    const clk=n.info?' clk':'';
+    let g=`<g class="n ${n.k||''}${n.k==='group'?'':''}${clk}" data-id="${n.id}"><rect x="${n.x-n.w/2}" y="${n.y-n.h/2}" width="${n.w}" height="${n.h}" rx="${n.k==='group'?16:9}"/>`;
+    if(n.k==='group')g+=`<text class="gl" x="${n.x-n.w/2+12}" y="${n.y-n.h/2+17}">${n.label}</text>`;
+    else g+=lines.map((l,i)=>`<text x="${n.x}" y="${y0+i*lh}" dominant-baseline="central">${l}</text>`).join('');
+    return g+'</g>';
+  };
+  cfg.nodes.filter(n=>n.k==='group').forEach(n=>s+=nodeSvg(n));
+  const E=[];
+  cfg.edges.forEach(e=>{
+    const a=N[e[0]],b=N[e[1]],o=e[2]||{};let d,mx,my;
+    if(es==='tb'){const x0=a.x,y0=a.y+a.h/2,x1=b.x,y1=b.y-b.h/2,m=(y0+y1)/2;d=`M${x0} ${y0}C${x0} ${m},${x1} ${m},${x1} ${y1}`;mx=(x0+x1)/2;my=m}
+    else if(es==='lr'){const x0=a.x+a.w/2,y0=a.y,x1=b.x-b.w/2,y1=b.y,m=(x0+x1)/2;d=`M${x0} ${y0}C${m} ${y0},${m} ${y1},${x1} ${y1}`;mx=m;my=(y0+y1)/2}
+    else{const p0=bp(a,b.x,b.y),p1=bp(b,a.x,a.y);d=`M${p0[0]} ${p0[1]}L${p1[0]} ${p1[1]}`;mx=(p0[0]+p1[0])/2;my=(p0[1]+p1[1])/2}
+    const arrow=cfg.noArrow?'':` marker-end="url(#ar${id})"`;
+    s+=`<path class="e${o.dash?' dash':''}" id="e${id}_${e[0]}_${e[1]}" d="${d}"${arrow}/>`;
+    if(o.label)s+=`<text class="elab" x="${mx}" y="${my-4}">${o.label}</text>`;
+    E.push(e[0]+'>'+e[1]);
+  });
+  cfg.nodes.filter(n=>n.k!=='group').forEach(n=>s+=nodeSvg(n));
+  s+=`<g id="pk${id}"></g></svg><div class="ginfo">${cfg.hint||'Haz clic en un componente para ver qué hace.'}</div>`;
+  if(cfg.steps)s+=`<div class="gctl"><button class="btn ghost" data-a="prev">◀</button><button class="btn fog" data-a="next">Siguiente ▶</button><button class="btn ghost" data-a="auto">▶ Auto</button><button class="btn ghost" data-a="reset">↺</button><span class="cnt"></span></div>`;
+  el.innerHTML=s;
+  const svg=$('svg',el),info=$('.ginfo',el),pk=$('#pk'+id,el);
+  const nodeEl=i=>$(`.n[data-id="${i}"]`,el),edgeEl=(a,b)=>$(`#e${id}_${a}_${b}`,el);
+  const api={};
+  api.set=(ns,es2)=>{
+    const any=(ns&&ns.length)||(es2&&es2.length);
+    $$('.n',el).forEach(g=>{const on=ns&&ns.includes(g.dataset.id);g.classList.toggle('on',!!on);g.classList.toggle('dim',!!any&&!on&&!g.classList.contains('group'))});
+    cfg.edges.forEach(e=>{const p=edgeEl(e[0],e[1]),on=es2&&es2.includes(e[0]+'>'+e[1]);p.classList.toggle('on',!!on);p.classList.toggle('dim',!!any&&!on);if(!cfg.noArrow)p.setAttribute('marker-end',`url(#${on?'ao':'ar'}${id})`)});
+  };
+  api.say=t=>info.innerHTML=t;
+  function fly(a,b){const p=edgeEl(a,b);if(!p)return;const L=p.getTotalLength();const c=document.createElementNS(SV,'circle');c.setAttribute('r',6);c.setAttribute('fill','#0e9f8e');c.setAttribute('stroke','#fff');c.setAttribute('stroke-width','2');pk.appendChild(c);const t0=performance.now(),D=800;(function f(t){const k=clamp((t-t0)/D,0,1);const pt=p.getPointAtLength(L*k);c.setAttribute('cx',pt.x);c.setAttribute('cy',pt.y);if(k<1)requestAnimationFrame(f);else c.remove()})(t0)}
+  api.fly=fly;
+  el.addEventListener('click',ev=>{const g=ev.target.closest('.n');if(!g)return;const n=N[g.dataset.id];if(n&&n.info&&!api.noInfo){api.say(`<b>${(n.label||'').replace(/\n/g,' ')}</b> — ${n.info}`);if(!cfg.steps)api.set([n.id],[])}});
+  if(cfg.steps){
+    let i=-1,timer=null;const cnt=$('.cnt',el);
+    const go=k=>{i=clamp(k,-1,cfg.steps.length-1);if(i<0){api.set([],[]);api.say(cfg.hint||'');cnt.textContent='';return}const st=cfg.steps[i];api.set(st.on||[],st.edges||[]);api.say(`<b>Paso ${i+1}/${cfg.steps.length}.</b> ${st.t}`);cnt.textContent=`${i+1} / ${cfg.steps.length}`;(st.edges||[]).forEach(x=>{const [a,b]=x.split('>');fly(a,b)})};
+    const stop=()=>{clearInterval(timer);timer=null;const b=$('[data-a=auto]',el);b.textContent='▶ Auto'};
+    $('[data-a=next]',el).onclick=()=>{stop();go(i>=cfg.steps.length-1?0:i+1)};
+    $('[data-a=prev]',el).onclick=()=>{stop();go(i-1)};
+    $('[data-a=reset]',el).onclick=()=>{stop();go(-1)};
+    $('[data-a=auto]',el).onclick=function(){if(timer){stop();return}this.textContent='⏸ Pausa';if(i>=cfg.steps.length-1)go(0);else go(i+1);timer=setInterval(()=>{if(i>=cfg.steps.length-1){stop();return}go(i+1)},2400)};
+  }
+  api.nodes=N;return api;
+}
+
+/* ================= PLOT (canvas) ================= */
+function Plot(cv,o){
+  const ctx=cv.getContext('2d'),P={ctx,pad:38,w:0,h:0};
+  P.fit=()=>{const r=cv.getBoundingClientRect();if(!r.width)return false;const d=window.devicePixelRatio||1;cv.width=Math.round(r.width*d);cv.height=Math.round(r.height*d);ctx.setTransform(d,0,0,d,0,0);P.w=r.width;P.h=r.height;return true};
+  P.X=x=>P.pad+(x-o.xmin)/(o.xmax-o.xmin)*(P.w-P.pad-12);
+  P.Y=y=>P.h-P.pad-(y-o.ymin)/(o.ymax-o.ymin)*(P.h-P.pad-12);
+  P.ix=px=>o.xmin+(px-P.pad)/(P.w-P.pad-12)*(o.xmax-o.xmin);
+  P.iy=py=>o.ymin+(P.h-P.pad-py)/(P.h-P.pad-12)*(o.ymax-o.ymin);
+  P.clear=()=>ctx.clearRect(0,0,P.w,P.h);
+  P.axes=()=>{ctx.save();ctx.strokeStyle='#e3e8f2';ctx.fillStyle='#6b778c';ctx.font='11px system-ui';ctx.lineWidth=1;
+    const sx=o.sx||2,sy=o.sy||2;
+    for(let x=Math.ceil(o.xmin/sx)*sx;x<=o.xmax;x+=sx){ctx.beginPath();ctx.moveTo(P.X(x),P.Y(o.ymin));ctx.lineTo(P.X(x),P.Y(o.ymax));ctx.stroke();ctx.textAlign='center';ctx.fillText(x,P.X(x),P.h-P.pad+14)}
+    for(let y=Math.ceil(o.ymin/sy)*sy;y<=o.ymax;y+=sy){ctx.beginPath();ctx.moveTo(P.X(o.xmin),P.Y(y));ctx.lineTo(P.X(o.xmax),P.Y(y));ctx.stroke();ctx.textAlign='right';ctx.fillText(y,P.pad-5,P.Y(y)+4)}
+    ctx.fillStyle='#3a475f';ctx.font='12px system-ui';ctx.textAlign='center';ctx.fillText(o.xl||'',P.pad+(P.w-P.pad)/2,P.h-6);
+    ctx.save();ctx.translate(12,P.pad+(P.h-P.pad)/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl||'',0,0);ctx.restore();ctx.restore()};
+  P.dot=(x,y,c,r=5,hollow)=>{ctx.beginPath();ctx.arc(P.X(x),P.Y(y),r,0,7);if(hollow){ctx.strokeStyle=c;ctx.lineWidth=2;ctx.stroke()}else{ctx.fillStyle=c;ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.2;ctx.stroke()}};
+  P.line=(x0,y0,x1,y1,c,w=2,dash)=>{ctx.save();ctx.beginPath();ctx.moveTo(P.X(x0),P.Y(y0));ctx.lineTo(P.X(x1),P.Y(y1));ctx.strokeStyle=c;ctx.lineWidth=w;if(dash)ctx.setLineDash(dash);ctx.stroke();ctx.restore()};
+  P.pos=e=>{const b=cv.getBoundingClientRect();return[P.ix(e.clientX-b.left),P.iy(e.clientY-b.top)]};
+  P.drag=(fn)=>{let d=false;cv.addEventListener('pointerdown',e=>{d=true;cv.setPointerCapture(e.pointerId);fn(P.pos(e),e)});cv.addEventListener('pointermove',e=>{if(d)fn(P.pos(e),e)});cv.addEventListener('pointerup',()=>d=false);cv.addEventListener('pointercancel',()=>d=false)};
+  return P;
+}
+const BLUE='#4f5bd5',RED='#d64545',TEAL='#0e9f8e',ORG='#d9780a';
+
+/* ================= INICIO: hero ================= */
+(function(){const g=$('#heroPk');const xs=[60,140,220,300,350];
+  function spawn(){if(!$('#t-inicio').classList.contains('on'))return;const x=xs[Math.floor(Math.random()*xs.length)],t0=performance.now();const c=document.createElementNS(SV,'circle');c.setAttribute('r',5);c.setAttribute('fill',ORG);g.appendChild(c);
+    (function f(t){const k=(t-t0)/1700;let y;if(k<.4){y=215-(k/.4)*85;c.setAttribute('fill',ORG)}else if(k<.55){y=130;c.setAttribute('fill',TEAL)}else{y=130-((k-.55)/.45)*90;c.setAttribute('fill',BLUE)}
+      c.setAttribute('cx',x);c.setAttribute('cy',y);if(k<1)requestAnimationFrame(f);else c.remove()})(t0)}
+  setInterval(spawn,500);})();
+
+/* ================= CAP 1.1 CARRERA ================= */
+(function(){
+  const root=$('#race');
+  root.innerHTML=`<div class="ctrls">
+   <label>Saltos de red hasta la nube: <b id="rHV">10</b><input id="rH" type="range" min="2" max="30" value="10"></label>
+   <label>Complejidad de la tarea: <b id="rWV">10</b> (1 = trivial · 100 = análisis masivo)<input id="rW" type="range" min="1" max="100" value="10"></label></div>
+   <div class="predict"><b>🎯 Predice:</b> ¿quién entrega la respuesta antes?
+    <label><input type="radio" name="rp" value="fog"> 🌫 Fog</label><label><input type="radio" name="rp" value="cloud"> ☁ Nube</label></div>
+   <svg id="rSvg" viewBox="0 0 760 240" class="gsvg"></svg>
+   <div class="btns"><button class="btn fog" id="rGo">🏁 ¡Lanzar la carrera!</button></div><div id="rOut" class="out"></div>`;
+  const X0=60,XF=200,XC=690,Y1=70,Y2=180;let raf=null;
+  const calc=()=>{const h=+$('#rH').value,w=+$('#rW').value;const cN=h*8,fN=8,cC=w*.1,fC=w*1;return{h,w,cN,fN,cC,fC,cT:cN+cC,fT:fN+fC}};
+  function draw(){
+    const c=calc();let s=`<defs><marker id="rma" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#98a3b8"/></marker></defs>`;
+    s+=`<text x="${X0}" y="26" class="svgt" text-anchor="middle">📡 Dispositivo</text>`;
+    s+=`<line x1="${X0}" y1="${Y1}" x2="${XC}" y2="${Y1}" class="lnk"/><line x1="${X0}" y1="${Y2}" x2="${XF}" y2="${Y2}" class="lnk"/>`;
+    for(let i=1;i<c.h;i++){const x=X0+(XC-X0)*i/c.h;s+=`<circle cx="${x}" cy="${Y1}" r="3.5" fill="#fff" stroke="#98a3b8" stroke-width="1.5"/>`}
+    s+=`<circle cx="${XF}" cy="${Y2}" r="3" fill="#fff" stroke="#98a3b8"/>`;
+    s+=`<rect x="${XC-18}" y="${Y1-26}" width="64" height="52" rx="10" fill="#e8eaff" stroke="${BLUE}"/><text x="${XC+14}" y="${Y1+4}" text-anchor="middle" class="svgt">☁ Nube</text>`;
+    s+=`<rect x="${XF-10}" y="${Y2-26}" width="70" height="52" rx="10" fill="#d9f4ef" stroke="${TEAL}"/><text x="${XF+25}" y="${Y2+4}" text-anchor="middle" class="svgt">🌫 Fog</text>`;
+    s+=`<text x="${(X0+XC)/2}" y="${Y1-14}" class="svgs" text-anchor="middle">${c.h} saltos · red ≈ ${c.cN} ms ida y vuelta · cómputo ≈ ${c.cC.toFixed(1)} ms</text>`;
+    s+=`<text x="${XF+95}" y="${Y2+4}" class="svgs">1 salto · red ≈ ${c.fN} ms · cómputo ≈ ${c.fC.toFixed(0)} ms</text>`;
+    s+=`<circle id="p1" cx="${X0}" cy="${Y1}" r="8" fill="${BLUE}" stroke="#fff" stroke-width="2"/><circle id="p2" cx="${X0}" cy="${Y2}" r="8" fill="${TEAL}" stroke="#fff" stroke-width="2"/>`;
+    s+=`<text id="t1" x="${XC-60}" y="${Y1+48}" class="svgt" text-anchor="middle" font-weight="700"></text><text id="t2" x="${XF+60}" y="${Y2+48}" class="svgt" text-anchor="middle" font-weight="700"></text>`;
+    $('#rSvg').innerHTML=s;
+  }
+  ['rH','rW'].forEach(i=>$('#'+i).oninput=()=>{$('#'+i+'V').textContent=$('#'+i).value;cancelAnimationFrame(raf);$('#rGo').disabled=false;draw();$('#rOut').innerHTML=''});
+  const frac=(t,net,comp)=>{const h=net/2;if(t<h)return t/h;if(t<h+comp)return 1;if(t<net+comp)return 1-(t-h-comp)/h;return 0};
+  $('#rGo').onclick=()=>{
+    const c=calc(),pred=($('input[name=rp]:checked')||{}).value;draw();$('#rGo').disabled=true;$('#rOut').innerHTML='';
+    const t0=performance.now(),K=18;
+    (function f(now){const t=(now-t0)/K;
+      const a=Math.min(t,c.cT),b=Math.min(t,c.fT);
+      $('#p1').setAttribute('cx',X0+(XC-X0)*frac(a,c.cN,c.cC));$('#p2').setAttribute('cx',X0+(XF-X0)*frac(b,c.fN,c.fC));
+      $('#t1').textContent=t>=c.cT?`☁ ✓ ${c.cT.toFixed(0)} ms`:`${a.toFixed(0)} ms`;$('#t2').textContent=t>=c.fT?`🌫 ✓ ${c.fT.toFixed(0)} ms`:`${b.toFixed(0)} ms`;
+      if(t<Math.max(c.cT,c.fT))raf=requestAnimationFrame(f);else done(c,pred)})(t0);
+  };
+  function done(c,pred){
+    $('#rGo').disabled=false;const win=c.fT<c.cT?'fog':'cloud';
+    const bar=(net,comp,col,l)=>{const sc=100/Math.max(c.cT,c.fT,25);return `<div style="margin:4px 0;font-size:13px"><b>${l}</b> · red ${net.toFixed(0)} ms + cómputo ${comp.toFixed(0)} ms = <b>${(net+comp).toFixed(0)} ms</b><div style="position:relative;height:16px;background:#eef1f8;border-radius:8px;margin-top:2px"><div style="position:absolute;left:0;top:0;height:16px;width:${net*sc}%;background:${col};opacity:.55;border-radius:8px 0 0 8px"></div><div style="position:absolute;left:${net*sc}%;top:0;height:16px;width:${comp*sc}%;background:${col}"></div><div style="position:absolute;left:${20*sc}%;top:-3px;height:22px;border-left:2px dashed #d64545" title="20 ms"></div></div></div>`};
+    let msg=(pred?(pred===win?'✅ <b>¡Acertaste!</b> ':'❌ <b>Era al revés.</b> '):'<i>(No hiciste predicción; ¡pruébalo la próxima vez!)</i> ');
+    msg+=win==='fog'?`Ganó el <b>fog</b>: la tarea es ligera, así que lo que domina es el tiempo de red.`:`Ganó la <b>nube</b>: el cómputo es tan pesado que su potencia compensa la distancia.`;
+    $('#rOut').innerHTML=msg+bar(c.cN,c.cC,BLUE,'☁ Nube')+bar(c.fN,c.fC,TEAL,'🌫 Fog')+`<div class="note">La línea roja discontinua es <b>20 ms</b>, el tiempo de reacción que, según el cap. 2, exigen aplicaciones como realidad aumentada o conducción autónoma. ${c.fT<=20&&c.cT>20?'Solo el fog cumple.':c.cT<=20&&c.fT>20?'Solo la nube cumple.':c.fT<=20&&c.cT<=20?'Ambos cumplen.':'Ninguno cumple.'}</div>`;
+  }
+  draw();
+})();
+
+/* ================= CAP 1.2 TRES NIVELES ================= */
+(function(){
+  const root=$('#tiers');
+  root.innerHTML=`<svg id="tsvg" viewBox="0 0 760 430" class="gsvg"></svg>
+  <div class="ctrls"><label class="inl"><input type="checkbox" id="tFog" checked> 🌫 Nodos fog activos</label><label class="inl"><input type="checkbox" id="tLink" checked> 🔗 Enlace a la nube activo</label><label class="inl"><input type="checkbox" id="tAuto" checked> Tráfico automático</label><button class="btn fog" id="tBurst">⚡ Ráfaga de 20 paquetes</button><button class="btn ghost" id="tReset">↺ Reiniciar</button></div>
+  <div class="stats"><div class="stat"><b id="sEm">0</b><span>paquetes emitidos por dispositivos</span></div><div class="stat"><b id="sCl">0</b><span>llegados a la nube</span></div><div class="stat"><b id="sRed">–</b><span>reducción de tráfico a la nube</span></div><div class="stat"><b id="sDec">0</b><span>decisiones tomadas</span></div><div class="stat"><b id="sQ">0</b><span>en cola (almacenamiento temporal del fog)</span></div><div class="stat"><b id="sLost">0</b><span>perdidos</span></div></div>
+  <div class="note" id="tNote"></div>`;
+  const devX=[100,230,360,490,620],devI=['🌡️','📷','📱','🚗','⌚'],fogX=[210,550],AGG=5;
+  const fogOf=i=>devX[i]<380?0:1;
+  let s=`<rect class="band bandc" x="10" y="8" width="740" height="118" rx="16"/><text class="svgt" x="26" y="30" font-weight="700">☁ NUBE · centros de datos</text>
+  <rect class="band bandf" x="10" y="150" width="740" height="125" rx="16"/><text class="svgt" x="26" y="172" font-weight="700">🌫 FOG · switches, gateways, routers</text>
+  <rect class="band bandt" x="10" y="300" width="740" height="122" rx="16"/><text class="svgt" x="26" y="322" font-weight="700">📡 COSAS / DISPOSITIVOS</text>
+  <rect x="320" y="44" width="120" height="62" rx="10" fill="#e8eaff" stroke="${BLUE}" stroke-width="1.5"/><text class="svgt" x="380" y="70" text-anchor="middle">Servidores</text><text class="svgs" x="380" y="88" text-anchor="middle">+ almacenamiento</text>
+  <rect x="${380-40}" y="107" width="80" height="20" rx="8" fill="#fff" stroke="${BLUE}"/><text class="svgs" x="380" y="121" text-anchor="middle">Cloud gateway</text>`;
+  fogX.forEach((x,i)=>{s+=`<line class="lnk" id="lk${i}" x1="${x}" y1="190" x2="380" y2="127"/><rect x="${x-70}" y="190" width="140" height="62" rx="10" fill="#d9f4ef" stroke="${TEAL}" stroke-width="1.5"/><text class="svgt" x="${x}" y="212" text-anchor="middle">Nodo fog ${'AB'[i]}</text><text class="svgs" x="${x}" y="230" text-anchor="middle">preprocesa · decide · guarda</text><text class="svgs" x="${x}" y="244" text-anchor="middle" id="fq${i}"></text>`});
+  s+=`<line class="lnk" x1="280" y1="221" x2="480" y2="221" stroke-dasharray="4 4"/><text class="svgs" x="380" y="214" text-anchor="middle">Interfaz Fog–Fog</text>`;
+  s+=`<text class="svgs" x="500" y="150" id="lkt">Interfaz Fog–Nube</text><text class="svgs" x="26" y="290">Interfaz Fog–Dispositivos ↕</text>`;
+  devX.forEach((x,i)=>{s+=`<line x1="${x}" y1="352" x2="${fogX[fogOf(i)]}" y2="252" stroke="#c4cddf" stroke-dasharray="3 5"/><circle cx="${x}" cy="372" r="22" fill="#fdebd0" stroke="${ORG}" stroke-width="1.5"/><text x="${x}" y="379" text-anchor="middle" font-size="20">${devI[i]}</text>`});
+  s+=`<text id="cutx" x="380" y="160" font-size="22" text-anchor="middle" fill="${RED}"></text><g id="tpk"></g>`;
+  $('#tsvg').innerHTML=s;
+  const pk=$('#tpk');const S={em:0,cl:0,dec:0,q:[0,0],lost:0,agg:[0,0]};
+  const fogOn=()=>$('#tFog').checked,link=()=>$('#tLink').checked;
+  function fly(x0,y0,x1,y1,col,D,cb,lose){const c=document.createElementNS(SV,'circle');c.setAttribute('r',6);c.setAttribute('fill',col);c.setAttribute('stroke','#fff');c.setAttribute('stroke-width','1.5');pk.appendChild(c);const t0=performance.now();
+    (function f(t){const k=clamp((t-t0)/D,0,1);c.setAttribute('cx',x0+(x1-x0)*k);c.setAttribute('cy',y0+(y1-y0)*k);if(lose&&k>.9)c.setAttribute('fill',RED);if(k<1)requestAnimationFrame(f);else{c.remove();cb&&cb()}})(t0)}
+  function upd(){$('#sEm').textContent=S.em;$('#sCl').textContent=S.cl;$('#sRed').textContent=S.em?Math.max(0,Math.round((1-S.cl/S.em)*100))+' %':'–';$('#sDec').textContent=S.dec;$('#sQ').textContent=S.q[0]+S.q[1];$('#sLost').textContent=S.lost;[0,1].forEach(i=>$('#fq'+i).textContent=S.q[i]?`⏳ cola: ${S.q[i]}`:'');
+    $('#lk0').classList.toggle('cut',!link());$('#lk1').classList.toggle('cut',!link());$('#cutx').textContent=link()?'':'✂';
+    $('#tNote').innerHTML=fogOn()?(link()?'Con fog: cada nodo toma la decisión <b>localmente</b> (rápida) y solo sube un resumen cada '+AGG+' paquetes.':'<b>Enlace cortado</b>, pero el fog sigue decidiendo y guarda los resúmenes en <b>almacenamiento temporal</b>. Al reconectar se envían.'):(link()?'Sin fog: <b>todo</b> paquete viaja hasta la nube y la decisión llega tarde.':'Sin fog y sin enlace: los paquetes <b>se pierden</b> y nadie decide. Ese es el riesgo de depender solo de la nube.')}
+  function emit(){const i=Math.floor(Math.random()*5),x=devX[i];S.em++;upd();
+    if(fogOn()){const f=fogOf(i),fx=fogX[f];fly(x,350,fx,254,ORG,520,()=>{S.dec++;S.agg[f]++;if(S.agg[f]>=AGG){S.agg[f]=0;if(link())fly(fx,190,380,108,TEAL,620,()=>{S.cl++;upd()});else{S.q[f]++}}upd()})}
+    else{if(link())fly(x,350,380,108,ORG,1250,()=>{S.cl++;S.dec++;upd()});else fly(x,350,(x+380)/2,150,ORG,700,()=>{S.lost++;upd()},true)}}
+  let prevLink=true;
+  $('#tLink').onchange=()=>{const l=link();if(l&&!prevLink){[0,1].forEach(f=>{const n=S.q[f];S.q[f]=0;for(let k=0;k<n;k++)setTimeout(()=>fly(fogX[f],190,380,108,TEAL,620,()=>{S.cl++;upd()}),k*160)})}prevLink=l;upd()};
+  $('#tFog').onchange=upd;
+  $('#tBurst').onclick=()=>{for(let i=0;i<20;i++)setTimeout(emit,i*110)};
+  $('#tReset').onclick=()=>{S.em=S.cl=S.dec=S.lost=0;S.q=[0,0];S.agg=[0,0];upd()};
+  setInterval(()=>{if($('#tAuto').checked&&root.offsetParent!==null)emit()},750);
+  upd();
+})();
+
+/* ================= CAP 1.3 SEIS CAPAS ================= */
+(function(){
+  const root=$('#layers');
+  const L=[
+   {n:'Física y virtualización',f:'Sensores y redes (físicos y virtuales) generan los datos.',chips:()=>[21,21,21.1,21,38.7,21,21.1,21,21,21.1].map(v=>`<span class="chip${v>30?' w':''}">${v}°C</span>`).join(''),note:'10 lecturas crudas, una por segundo. Una de ellas (38.7 °C) es inusual.'},
+   {n:'Monitoreo',f:'Vigila que las peticiones y servicios estén en orden.',chips:()=>`<span class="chip g">✔ sensor vivo</span><span class="chip g">✔ petición #4821 en curso</span><span class="chip g">✔ latencia OK</span>`,note:'No cambia los datos: comprueba que el servicio funciona.'},
+   {n:'Preprocesamiento',f:'Poda y filtra los datos.',chips:()=>`<span class="chip">21.0°C ×9 (resumido)</span><span class="chip w">38.7°C ⚠ anómala</span>`,note:'De 10 valores quedan 2: el resumen de lo normal y el dato relevante.'},
+   {n:'Almacenamiento temporal',f:'Guarda los datos para procesamiento futuro.',chips:()=>`<span class="chip s">💾 búfer: 2 elementos</span><span class="chip s">espera ventana de envío</span>`,note:'Si la nube no responde, aquí esperan los datos.'},
+   {n:'Seguridad',f:'Cifra y descifra para mantener la integridad.',chips:()=>`<span class="chip s">🔒 9f3a…c1d2</span><span class="chip s">🔒 e07b…5d90</span>`,note:'Los datos viajan cifrados hacia la nube.'},
+   {n:'Transporte',f:'Sube los datos preprocesados a la nube.',chips:()=>`<span class="chip g">⬆ 2 paquetes a la nube</span><span class="chip g">(en vez de 10 → −80 %)</span>`,note:'Solo viaja lo que importa.'}
+  ];
+  const order=[5,4,3,2,1,0];// visual top→bottom: Transporte(5)..Física(0)
+  root.innerHTML=`<div class="stack">`+order.map(i=>`<div class="layer" data-i="${i}"><span class="no">${i+1}</span><b>${L[i].n}</b><span class="fx">${L[i].f}</span></div>`).join('')+`</div><div class="chips" id="lyChips"></div><div class="ginfo" id="lyNote">Pulsa <b>Siguiente</b> para subir un dato por las capas, empezando desde abajo.</div>
+  <div class="gctl"><button class="btn ghost" id="lyPrev">◀</button><button class="btn fog" id="lyNext">Siguiente ▶</button><button class="btn ghost" id="lyReset">↺</button><span class="cnt" id="lyCnt"></span></div>`;
+  let i=-1;
+  const go=k=>{i=clamp(k,-1,5);$$('.layer',root).forEach(l=>l.classList.toggle('on',+l.dataset.i===i));if(i<0){$('#lyChips').innerHTML='';$('#lyNote').innerHTML='Pulsa <b>Siguiente</b> para subir un dato por las capas, empezando desde abajo.';$('#lyCnt').textContent='';return}$('#lyChips').innerHTML=L[i].chips();$('#lyNote').innerHTML=`<b>Capa ${i+1} · ${L[i].n}.</b> ${L[i].note}`;$('#lyCnt').textContent=`${i+1} / 6`};
+  $('#lyNext').onclick=()=>go(i>=5?0:i+1);$('#lyPrev').onclick=()=>go(i-1);$('#lyReset').onclick=()=>go(-1);
+})();
+
+/* ================= CAP 1.4 TAXONOMÍA ================= */
+(function(){
+  const nodes=[
+   {id:'r',x:80,y:265,w:120,h:56,label:'Taxonomía\nde fog',k:'fog',info:'Naha et al. (2018) organizan fog en tres ramas: infraestructura, plataforma y aplicación.'},
+   {id:'in',x:270,y:90,w:130,h:44,label:'INFRAESTRUCTURA',k:'thing',info:'Todo lo físico: sensores, actuadores, dispositivos de mano, gateways físicos, routers y servidores. Crece exponencialmente cada año.'},
+   {id:'pl',x:270,y:265,w:130,h:44,label:'PLATAFORMA',k:'cloud',info:'El sistema de gestión que permite que los dispositivos fog ejecuten sus tareas de forma síncrona y eficiente. Tiene cinco dimensiones.'},
+   {id:'ap',x:270,y:450,w:130,h:44,label:'APLICACIONES',k:'user',info:'El núcleo del fog: cumple los requisitos de qué acciones tomar según la percepción del entorno.'},
+   {id:'i1',x:560,y:45,w:240,h:34,label:'Requisitos de infraestructura',k:'thing',info:'Sensores y actuadores: pequeños, unidireccionales (reciben una entrada y dan una salida), poco ancho de banda y mínimo consumo. Ej.: un sensor de humedad activa o desactiva el riego. El fog debe tener suficientes recursos de cómputo, red y almacenamiento.'},
+   {id:'i2',x:560,y:90,w:240,h:34,label:'Requisitos de red',k:'thing',info:'Miles de nodos sensores generan un cuello de botella. Opciones: redes móviles ad hoc (MANET: cada dispositivo es router; NFC, Bluetooth, Zigbee) y redes malladas inalámbricas (WMN: routers de baja movilidad).'},
+   {id:'i3',x:560,y:135,w:240,h:34,label:'Dispositivos fog',k:'thing',info:'Introducidos para apoyar a los dispositivos IoT: sistemas de aterrizaje de aviones, geolocalización en barcos y yates… Donde depender de la nube directamente es inviable. Requiere coordinación entre gestión, dispositivos y almacenamiento.'},
+   {id:'p1',x:560,y:185,w:240,h:34,label:'Asignación de recursos y planificación',k:'cloud',info:'Depende de la disponibilidad de recursos y de la eficiencia de los dispositivos. Como los nodos no son recursos dedicados, una mala planificación genera retrasos y anula el objetivo del fog.'},
+   {id:'p2',x:560,y:225,w:240,h:34,label:'Requisitos de servicio',k:'cloud',info:'Incluye tolerancia a fallos (reinicio puntual, traslado de trabajos, replanificación de tareas) y calidad de servicio QoS (rendimiento, consumo energético y fiabilidad).'},
+   {id:'p3',x:560,y:265,w:240,h:34,label:'Seguridad y privacidad',k:'cloud',info:'Los datos del borde pueden ser personales o sensibles. Red, usuario y datos deben ser seguros. Fog es descentralizado, lo que ayuda a manipular datos sin centralizarlos.'},
+   {id:'p4',x:560,y:305,w:240,h:34,label:'Multi-tenencia',k:'cloud',info:'Varios inquilinos comparten un nodo fog cuando los recursos escasean. Como los nodos no son dedicados, se usa multi-tenencia basada en contenedores o virtualización.'},
+   {id:'p5',x:560,y:345,w:240,h:34,label:'Gestión',k:'cloud',info:'Los dispositivos son de formas y tipos diferentes y la red es descentralizada; el fog necesita autogestión para funcionar sin fricción.'},
+   {id:'a1',x:560,y:405,w:240,h:34,label:'Requisitos de la aplicación',k:'user',info:'Heterogeneidad (dispositivos de entrada/salida, de cómputo y nodos de borde, a veces todo en un router inteligente), escalabilidad e interacción oportuna con movilidad (ciclo percepción-acción, PA).'},
+   {id:'a2',x:560,y:450,w:240,h:34,label:'Requisitos del usuario',k:'user',info:'Dinámicos y limitados por entorno y ubicación. Una tarea puede estar limitada por coste y puntualidad; la red optimiza sus recursos según capacidades y comportamiento del usuario.'},
+   {id:'a3',x:560,y:495,w:240,h:34,label:'Modelado',k:'user',info:'Dos enfoques según el dato: modelos basados en flujos (streams, para manipular en tiempo real) o microservicios para abstraer funciones y librerías.'}
+  ];
+  const edges=[['r','in'],['r','pl'],['r','ap'],['in','i1'],['in','i2'],['in','i3'],['pl','p1'],['pl','p2'],['pl','p3'],['pl','p4'],['pl','p5'],['ap','a1'],['ap','a2'],['ap','a3']];
+  Graph($('#taxo'),{w:760,h:530,nodes,edges,edgeStyle:'lr',noArrow:true,label:'Taxonomía del fog',hint:'👆 Haz clic en una caja para leer su explicación.'});
+})();
+
+/* ================= CAP 1.5 ARQUITECTURAS ================= */
+(function(){
+  const G={};
+  G.cvp={t:'Plataforma de visita de nube (CVP)',w:760,h:440,nodes:[
+   {id:'phys',x:420,y:210,w:620,h:380,label:'Dispositivo físico (nodo fog)',k:'group'},
+   {id:'vm1',x:270,y:115,w:250,h:150,label:'Máquina virtual 1',k:'group'},
+   {id:'vm2',x:545,y:115,w:220,h:150,label:'Máquina virtual 2',k:'group'},
+   {id:'a1',x:270,y:85,w:170,h:28,label:'App A (contenedor)',k:'user',info:'Aplicaciones aisladas en contenedores o VMs: así varios inquilinos comparten el mismo dispositivo físico (multi-tenencia).'},
+   {id:'a2',x:270,y:125,w:170,h:28,label:'App B (contenedor)',k:'user',info:'Otra aplicación de otro inquilino en el mismo nodo.'},
+   {id:'a3',x:545,y:105,w:170,h:28,label:'App C',k:'user',info:'Una aplicación dentro de la VM 2.'},
+   {id:'api1',x:270,y:215,w:74,h:26,label:'API',k:'fog',info:'Las APIs permiten acceder a las capacidades del hardware de forma genérica.'},
+   {id:'api2',x:545,y:215,w:74,h:26,label:'API',k:'fog',info:'Cada VM habla con la plataforma mediante APIs.'},
+   {id:'cvp',x:410,y:272,w:460,h:40,label:'CVP · Plataforma de visita de nube',k:'cloud',info:'El CVP (Zhanikeev, 2015) conoce el hardware local presente en VMs y contenedores y lo descompone en APIs e interfaces. Facilita la federación nube–fog.'},
+   {id:'if',x:410,y:326,w:300,h:34,label:'Interfaces (acceso genérico al hardware)',k:'cloud',info:'Dan acceso a los distintos interesados y al hardware de forma uniforme: así se absorbe la heterogeneidad.'},
+   {id:'st',x:235,y:376,w:130,h:30,label:'Almacenamiento',k:'thing',info:'Recurso local.'},
+   {id:'se',x:410,y:376,w:130,h:30,label:'Sensores',k:'thing',info:'Recurso local.'},
+   {id:'bd',x:585,y:376,w:130,h:30,label:'Big data',k:'thing',info:'Recurso local.'},
+   {id:'tn',x:52,y:85,w:88,h:40,label:'Múltiples\ninquilinos',k:'thing',info:'Multi-tenencia: varias aplicaciones de distintos clientes en un mismo nodo.'}
+  ],edges:[['tn','a1',{dash:1}],['a1','api1'],['a2','api1'],['a3','api2'],['api1','cvp'],['api2','cvp'],['cvp','if'],['if','st'],['if','se'],['if','bd']],
+  steps:[{on:['a1','a2','a3','vm1','vm2','tn'],edges:['tn>a1'],t:'Varios inquilinos ejecutan sus aplicaciones en contenedores/VMs dentro del mismo dispositivo físico.'},
+   {on:['a1','a2','api1','a3','api2'],edges:['a1>api1','a2>api1','a3>api2'],t:'Cada aplicación llama a las APIs en lugar de tocar el hardware directamente.'},
+   {on:['api1','api2','cvp'],edges:['api1>cvp','api2>cvp'],t:'El CVP recibe las peticiones: conoce el hardware local y lo abstrae.'},
+   {on:['cvp','if'],edges:['cvp>if'],t:'Las interfaces ofrecen un acceso genérico al hardware, así la heterogeneidad no complica a las apps.'},
+   {on:['if','st','se','bd'],edges:['if>st','if>se','if>bd'],t:'Finalmente se usan los recursos locales: almacenamiento, sensores y big data.'}]};
+  G.bus={t:'Fog en autobuses (offloading)',w:760,h:440,nodes:[
+   {id:'us',x:80,y:220,w:120,h:56,label:'📱 Usuarios\nmóviles',k:'thing',info:'Reciben servicio a través de puntos de acceso.'},
+   {id:'ap1',x:290,y:130,w:130,h:40,label:'Punto de acceso 1',k:'fog',info:'Conecta a los móviles con el cloudlet de carretera.'},
+   {id:'ap2',x:290,y:310,w:130,h:40,label:'Punto de acceso 2',k:'fog',info:'También permite delegar servicio a los autobuses.'},
+   {id:'roadside',x:545,y:190,w:230,h:170,label:'Cloudlet de carretera',k:'group'},
+   {id:'ls',x:545,y:175,w:170,h:40,label:'Servidor local',k:'cloud',info:'Capacidad limitada: si hay demasiados usuarios se sobrecarga.'},
+   {id:'lbs',x:545,y:245,w:170,h:40,label:'Proveedor LBS',k:'cloud',info:'Servicios basados en ubicación.'},
+   {id:'b1',x:400,y:400,w:130,h:40,label:'🚌 Bus fog 1',k:'fog',info:'Servidor virtualizado a bordo que actúa casi como un cloudlet móvil.'},
+   {id:'b2',x:620,y:400,w:130,h:40,label:'🚌 Bus fog 2',k:'fog',info:'Otro servidor virtualizado sobre ruedas.'}
+  ],edges:[['us','ap1'],['us','ap2'],['ap1','ls'],['ap2','ls'],['ls','lbs'],['ap2','b1',{dash:1,label:'offloading'}],['ap2','b2',{dash:1}]],
+  steps:[{on:['us','ap1','ap2'],edges:['us>ap1','us>ap2'],t:'Los usuarios móviles piden servicio mediante los puntos de acceso.'},
+   {on:['ap1','ap2','ls','lbs'],edges:['ap1>ls','ap2>ls','ls>lbs'],t:'Normalmente los atiende el servidor local del cloudlet de carretera (y el proveedor LBS).'},
+   {on:['ap2','b1','b2'],edges:['ap2>b1','ap2>b2'],t:'Si el servidor local no da abasto, parte del servicio se delega («offloading») a los servidores fog de los autobuses. Prueba abajo cuántos usuarios hacen falta.'}]};
+  G.health={t:'Salud orientada a servicios (Fig. 1.5)',w:760,h:430,nodes:[
+   {id:'dr',x:150,y:40,w:150,h:44,label:'👩‍⚕️ Médico (tablet)',k:'user',info:'Accede a los datos desde un dispositivo de usuario.'},
+   {id:'fa',x:380,y:40,w:150,h:44,label:'👪 Familia / cuidador',k:'user',info:'También puede consultar el estado del paciente.'},
+   {id:'tv',x:610,y:40,w:150,h:44,label:'📺 Pantalla del usuario',k:'user',info:'Interfaz de visualización.'},
+   {id:'cloud',x:380,y:155,w:380,h:140,label:'Nube',k:'group'},
+   {id:'saas',x:380,y:130,w:300,h:30,label:'SaaS para salud',k:'cloud',info:'Software de salud entregado como servicio.'},
+   {id:'paas',x:380,y:165,w:300,h:30,label:'PaaS · servidor virtualizado',k:'cloud',info:'Plataforma virtualizada.'},
+   {id:'iaas',x:380,y:200,w:300,h:30,label:'IaaS · hardware del servidor',k:'cloud',info:'Infraestructura.'},
+   {id:'gw',x:380,y:285,w:240,h:40,label:'Router / Gateway (fog)',k:'fog',info:'Intermedio entre sensores y nube: preprocesa y envía. Cada aspecto del modelo dispara una respuesta que alimenta el siguiente nivel.'},
+   {id:'s1',x:90,y:380,w:150,h:48,label:'👵 Anciano 1\n(cámara)',k:'thing',info:'Sensores de signos vitales.'},
+   {id:'s2',x:270,y:380,w:150,h:48,label:'👴 Anciano 2\n(ECG / lab)',k:'thing',info:'Sensores de signos vitales.'},
+   {id:'s3',x:480,y:380,w:150,h:48,label:'👵 Anciano 3\n(pulso, WiFi)',k:'thing',info:'Conectado por WiFi.'},
+   {id:'s4',x:670,y:380,w:150,h:48,label:'👴 Anciano 4\n(Bluetooth)',k:'thing',info:'Conectado por Bluetooth.'}
+  ],edges:[['s1','gw'],['s2','gw'],['s3','gw'],['s4','gw'],['gw','iaas'],['iaas','paas'],['paas','saas'],['saas','dr'],['saas','fa'],['saas','tv']],
+  steps:[{on:['s1','s2','s3','s4'],edges:[],t:'Sensores y dispositivos capturan los signos vitales de cada persona mayor.'},
+   {on:['s1','s2','s3','s4','gw'],edges:['s1>gw','s2>gw','s3>gw','s4>gw'],t:'Envían por WiFi/Bluetooth al gateway (fog), que puede detectar cambios mínimos y reaccionar.'},
+   {on:['gw','iaas'],edges:['gw>iaas'],t:'El gateway reenvía a la nube solo lo necesario.'},
+   {on:['iaas','paas','saas'],edges:['iaas>paas','paas>saas'],t:'La nube procesa y analiza en sus capas IaaS → PaaS → SaaS.'},
+   {on:['saas','dr','fa','tv'],edges:['saas>dr','saas>fa','saas>tv'],t:'Médico y familia consultan resultados desde sus dispositivos.'}]};
+  G.ewall={t:'eWALL (Fig. 1.7)',w:760,h:430,nodes:[
+   {id:'home',x:150,y:225,w:250,h:330,label:'Hogar (entorno)',k:'group'},
+   {id:'pt',x:150,y:150,w:150,h:50,label:'🧓 Paciente\n(EPOC / demencia leve)',k:'thing',info:'Estudio con pacientes de EPOC (COPD) y personas con demencia leve en Rumania (Fratu et al.).'},
+   {id:'ew',x:150,y:270,w:190,h:70,label:'eWall\ninterfaz adaptable\n+ gestión de movilidad',k:'fog',info:'La «pared» es la interfaz directa entre paciente y sus constantes vitales. Sensores y actuadores dan conciencia de contexto y ubicación. Procesamiento intermedio en el fog.'},
+   {id:'cloud',x:525,y:145,w:340,h:200,label:'Nube eWall',k:'group'},
+   {id:'mon',x:450,y:110,w:130,h:30,label:'Monitoreo',k:'cloud',info:'Seguimiento continuo.'},
+   {id:'pro',x:600,y:110,w:130,h:30,label:'Perfilado',k:'cloud',info:'Perfil del usuario.'},
+   {id:'ale',x:450,y:150,w:130,h:30,label:'Alertas',k:'cloud',info:'Avisos ante situaciones anormales.'},
+   {id:'sla',x:600,y:150,w:130,h:30,label:'SLA',k:'cloud',info:'Acuerdos de nivel de servicio.'},
+   {id:'svc',x:525,y:215,w:310,h:44,label:'Servicios: epSOS · seguridad en casa\ne-health · gestión del estilo de vida',k:'cloud',info:'Servicios de la plataforma ambiente de vida asistida (AAL).'},
+   {id:'g1',x:420,y:320,w:110,h:30,label:'Gateway',k:'fog',info:'Puerta de enlace hacia la familia.'},
+   {id:'g2',x:640,y:320,w:110,h:30,label:'Gateway',k:'fog',info:'Puerta de enlace hacia el hospital.'},
+   {id:'fam',x:420,y:395,w:130,h:44,label:'👪 Familia',k:'user',info:'Recibe información relevante.'},
+   {id:'hos',x:640,y:395,w:140,h:44,label:'🏥 Hospital\npersonal médico',k:'user',info:'Médico y paciente siempre sincronizados: los datos están en la nube.'}
+  ],edges:[['pt','ew'],['ew','mon'],['ew','svc'],['svc','g1'],['svc','g2'],['g1','fam'],['g2','hos']],
+  steps:[{on:['pt','ew','home'],edges:['pt>ew'],t:'El paciente interactúa con la «pared» eWall en su hogar: interfaz adaptable con sensores del entorno.'},
+   {on:['ew'],edges:[],t:'El procesamiento intermedio en el fog aporta conciencia de contexto y ubicación del paciente.'},
+   {on:['ew','mon','svc'],edges:['ew>mon','ew>svc'],t:'Los datos suben a la nube eWall: monitoreo, perfilado, alertas y SLA.'},
+   {on:['svc','g1','g2'],edges:['svc>g1','svc>g2'],t:'Los servicios se exponen mediante gateways hacia familia y hospital.'},
+   {on:['g1','g2','fam','hos'],edges:['g1>fam','g2>hos'],t:'Médico y paciente quedan siempre sincronizados: ambient assisted living (AAL).'}]};
+  G.fit={t:'FIT: habla en Parkinson (Fig. 1.8)',w:760,h:300,nodes:[
+   {id:'home',x:260,y:150,w:470,h:240,label:'Hogar de teleasistencia',k:'group'},
+   {id:'wb',x:110,y:150,w:150,h:70,label:'⌚ Dispositivo\nwearable\n(habla del paciente)',k:'thing',info:'Un smartwatch registra el habla de pacientes con Parkinson: agudeza, volumen y tono (Monteiro et al.).'},
+   {id:'fg',x:330,y:150,w:210,h:90,label:'Fog en casa (FIT)\nalta fidelidad · bajo consumo\ncontrol de servicio',k:'fog',info:'Procesa remotamente los datos clínicos del habla cerca del paciente, con bajo consumo energético.'},
+   {id:'cl',x:620,y:110,w:200,h:70,label:'☁ Nube\nalmacenamiento + cómputo',k:'cloud',info:'Guarda y calcula; comparte con el médico.'},
+   {id:'md',x:620,y:225,w:200,h:50,label:'👩‍⚕️ Médico',k:'user',info:'Recibe los datos para dar consejo médico.'}
+  ],edges:[['wb','fg'],['fg','cl'],['cl','md']],
+  steps:[{on:['wb'],edges:[],t:'El smartwatch captura el habla (agudeza, volumen, tono).'},{on:['wb','fg'],edges:['wb>fg'],t:'El fog en casa procesa con alta fidelidad y bajo consumo.'},{on:['fg','cl'],edges:['fg>cl'],t:'Solo los resultados relevantes suben a la nube para almacenar y calcular.'},{on:['cl','md'],edges:['cl>md'],t:'El médico accede a los datos y da consejo.'}]};
+  G.agri={t:'Agricultura inteligente',w:760,h:430,nodes:[
+   {id:'soil',x:100,y:340,w:160,h:50,label:'🌱 Sensor de humedad\ndel suelo',k:'thing',info:'Pequeño, unidireccional, de muy bajo consumo.'},
+   {id:'drone',x:100,y:200,w:160,h:50,label:'🚁 Drones y\nmóviles agrícolas',k:'thing',info:'Dispositivos aéreos y móviles inteligentes que reportan vía fog (Malik et al.).'},
+   {id:'fog',x:360,y:270,w:210,h:80,label:'🌫 Gateway fog\nde la granja\nregla: humedad < umbral → regar',k:'fog',info:'Preprocesa y detecta valores atípicos. En el caso del café (Montoya-Muñoz) el fog preprocesa y la nube interpola los datos atípicos.'},
+   {id:'act',x:360,y:395,w:190,h:44,label:'🚿 Actuador (válvula)',k:'thing',info:'Activa o desactiva el riego en el acto, sin esperar a la nube.'},
+   {id:'cloud',x:630,y:230,w:200,h:80,label:'☁ Nube\nanálisis · predicción\nde cosecha · ML',k:'cloud',info:'Análisis global y modelos que no necesitan respuesta inmediata.'},
+   {id:'farm',x:630,y:80,w:200,h:50,label:'👨‍🌾 Agricultor\n(panel)',k:'user',info:'Consulta resultados y tendencias.'}
+  ],edges:[['soil','fog'],['drone','fog'],['fog','act'],['fog','cloud'],['cloud','farm']],
+  steps:[{on:['soil','drone'],edges:[],t:'Sensores en el suelo y drones recogen humedad y estado de los cultivos.'},{on:['soil','drone','fog'],edges:['soil>fog','drone>fog'],t:'Todo llega al gateway fog de la granja.'},{on:['fog','act'],edges:['fog>act'],t:'Decisión local e inmediata: si la humedad baja del umbral, se activa el riego. Sin viaje a la nube.'},{on:['fog','cloud'],edges:['fog>cloud'],t:'Solo un resumen limpio sube a la nube (menos datos, menos coste).'},{on:['cloud','farm'],edges:['cloud>farm'],t:'La nube analiza tendencias, predice cosecha y alimenta el panel del agricultor.'}]};
+  const keys=['cvp','bus','health','ewall','fit','agri'];
+  const seg=$('#archSeg'),box=$('#archBox');
+  seg.innerHTML=keys.map(k=>`<button data-k="${k}">${G[k].t.replace(/ \(Fig.*\)/,'')}</button>`).join('');
+  function show(k){$$('#archSeg button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));const g=G[k];Graph(box,{w:g.w,h:g.h,nodes:g.nodes,edges:g.edges,steps:g.steps,label:g.t,hint:'Pulsa «Siguiente ▶» o haz clic en un componente.'});$('#busSim').style.display=k==='bus'?'block':'none'}
+  seg.onclick=e=>{const b=e.target.closest('button');if(b)show(b.dataset.k)};
+  show('cvp');
+  // bus sim
+  const bs=$('#busSim');
+  bs.innerHTML=`<b>🧪 Simulación de offloading</b> — el servidor local aguanta 40 usuarios; cada bus fog, 25.
+   <div class="ctrls"><label>Usuarios móviles activos: <b id="bUV">30</b><input type="range" id="bU" min="0" max="100" value="30"></label></div>
+   <div id="bBars"></div><div class="note" id="bNote"></div>`;
+  function bupd(){const u=+$('#bU').value;$('#bUV').textContent=u;const l=Math.min(u,40),r=u-l,b1=Math.min(r,25),b2=Math.min(r-b1,25),lost=r-b1-b2;
+   const bar=(n,v,c,cap,col)=>`<div class="meter"><span>${n}</span><div class="bar"><i style="width:${v/cap*100}%;background:${col}"></i></div><b>${v}/${cap}</b></div>`;
+   $('#bBars').innerHTML=bar('Servidor local',l,0,40,BLUE)+bar('🚌 Bus fog 1',b1,0,25,TEAL)+bar('🚌 Bus fog 2',b2,0,25,TEAL);
+   $('#bNote').innerHTML=u<=40?'Todo cabe en el servidor local: no hace falta delegar.':lost>0?`⚠ Incluso con los buses faltan recursos para <b>${lost}</b> usuarios: un fog sin recursos suficientes se satura.`:`El servidor local se llena y delega <b>${r}</b> usuarios a los autobuses. Mejor uso de recursos sin construir más infraestructura fija.`}
+  $('#bU').oninput=bupd;bupd();
+})();
+
+/* ================= CAP 1.6 RETOS ================= */
+function flipCards(el,arr){el.innerHTML=arr.map(c=>`<div class="flip"><div class="in"><div class="fa">${c[0]}<small>clic para ver más</small></div><div class="fb">${c[1]}</div></div></div>`).join('');$$('.flip',el).forEach(f=>f.onclick=()=>f.classList.toggle('f'))}
+flipCards($('#challenges1'),[
+ ['🔐 Privacidad','Fog está más cerca del borde y puede guardar más datos personales; muchos fabricantes de IoT relegan la privacidad para ahorrar recursos. Innovaciones como el protocolo HAN la hacen más accesible.'],
+ ['🛡 Seguridad','Red heterogénea: autenticar y verificar en cada gateway es costoso. Una opción propuesta (Yi et al.) es un sistema de detección de intrusiones.'],
+ ['🧩 Gestión','Al ser descentralizado hace falta un sistema global: monitorear energía (cada nodo es multi-inquilino), gestionar la red con muchos dispositivos y controlar los retardos.'],
+ ['⏱ Retardo y energía','Gestionar demoras y capacidad de respuesta es crucial: todo el fog existe para recortar la latencia de ir a la nube. La energía por nodo es otro cuello de botella.']
+]);
+
+/* ================= CAP 2.1 DONDE ================= */
+(function(){
+  const P={dev:{n:'Dispositivo (extremo)',v:{'Rapidez de respuesta':95,'Potencia de cómputo':12,'Capacidad de almacenamiento':10,'Visión global de los datos':8,'Tráfico enviado a la nube (menor es mejor)':0},t:'Responde al instante pero sabe poco y calcula poco: un sensor no puede entrenar un modelo.'},
+   fog:{n:'Nodo fog (intermedio)',v:{'Rapidez de respuesta':80,'Potencia de cómputo':50,'Capacidad de almacenamiento':45,'Visión global de los datos':45,'Tráfico enviado a la nube (menor es mejor)':25},t:'Equilibrio: decide rápido, filtra y agrega, y solo manda a la nube lo importante.'},
+   cloud:{n:'Nube',v:{'Rapidez de respuesta':25,'Potencia de cómputo':98,'Capacidad de almacenamiento':98,'Visión global de los datos':98,'Tráfico enviado a la nube (menor es mejor)':100},t:'Potencia y visión global enormes, pero lejos y con todo el tráfico viajando hasta ella.'}};
+  $('#whereSeg').innerHTML=Object.keys(P).map(k=>`<button data-k="${k}">${P[k].n}</button>`).join('');
+  const box=$('#where');
+  function show(k){$$('#whereSeg button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));const d=P[k];
+    const pos={dev:60,fog:190,cloud:320}[k];
+    let s=`<svg viewBox="0 0 380 110" class="gsvg"><line x1="40" y1="55" x2="340" y2="55" stroke="#c4cddf" stroke-width="4"/>`;
+    [['dev',60,'📡',ORG],['fog',190,'🌫',TEAL],['cloud',320,'☁',BLUE]].forEach(a=>s+=`<circle cx="${a[1]}" cy="55" r="${a[0]===k?26:18}" fill="${a[0]===k?a[3]:'#fff'}" stroke="${a[3]}" stroke-width="3"/><text x="${a[1]}" y="${a[0]===k?64:62}" text-anchor="middle" font-size="${a[0]===k?24:17}">${a[2]}</text>`);
+    s+=`<text x="60" y="102" class="svgs" text-anchor="middle">cerca del dato</text><text x="320" y="102" class="svgs" text-anchor="middle">lejos del dato</text></svg>`;
+    s+=Object.entries(d.v).map(([n,v])=>{const bad=n.startsWith('Tráfico');const col=bad?(v>60?RED:v>30?ORG:TEAL):(v>66?TEAL:v>33?ORG:RED);return `<div class="meter"><span>${n}</span><div class="bar"><i style="width:${v}%;background:${col}"></i></div><b>${v}</b></div>`}).join('');
+    s+=`<div class="note">${d.t}</div>`;box.innerHTML=s}
+  $('#whereSeg').onclick=e=>{const b=e.target.closest('button');if(b)show(b.dataset.k)};show('fog');
+})();
+
+/* ================= CAP 2.2 TIMELINE ================= */
+(function(){
+  const E=[['1990','CDN','Akamai lanza el primer servicio cloud de red de entrega de contenido (CDN): aquí empieza la computación descentralizada.'],
+   ['1997','Movilidad','Noble et al. muestran con «adaptación ágil orientada a la movilidad» que dispositivos móviles pueden descargar carga hacia servidores (sustitutos).'],
+   ['2001','Persuasiva','Satyanarayanan et al. publican «Persuasive computing». Surgen redes superpuestas peer-to-peer (DHT) que auto-organizan enrutamiento y balanceo.'],
+   ['2006','EC2','Amazon lanza «Elastic Compute Cloud»: se abre un mundo de libertad en cálculo, percepción y capacidad.'],
+   ['2009','Cloudlet','Satyanarayanan et al. introducen el término <b>cloudlet</b>: nivel 1 = nube (alta latencia), nivel 2 = cloudlets (baja latencia), y un nivel descentralizado y distribuido.'],
+   ['2011–12','Fog (Cisco)','Se presenta el fog computing (el cap. 1 dice 2011, el cap. 2 dice 2012 por Cisco) para dar soporte a IoT: enormes volúmenes de datos con baja latencia. Idea atribuida a Salvatore Stolfo.'],
+   ['2014','Visión Cisco','En enero de 2014 Cisco presenta su visión de fog para llevar la magnitud de la nube al borde.'],
+   ['2015','OpenFog','Princeton, junto con la industria, forma el <b>OpenFog Consortium</b> (Edge Lab, Mung Chiang).'],
+   ['Hoy','Mezcla','Nube y edge conviven; las organizaciones combinan nube con procesamiento en el borde para sus sistemas IoT integrados.']];
+  const tl=$('#tl'),d=$('#tld');
+  tl.innerHTML=E.map((e,i)=>`<div class="ev" data-i="${i}"><i></i><b>${e[0]}</b><span>${e[1]}</span></div>`).join('');
+  const sel=i=>{$$('.ev',tl).forEach(x=>x.classList.toggle('on',+x.dataset.i===i));d.innerHTML=`<b>${E[i][0]} · ${E[i][1]}</b><br>${E[i][2]}`};
+  tl.onclick=e=>{const x=e.target.closest('.ev');if(x)sel(+x.dataset.i)};sel(0);
+})();
+
+/* ================= CAP 2.3 GARTNER ================= */
+(function(){
+  const s=`<line x1="40" y1="170" x2="360" y2="170" stroke="#98a3b8"/>
+  <rect x="80" y="${170-10*1.4}" width="80" height="${10*1.4}" fill="${BLUE}" rx="6"/><text x="120" y="${170-10*1.4-6}" text-anchor="middle" class="svgt" font-weight="700">~10 %</text><text x="120" y="188" text-anchor="middle" class="svgs">antes</text>
+  <rect x="240" y="${170-75*1.4}" width="80" height="${75*1.4}" fill="${TEAL}" rx="6"/><text x="280" y="${170-75*1.4-6}" text-anchor="middle" class="svgt" font-weight="700">75 %</text><text x="280" y="188" text-anchor="middle" class="svgs">proyección 2022</text>
+  <text x="190" y="22" text-anchor="middle" class="svgs">datos empresariales creados y procesados fuera del centro de datos/nube</text>`;
+  $('#gartner').innerHTML=s;
+})();
+
+/* ================= CAP 2.4 razones ================= */
+flipCards($('#reasons'),[
+ ['⏱ 1. Latencia','Una respuesta sub-segundo es imposible si hay que esperar a la nube. Un sistema de seguridad de maquinaria debe parar al instante si hay una persona cerca; AR y vehículos autónomos necesitan <b>&lt; 20 ms</b>.'],
+ ['💰 2. Coste','Un sensor que reporta 20 °C cada segundo no interesa hasta que marca 40 °C. El fog filtra antes de subir: baja el coste de transmisión, almacenamiento y gestión de datos irrelevantes.'],
+ ['🧠 3. Cómputo','Enviar análisis o modelos de IA al borde permite hacerlos sobre colecciones de datos más pequeñas; el fog procesa de forma más eficiente este tipo de datos.'],
+ ['🔌 4. Autonomía','Muchos dispositivos deben ser autosuficientes (seguridad, calidad, experiencia de usuario) aunque no estén conectados a la organización: el fog da cómputo local.'],
+ ['🔒 5. Seguridad','Menos sensores/actuadores expuestos a la web → menor superficie de ataque. Separar y procesar localmente reduce los datos sensibles que viajan.']
+]);
+
+/* robot */
+(function(){
+  const root=$('#robot');
+  root.innerHTML=`<div class="ctrls"><label>Latencia hasta la nube: <b id="roCV">120</b> ms<input type="range" id="roC" min="40" max="200" value="120"></label><label>Latencia con fog: <b id="roFV">10</b> ms<input type="range" id="roF" min="2" max="40" value="10"></label><label>Margen de seguridad: <b id="roDV">15</b> cm<input type="range" id="roD" min="5" max="60" value="15"></label></div>
+  <div class="predict"><b>🎯 Predice:</b> ¿quién evita el choque? <label><input type="radio" name="rop" value="fog"> solo el fog</label><label><input type="radio" name="rop" value="cloud"> solo la nube</label><label><input type="radio" name="rop" value="both"> ambos</label><label><input type="radio" name="rop" value="none"> ninguno</label></div>
+  <svg id="roSvg" viewBox="0 0 760 210" class="gsvg"></svg><div class="btns"><button class="btn fog" id="roGo">▶ Detectar persona y frenar</button></div><div class="out" id="roOut"></div>`;
+  const XD=250,PX=6;// px por cm
+  const speed=0.2;// cm/ms (2 m/s)
+  const v=()=>({c:+$('#roC').value,f:+$('#roF').value,d:+$('#roD').value});
+  function draw(t,state){const p=v();let s=`<text x="14" y="20" class="svgs">Cada pista: el brazo avanza a 2 m/s (cámara lenta ×10). La persona está a ${p.d} cm del punto de detección.</text>`;
+    [['☁ Decisión en la nube',60,p.c,BLUE],['🌫 Decisión en el fog',140,p.f,TEAL]].forEach((r,i)=>{
+      const lat=r[2],stopped=Math.min(t,lat),x=XD+stopped*speed*PX,hx=XD+p.d*PX;const hit=(lat*speed>p.d);
+      s+=`<text x="14" y="${r[1]-18}" class="svgt" font-weight="700">${r[0]}</text><line x1="60" y1="${r[1]}" x2="740" y2="${r[1]}" stroke="#e3e8f2" stroke-width="18" stroke-linecap="round"/>
+      <line x1="${XD}" y1="${r[1]-18}" x2="${XD}" y2="${r[1]+18}" stroke="#98a3b8" stroke-dasharray="3 3"/>
+      <text x="${hx}" y="${r[1]+6}" text-anchor="middle" font-size="24">🧍</text>
+      <rect x="${x-60}" y="${r[1]-10}" width="60" height="20" rx="6" fill="${r[3]}"/><text x="${x-30}" y="${r[1]+4}" text-anchor="middle" font-size="11" fill="#fff">brazo</text>`;
+      if(t>=lat){s+=`<text x="${x+8}" y="${r[1]+5}" font-size="13" fill="${hit?RED:'#2a9455'}" font-weight="700">${hit?'💥 CHOQUE · avanzó '+(lat*speed).toFixed(0)+' cm':'✓ paró tras '+(lat*speed).toFixed(0)+' cm'}</text>`}
+      else if(t>0)s+=`<text x="${x+8}" y="${r[1]-14}" class="svgs">decidiendo… ${t.toFixed(0)} ms</text>`;
+    });$('#roSvg').innerHTML=s}
+  ['roC','roF','roD'].forEach(i=>$('#'+i).oninput=()=>{$('#'+i+'V').textContent=$('#'+i).value;draw(0)});
+  let raf;$('#roGo').onclick=()=>{cancelAnimationFrame(raf);const p=v(),pred=($('input[name=rop]:checked')||{}).value,t0=performance.now(),mx=Math.max(p.c,p.f)+20;$('#roOut').innerHTML='';
+    (function f(now){const t=(now-t0)/10;draw(Math.min(t,mx));if(t<mx)raf=requestAnimationFrame(f);else{const cH=p.c*speed>p.d,fH=p.f*speed>p.d;const truth=!cH&&!fH?'both':!cH?'cloud':!fH?'fog':'none';
+      $('#roOut').innerHTML=(pred?(pred===truth?'✅ <b>¡Acertaste!</b> ':'❌ <b>Resultado distinto.</b> '):'')+`Distancia recorrida hasta parar: nube ${(p.c*speed).toFixed(0)} cm · fog ${(p.f*speed).toFixed(0)} cm. Margen: ${p.d} cm. <b>${truth==='fog'?'Solo el fog evita el choque.':truth==='both'?'Con ese margen ambos frenan a tiempo: reduce el margen y prueba.':truth==='cloud'?'Solo la nube (¿latencia del fog muy alta?).':'Ninguno logra frenar a tiempo.'}</b>`}})(t0)};
+  draw(0);
+})();
+
+/* filtro + autonomía */
+(function(){
+  const root=$('#filter');
+  root.innerHTML=`<canvas class="cv short" id="flCv"></canvas>
+  <div class="ctrls"><label>Umbral de interés: <b id="flTV">40</b> °C<input type="range" id="flT" min="25" max="44" value="40"></label><button class="btn" id="flFire">🔥 Provocar incendio</button><label class="inl"><input type="checkbox" id="flNet" checked> 🌐 Internet disponible</label><button class="btn ghost" id="flReset">↺</button></div>
+  <div class="twocol"><div class="stat"><b id="flA">0</b><span>☁ <u>Sin fog</u>: lecturas enviadas a la nube · alarmas recibidas: <b id="flAA">0</b></span></div><div class="stat"><b id="flB">0</b><span>🌫 <u>Con fog</u>: enviadas · alarmas locales: <b id="flBA">0</b></span></div></div><div class="note" id="flNote"></div>`;
+  const cv=$('#flCv'),P=Plot(cv,{xmin:0,xmax:60,ymin:15,ymax:50,sx:10,sy:5,xl:'últimos 60 s',yl:'°C',pad:34});
+  let data=[],T=20,fire=0,S={a:0,b:0,aa:0,ba:0,tot:0},ev=0;
+  function tick(){if(!$('#t-cap2').classList.contains('on'))return;const thr=+$('#flT').value;
+    if(fire>0){T+=(46-T)*.45;fire--}else T+=(20-T)*.2+(Math.random()-.5)*.5;
+    data.push(T);if(data.length>60)data.shift();S.tot++;const net=$('#flNet').checked,hot=T>thr;
+    if(net)S.a++;if(net&&hot)S.aa++;
+    if(hot||S.tot%20===0)S.b++;if(hot)S.ba++;
+    const ex=hot?(net?'🔥 Temperatura sobre el umbral: <b>ambos</b> disparan alarma, pero el fog envía '+S.b+' mensajes y la nube-sola '+S.a+'.':'🔥 <b>Sin Internet</b>: el fog <b>sí</b> disparó la alarma local; sin fog nadie se enteró.'):'';
+    $('#flNote').innerHTML=ex||(net?'Todo normal. Mira cómo el contador «sin fog» sube cada segundo y el «con fog» casi no se mueve.':'Internet caído: sin fog no sale ningún dato. Pulsa 🔥 y compara las alarmas.');
+    $('#flA').textContent=S.a;$('#flB').textContent=S.b;$('#flAA').textContent=S.aa;$('#flBA').textContent=S.ba;draw()}
+  function draw(){if(!P.fit())return;const thr=+$('#flT').value;P.clear();P.axes();P.line(0,thr,60,thr,RED,1.5,[6,4]);
+    P.ctx.fillStyle=RED;P.ctx.font='11px system-ui';P.ctx.fillText('umbral '+thr+' °C',P.X(1),P.Y(thr)-4);
+    P.ctx.beginPath();data.forEach((v,i)=>{const x=P.X(60-data.length+i),y=P.Y(v);i?P.ctx.lineTo(x,y):P.ctx.moveTo(x,y)});P.ctx.strokeStyle=ORG;P.ctx.lineWidth=2;P.ctx.stroke();
+    data.forEach((v,i)=>{if(v>thr)P.dot(60-data.length+i,v,RED,3.5)})}
+  $('#flT').oninput=()=>{$('#flTV').textContent=$('#flT').value;draw()};
+  $('#flFire').onclick=()=>fire=7;
+  $('#flReset').onclick=()=>{data=[];T=20;fire=0;S={a:0,b:0,aa:0,ba:0,tot:0};draw()};
+  window.addEventListener('resize',draw);setInterval(tick,600);
+})();
+
+/* ================= CAP 2.5 JUEGO ================= */
+(function(){
+  const items=[
+   ['Frenar una máquina cuando un sensor detecta a una persona muy cerca','fog','Decisión de seguridad con latencia mínima: no puede esperar a la nube.'],
+   ['Entrenar un modelo con 3 años de datos de miles de fábricas','cloud','Requiere cómputo y almacenamiento masivos y no es urgente.'],
+   ['Descartar lecturas repetidas de «20 °C» antes de enviarlas','fog','Filtrar cerca del dato reduce coste y tráfico.'],
+   ['Videojuego de realidad aumentada que exige respuesta &lt; 20 ms','fog','Solo la proximidad cumple el presupuesto de latencia.'],
+   ['Archivo histórico para una auditoría anual','cloud','Almacenamiento masivo y barato, sin urgencia.'],
+   ['Mantener las alarmas de una planta aunque se caiga Internet','fog','Autonomía: el cómputo local no depende de la conexión.'],
+   ['Panel corporativo global con datos de todas las sedes','cloud','Necesita la visión global que solo la nube concentra.'],
+   ['Detectar tráfico sospechoso en un gateway de la red local','fog','Detección cerca del origen reduce exposición y tiempo de reacción.'],
+   ['Resumen diario agregado por el fog para analítica profunda en la nube','both','Colaboración: el fog agrega y filtra, la nube analiza en profundidad.'],
+   ['Procesar por lotes terabytes sin urgencia (informe mensual)','cloud','Trabajo por lotes y pesado: el cómputo de la nube es lo adecuado.']
+  ];
+  const root=$('#game');let sc=0,ans=0;
+  function build(){sc=0;ans=0;root.innerHTML=`<div class="stat" style="max-width:240px"><b id="gSc">0 / ${items.length}</b><span>aciertos</span></div>`+items.map((it,i)=>`<div class="task" data-i="${i}"><div class="tx">${i+1}. ${it[0]}</div><div class="ch"><button data-v="fog">🌫 Fog</button><button data-v="cloud">☁ Nube</button><button data-v="both">🤝 Ambos</button></div><div class="fb"></div></div>`).join('')+`<div class="btns"><button class="btn ghost" id="gReset">↺ Reintentar</button></div>`;
+    $$('.task',root).forEach(t=>t.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(t.classList.contains('done'))return;const it=items[+t.dataset.i],ok=b.dataset.v===it[1];b.classList.add(ok?'ok':'no');if(!ok)t.querySelector(`[data-v=${it[1]}]`).classList.add('ok');t.classList.add('done');t.querySelector('.fb').innerHTML=(ok?'✅ ':'❌ ')+it[2];ans++;if(ok)sc++;$('#gSc').textContent=sc+' / '+items.length}));
+    $('#gReset').onclick=build}
+  build();
+})();
+
+/* ================= CAP 2.6 ventajas ================= */
+flipCards($('#adv'),[
+ ['🛡 Mejor seguridad','Procesar localmente en vez de enviarlo todo a la nube expone menos datos y acorta la distancia cliente–servidor.'],
+ ['🔄 Nodos versátiles','Los nodos fog pueden unirse y salir de la red en cualquier momento.'],
+ ['🏭 Entornos duros','Pueden estar en vías, vehículos o plantas de fabricación y resistir condiciones naturales extremas.'],
+ ['⚡ Menos inactividad','Menos tiempo de ida y vuelta y menos ancho de banda: decisiones rápidas que evitan percances.'],
+ ['🎯 Datos selectivos','Se elige qué datos procesar regionalmente en vez de enviarlo todo a la nube.']
+]);
+
+/* ================= CAP 3 ================= */
+/* 3.1 IO */
+(function(){
+  const root=$('#io');
+  const cases=[['5 000 paquetes/s desde una sola IP','Anormal',1,'Coincide con la firma de un DDoS en el dataset etiquetado.'],['Tráfico habitual de un sensor cada 10 s','Normal',0,'Se parece a los patrones etiquetados como normales.'],['40 intentos de login fallidos en 1 minuto','Anormal',1,'Patrón típico de fuerza bruta.'],['Un termostato envía su lectura diaria','Normal',0,'Comportamiento esperado.']];
+  root.innerHTML=`<p><b>Elige una entrada (A)</b> y mira qué produce el sistema (B):</p><div class="btns">`+cases.map((c,i)=>`<button class="btn ghost" data-i="${i}">${c[0]}</button>`).join('')+`</div>
+  <svg viewBox="0 0 760 130" class="gsvg" id="ioSvg"><defs><marker id="ioa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#98a3b8"/></marker></defs>
+   <rect x="10" y="30" width="230" height="70" rx="10" fill="#fdebd0" stroke="${ORG}"/><text x="125" y="70" text-anchor="middle" class="svgt" id="ioA">ENTRADA A (patrón)</text>
+   <line x1="240" y1="65" x2="290" y2="65" stroke="#98a3b8" stroke-width="2" marker-end="url(#ioa)"/>
+   <rect x="290" y="20" width="180" height="90" rx="14" fill="#fff3c4" stroke="#c49000"/><text x="380" y="58" text-anchor="middle" class="svgt" font-weight="700">Sistema basado en ML</text><text x="380" y="78" text-anchor="middle" class="svgs">compara con el dataset</text><text x="380" y="92" text-anchor="middle" class="svgs">etiquetado</text>
+   <line x1="470" y1="65" x2="520" y2="65" stroke="#98a3b8" stroke-width="2" marker-end="url(#ioa)"/>
+   <rect x="520" y="30" width="230" height="70" rx="10" fill="#eef1f8" stroke="#a9b4ca" id="ioB"/><text x="635" y="70" text-anchor="middle" class="svgt" id="ioBt">SALIDA B (normal / anormal)</text></svg><div class="ginfo" id="ioN">Elige una entrada.</div>`;
+  $$('button',root).forEach(b=>b.onclick=()=>{const c=cases[+b.dataset.i];$('#ioA').textContent='A: '+c[0].slice(0,26)+(c[0].length>26?'…':'');$('#ioBt').textContent='B: '+c[1];$('#ioB').setAttribute('fill',c[2]?'#fde4e4':'#dcf2e5');$('#ioB').setAttribute('stroke',c[2]?RED:'#2a9455');$('#ioN').innerHTML=`<b>${c[0]}</b> → <b>${c[1]}</b>. ${c[3]}`});
+})();
+
+/* 3.2 mapa ML */
+(function(){
+  const nodes=[
+   {id:'ml',x:70,y:265,w:110,h:56,label:'Machine\nLearning',k:'ml',info:'Rama de la IA que permite a los sistemas aprender de los datos y mejorar su exactitud sin ser programados explícitamente.'},
+   {id:'su',x:230,y:130,w:140,h:50,label:'Aprendizaje\nsupervisado',k:'cloud',info:'Hay entradas (x) y salidas (y) conocidas; aprende y = f(x). Es el más usado en fog por su exactitud y rapidez.'},
+   {id:'un',x:230,y:320,w:140,h:50,label:'Aprendizaje\nno supervisado',k:'fog',info:'Solo hay datos de entrada, sin salidas. Encuentra estructura oculta por sí mismo (agrupa por similitud). Útil para fraude y anomalías.'},
+   {id:'rl',x:230,y:470,w:140,h:50,label:'Aprendizaje por\nrefuerzo',k:'thing',info:'Un agente aprende acciones en un entorno según recompensas. Usa Q-learning y Deep Q-network.'},
+   {id:'cl',x:410,y:85,w:130,h:36,label:'Clasificación',k:'cloud',info:'Salida categórica: diagnóstico, detección de fraude o identidad, reconocimiento de voz, ataque/normal.'},
+   {id:'re',x:410,y:185,w:130,h:36,label:'Regresión',k:'cloud',info:'Salida con valor real (continuo): pronóstico del tiempo, crecimiento de población, tendencias de sensores.'},
+   {id:'cu',x:410,y:295,w:130,h:36,label:'Clustering',k:'fog',info:'Agrupa datos en k grupos de características similares.'},
+   {id:'dr',x:410,y:345,w:130,h:44,label:'Reducción de\ndimensionalidad',k:'fog',info:'Simplifica los datos conservando su información esencial.'},
+   {id:'rt',x:430,y:470,w:170,h:70,label:'IA de juegos · decisiones\nen tiempo real · navegación\nrobótica · tareas',k:'thing',info:'Aplicaciones típicas del refuerzo.'},
+   {id:'svm',x:640,y:30,w:110,h:26,label:'SVM',k:'cloud',info:'Hiperplano de máximo margen; muy bueno para detección de intrusión y malware en fog y compacto en memoria.'},
+   {id:'dt',x:640,y:65,w:110,h:26,label:'Árbol de decisión',k:'cloud',info:'Clasifica con preguntas encadenadas (raíz → nodos → hojas). Detecta intrusiones y DDoS.'},
+   {id:'rf',x:640,y:100,w:110,h:26,label:'Random Forest',k:'cloud',info:'Muchos árboles que votan; ayuda a detectar nodos fog suplantados y ataques.'},
+   {id:'kn',x:640,y:135,w:110,h:26,label:'KNN',k:'cloud',info:'Vota entre los k vecinos más cercanos (distancia euclídea).'},
+   {id:'lr',x:640,y:185,w:110,h:26,label:'Regresión lineal',k:'cloud',info:'Relación lineal entre x e y; predice tendencias y repara datos perdidos en tiempo real.'},
+   {id:'km',x:640,y:295,w:110,h:26,label:'K-means',k:'fog',info:'Asigna cada punto al centroide más cercano y mueve los centroides; detecta anomalías y ataques Sybil.'},
+   {id:'ql',x:640,y:470,w:110,h:44,label:'Q-learning /\nDQN',k:'thing',info:'Algoritmos de refuerzo; en fog se usan para anti-jamming (elegir la sub-banda libre).'}
+  ];
+  const edges=[['ml','su'],['ml','un'],['ml','rl'],['su','cl'],['su','re'],['un','cu'],['un','dr'],['rl','rt'],['cl','svm'],['cl','dt'],['cl','rf'],['cl','kn'],['re','lr'],['cu','km'],['rt','ql']];
+  Graph($('#mltree'),{w:760,h:520,nodes,edges,edgeStyle:'lr',noArrow:true,label:'Mapa de técnicas de ML',hint:'👆 Haz clic en un nodo.'});
+})();
+
+/* 3.3 flujo supervisado */
+(function(){
+  Graph($('#supflow'),{w:760,h:300,label:'Aprendizaje supervisado',nodes:[
+   {id:'tr',x:100,y:80,w:160,h:60,label:'Datos de\nentrenamiento\netiquetados',k:'thing',info:'Pares (x, y) con la respuesta correcta conocida.'},
+   {id:'al',x:340,y:80,w:170,h:60,label:'Algoritmo de\naprendizaje\nsupervisado',k:'ml',info:'SVM, árbol, KNN, regresión… ajusta f para que f(x) ≈ y.'},
+   {id:'mo',x:580,y:150,w:140,h:60,label:'Modelo\ny = f(x)',k:'cloud',info:'El resultado del entrenamiento. Se usa en la fase de prueba.'},
+   {id:'ne',x:580,y:40,w:140,h:44,label:'Datos nuevos',k:'thing',info:'Entradas que el modelo nunca ha visto.'},
+   {id:'pr',x:580,y:260,w:170,h:44,label:'Predicción /\nclasificación',k:'good',info:'La salida final del sistema.'}
+  ],edges:[['tr','al'],['al','mo'],['ne','mo'],['mo','pr']],
+  steps:[{on:['tr'],edges:[],t:'<b>Fase 1 · entrenamiento.</b> Partimos de datos con la respuesta correcta conocida (etiquetados).'},{on:['tr','al'],edges:['tr>al'],t:'El algoritmo estudia cómo se relacionan las características con las etiquetas.'},{on:['al','mo'],edges:['al>mo'],t:'Resultado: un modelo y = f(x).'},{on:['ne','mo'],edges:['ne>mo'],t:'<b>Fase 2 · prueba.</b> Llegan datos nuevos sin etiqueta al modelo.'},{on:['mo','pr'],edges:['mo>pr'],t:'El modelo predice o clasifica: ¡normal o ataque!'}]});
+})();
+
+/* datasets */
+function mkClassData(seed,n1,c1,s1,n2,c2,s2,rej){const r=rng(seed),A=[],B=[];
+  const ok=p=>p[0]>.2&&p[0]<9.8&&p[1]>.2&&p[1]<9.8&&(!rej||rej(p));
+  while(A.length<n1){const p=[c1[0]+gauss(r)*s1,c1[1]+gauss(r)*s1];if(ok(p))A.push(p)}
+  while(B.length<n2){const p=[c2[0]+gauss(r)*s2,c2[1]+gauss(r)*s2];if(ok(p))B.push(p)}
+  return{A,B}}
+
+/* 3.4 KNN */
+(function(){
+  const D=mkClassData(7,22,[3,3],1.1,22,[7,7],1.1);D.A.push([5.6,5.9],[4.9,5.3]);D.B.push([4.4,4.9],[5.1,4.5]);
+  const pts=[...D.A.map(p=>({p,c:0})),...D.B.map(p=>({p,c:1}))];
+  const cv=$('#knnCv'),P=Plot(cv,{xmin:0,xmax:10,ymin:0,ymax:10,xl:'Volumen de tráfico (relativo)',yl:'Fallos de autenticación (relativo)',sx:2,sy:2});
+  let q=[5,5.2];
+  const knn=(x,y,k)=>{const d=pts.map(o=>({o,d:Math.hypot(o.p[0]-x,o.p[1]-y)})).sort((a,b)=>a.d-b.d);const nb=d.slice(0,k);const v=[0,0];nb.forEach(n=>v[n.o.c]++);const cls=v[0]===v[1]?nb[0].o.c:(v[1]>v[0]?1:0);return{nb,v,cls}};
+  function draw(){if(!P.fit())return;const k=+$('#knnK').value;P.clear();
+    if($('#knnReg').checked){const N=36;for(let i=0;i<N;i++)for(let j=0;j<N;j++){const x=(i+.5)/N*10,y=(j+.5)/N*10,c=knn(x,y,k).cls;P.ctx.fillStyle=c?'rgba(214,69,69,.10)':'rgba(79,91,213,.10)';const x0=P.X(i/N*10),x1=P.X((i+1)/N*10),y0=P.Y((j+1)/N*10),y1=P.Y(j/N*10);P.ctx.fillRect(x0,y0,x1-x0+1,y1-y0+1)}}
+    P.axes();const r=knn(q[0],q[1],k);
+    const kd=r.nb[r.nb.length-1].d;P.ctx.beginPath();P.ctx.arc(P.X(q[0]),P.Y(q[1]),kd*(P.w-P.pad-12)/10,0,7);P.ctx.setLineDash([5,4]);P.ctx.strokeStyle='#8a96b0';P.ctx.stroke();P.ctx.setLineDash([]);
+    r.nb.forEach(n=>P.line(q[0],q[1],n.o.p[0],n.o.p[1],n.o.c?RED:BLUE,1.5));
+    pts.forEach(o=>P.dot(o.p[0],o.p[1],o.c?RED:BLUE,5));
+    r.nb.forEach(n=>{P.ctx.beginPath();P.ctx.arc(P.X(n.o.p[0]),P.Y(n.o.p[1]),9,0,7);P.ctx.strokeStyle='#222';P.ctx.lineWidth=1.5;P.ctx.stroke()});
+    P.dot(q[0],q[1],'#222',8);P.ctx.fillStyle='#fff';P.ctx.font='bold 10px system-ui';P.ctx.textAlign='center';P.ctx.fillText('?',P.X(q[0]),P.Y(q[1])+3.5);
+    $('#knnOut').innerHTML=`Con <b>k=${k}</b>: <span style="color:${BLUE}"><b>${r.v[0]}</b> vecinos normales</span> vs <span style="color:${RED}"><b>${r.v[1]}</b> ataque</span> → clasifica como <b style="color:${r.cls?RED:BLUE}">${r.cls?'ATAQUE':'NORMAL'}</b>. Distancia al vecino más lejano: ${kd.toFixed(2)}.`}
+  P.drag(p=>{q=[clamp(p[0],.1,9.9),clamp(p[1],.1,9.9)];draw()});
+  $('#knnK').oninput=()=>{$('#knnKV').textContent=$('#knnK').value;draw()};$('#knnReg').onchange=draw;
+  window.addEventListener('resize',draw);draw();
+})();
+
+/* 3.5 SVM */
+(function(){
+  const D=mkClassData(21,14,[2.6,2.9],.75,14,[7.2,7],.75,p=>Math.abs(p[0]+p[1]-9.75)/Math.SQRT2>1.0);
+  const cv=$('#svmCv'),P=Plot(cv,{xmin:0,xmax:10,ymin:0,ymax:10,xl:'Característica 1',yl:'Característica 2',sx:2,sy:2});
+  const info=()=>{const a=+$('#svmA').value*Math.PI/180,c=+$('#svmC').value,n=[Math.cos(a),Math.sin(a)];
+    const dA=D.A.map(p=>n[0]*p[0]+n[1]*p[1]-c),dB=D.B.map(p=>n[0]*p[0]+n[1]*p[1]-c);
+    const sep=(dA.every(d=>d<0)&&dB.every(d=>d>0))||(dA.every(d=>d>0)&&dB.every(d=>d<0));
+    const m=sep?Math.min(...dA.map(Math.abs),...dB.map(Math.abs)):0;return{a,c,n,dA,dB,sep,m}};
+  function draw(){if(!P.fit())return;const I=info();P.clear();P.axes();
+    const line=(off,col,w,dash)=>{const pts=[];const{n}=I;const c=I.c+off;const ex=[];
+      [[0,null],[10,null]].forEach(()=>{});
+      const cand=[];if(Math.abs(n[1])>1e-6){cand.push([0,(c-n[0]*0)/n[1]],[10,(c-n[0]*10)/n[1]])}if(Math.abs(n[0])>1e-6){cand.push([(c-n[1]*0)/n[0],0],[(c-n[1]*10)/n[0],10])}
+      const inb=cand.filter(p=>p[0]>=-.001&&p[0]<=10.001&&p[1]>=-.001&&p[1]<=10.001);if(inb.length>=2)P.line(inb[0][0],inb[0][1],inb[1][0],inb[1][1],col,w,dash)};
+    if(I.sep){line(I.m,'rgba(14,159,142,.9)',1.5,[6,4]);line(-I.m,'rgba(14,159,142,.9)',1.5,[6,4])}
+    line(0,I.sep?TEAL:RED,3);
+    D.A.forEach(p=>P.dot(p[0],p[1],BLUE,5.5));D.B.forEach(p=>P.dot(p[0],p[1],RED,5.5));
+    if(I.sep){[[D.A,I.dA],[D.B,I.dB]].forEach(([arr,ds])=>arr.forEach((p,i)=>{if(Math.abs(Math.abs(ds[i])-I.m)<0.04){P.ctx.beginPath();P.ctx.arc(P.X(p[0]),P.Y(p[1]),10,0,7);P.ctx.strokeStyle='#222';P.ctx.lineWidth=2;P.ctx.stroke()}}))}
+    const sv=I.sep?[...I.dA,...I.dB].filter(d=>Math.abs(Math.abs(d)-I.m)<0.04).length:0;
+    $('#svmOut').innerHTML=I.sep?`✅ La recta <b>separa</b> las clases. Margen = <b>${I.m.toFixed(2)}</b> · vectores soporte: <b>${sv}</b> (círculos negros). ${I.m>1.3?'¡Muy buen margen!':'Intenta ampliarlo.'}`:`❌ La recta <b>no separa</b> correctamente las dos clases (hay puntos mal clasificados). Muévela hasta que cada color quede de un lado.`;
+    $('#svmAV').textContent=Math.round(I.a*180/Math.PI);$('#svmCV').textContent=I.c.toFixed(1)}
+  $('#svmA').oninput=draw;$('#svmC').oninput=draw;
+  $('#svmBest').onclick=()=>{let best={m:-1};for(let t=0;t<360;t++){const a=t*Math.PI/180,n=[Math.cos(a),Math.sin(a)];const pa=D.A.map(p=>n[0]*p[0]+n[1]*p[1]),pb=D.B.map(p=>n[0]*p[0]+n[1]*p[1]);const mA=Math.max(...pa),mB=Math.min(...pb);if(mA<mB){const c=Math.round((mA+mB)/2*20)/20;const m=Math.min(c-mA,mB-c);if(m>best.m)best={m,t,c}}}
+    if(best.m>0){$('#svmA').value=best.t;$('#svmC').value=clamp(best.c,-14,14);draw()}};
+  window.addEventListener('resize',draw);draw();
+})();
+
+/* 3.6 árbol y bosque */
+(function(){
+  const ctl=$('#dtCtl');
+  ctl.innerHTML=`<label>Tráfico: <b id="dPV">300</b> paquetes/s<input type="range" id="dP" min="0" max="1000" value="300"></label><label>Fallos de login: <b id="dFV">2</b><input type="range" id="dF" min="0" max="20" value="2"></label><label class="inl"><input type="checkbox" id="dK" checked> IP conocida</label>`;
+  const nodes=[
+   {id:'r',x:385,y:40,w:210,h:44,label:'RAÍZ · ¿tráfico > 500 pkts/s?',k:'ml',info:'Nodo raíz: la primera pregunta que divide el conjunto de datos.'},
+   {id:'d1',x:200,y:140,w:190,h:44,label:'¿fallos de login > 5?',k:'cloud',info:'Nodo de decisión de la rama «tráfico alto».'},
+   {id:'d2',x:540,y:140,w:160,h:44,label:'¿IP conocida?',k:'cloud',info:'Nodo de decisión de la rama «tráfico bajo».'},
+   {id:'l1',x:100,y:260,w:140,h:50,label:'DDoS /\nfuerza bruta',k:'bad',info:'Hoja: clase final «ataque».'},
+   {id:'l2',x:290,y:260,w:140,h:50,label:'Ráfaga\nlegítima',k:'good',info:'Hoja: clase final «normal».'},
+   {id:'l3',x:440,y:260,w:110,h:50,label:'Normal',k:'good',info:'Hoja: IP conocida con tráfico bajo.'},
+   {id:'d3',x:640,y:260,w:140,h:44,label:'¿fallos > 3?',k:'cloud',info:'Nodo de decisión de la rama «IP desconocida».'},
+   {id:'l4',x:575,y:355,w:120,h:50,label:'Intrusión\n(suplantación)',k:'bad',info:'Hoja: IP desconocida y varios fallos.'},
+   {id:'l5',x:705,y:355,w:100,h:50,label:'Normal',k:'good',info:'Hoja: IP desconocida sin fallos.'}
+  ];
+  const edges=[['r','d1',{label:'sí'}],['r','d2',{label:'no'}],['d1','l1',{label:'sí'}],['d1','l2',{label:'no'}],['d2','l3',{label:'sí'}],['d2','d3',{label:'no'}],['d3','l4',{label:'sí'}],['d3','l5',{label:'no'}]];
+  const G=Graph($('#dtGraph'),{w:770,h:400,nodes,edges,edgeStyle:'tb',noArrow:true,label:'Árbol de decisión',hint:'Mueve los controles: el camino recorrido se ilumina.'});
+  const val=()=>({p:+$('#dP').value,f:+$('#dF').value,k:$('#dK').checked});
+  function path(v){if(v.p>500)return v.f>5?['r','d1','l1']:['r','d1','l2'];if(v.k)return['r','d2','l3'];return v.f>3?['r','d2','d3','l4']:['r','d2','d3','l5']}
+  const rules=[
+   {n:'Árbol 1',d:'tráfico > 500 Y fallos > 5',f:v=>v.p>500&&v.f>5},
+   {n:'Árbol 2',d:'fallos > 4',f:v=>v.f>4},
+   {n:'Árbol 3',d:'tráfico > 700',f:v=>v.p>700},
+   {n:'Árbol 4',d:'IP desconocida Y fallos > 2',f:v=>!v.k&&v.f>2},
+   {n:'Árbol 5',d:'tráfico > 400 Y IP desconocida',f:v=>v.p>400&&!v.k}];
+  const off=new Set();
+  $('#rfCards').innerHTML=rules.map((r,i)=>`<div class="tcard" id="rc${i}"><b>${r.n}</b>ataque si: ${r.d}<br><span class="vv"></span><br><button data-i="${i}">apagar / encender</button></div>`).join('');
+  $$('#rfCards button').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;off.has(i)?off.delete(i):off.add(i);upd()});
+  function upd(){const v=val();$('#dPV').textContent=v.p;$('#dFV').textContent=v.f;const pth=path(v);const eg=[];for(let i=0;i<pth.length-1;i++)eg.push(pth[i]+'>'+pth[i+1]);G.set(pth,eg);
+    const leaf=pth[pth.length-1];G.say(`Camino: <b>${pth.map(x=>G.nodes[x].label.replace(/\n/g,' ')).join(' → ')}</b>. Resultado: <b>${['l1','l4'].includes(leaf)?'🚨 ATAQUE':'✅ NORMAL'}</b>.`);
+    let votes=0,tot=0;rules.forEach((r,i)=>{const el=$('#rc'+i),a=r.f(v);el.classList.toggle('off',off.has(i));el.classList.toggle('bad',!off.has(i)&&a);el.classList.toggle('good',!off.has(i)&&!a);$('.vv',el).innerHTML=off.has(i)?'(apagado)':`voto: <b>${a?'ATAQUE':'normal'}</b>`;if(!off.has(i)){tot++;if(a)votes++}});
+    $('#rfOut').innerHTML=tot?`Votos de ataque: <b>${votes}</b> de ${tot} → bosque: <b style="color:${votes*2>tot?RED:votes*2===tot?ORG:TEAL}">${votes*2>tot?'🚨 ATAQUE':votes*2===tot?'⚖ EMPATE':'✅ NORMAL'}</b> (gana la clase más votada).`:'Enciende al menos un árbol.'}
+  ['dP','dF','dK'].forEach(i=>$('#'+i).oninput=upd);$('#dK').onchange=upd;upd();
+})();
+
+/* 3.7 regresión */
+(function(){
+  const cv=$('#regCv'),P=Plot(cv,{xmin:0,xmax:24,ymin:14,ymax:30,sx:4,sy:2,xl:'Hora del día',yl:'Temperatura (°C)'});
+  let base=[],miss=new Set(),seed=3;
+  function gen(){const r=rng(seed);base=Array.from({length:25},(_,i)=>gauss(r));}
+  gen();
+  const ys=()=>{const nz=+$('#regN').value;return base.map((g,i)=>18+.45*i+g*nz)};
+  function fit(){const Y=ys(),pts=[];Y.forEach((y,i)=>{if(!miss.has(i))pts.push([i,y])});if(pts.length<2)return null;const n=pts.length,sx=pts.reduce((a,p)=>a+p[0],0),sy=pts.reduce((a,p)=>a+p[1],0),sxx=pts.reduce((a,p)=>a+p[0]*p[0],0),sxy=pts.reduce((a,p)=>a+p[0]*p[1],0);const a=(n*sxy-sx*sy)/(n*sxx-sx*sx),b=(sy-a*sx)/n;return{a,b,Y}}
+  function draw(){if(!P.fit())return;P.clear();P.axes();const F=fit();$('#regNV').textContent=(+$('#regN').value).toFixed(1);if(!F){$('#regOut').textContent='Quedan menos de 2 puntos: no se puede ajustar una recta.';return}
+    P.line(0,F.b,24,F.a*24+F.b,TEAL,2.5);let err=0,m=0;
+    F.Y.forEach((y,i)=>{if(miss.has(i)){const pr=F.a*i+F.b;P.line(i,y,i,pr,'#c4cddf',1,[3,3]);P.dot(i,pr,TEAL,6,true);P.ctx.fillStyle='#98a3b8';P.ctx.font='12px system-ui';P.ctx.textAlign='center';P.ctx.fillText('×',P.X(i),P.Y(y)+4);err+=Math.abs(pr-y);m++}else P.dot(i,y,ORG,4.5)});
+    $('#regOut').innerHTML=`Recta: <b>y = ${F.a.toFixed(2)}·x + ${F.b.toFixed(1)}</b> (sube ≈ ${F.a.toFixed(2)} °C por hora). ${m?`Valores perdidos: <b>${m}</b> (círculos huecos = reconstruidos; × = valor real perdido). Error medio de reconstrucción: <b>${(err/m).toFixed(2)} °C</b>.`:'Haz clic en puntos naranjas para «perderlos».'}`}
+  cv.addEventListener('click',e=>{const b=cv.getBoundingClientRect(),mx=e.clientX-b.left,my=e.clientY-b.top;const Y=ys();let best=-1,bd=18;Y.forEach((y,i)=>{const d=Math.hypot(P.X(i)-mx,P.Y(y)-my);if(d<bd){bd=d;best=i}});if(best>=0){miss.has(best)?miss.delete(best):miss.add(best);draw()}});
+  $('#regN').oninput=draw;
+  $('#regLose').onclick=()=>{const r=Math.random;miss.clear();for(let i=0;i<25;i++)if(r()<.3)miss.add(i);draw()};
+  $('#regReset').onclick=()=>{miss.clear();seed++;gen();draw()};
+  window.addEventListener('resize',draw);draw();
+})();
+
+/* 3.8 kmeans */
+(function(){
+  const cv=$('#kmCv'),P=Plot(cv,{xmin:0,xmax:10,ymin:0,ymax:10,xl:'Importe gastado',yl:'Frecuencia de uso',sx:2,sy:2});
+  const r0=rng(11),pts=[];[[2,2.2],[5.4,6.6],[8.4,2.6]].forEach(c=>{for(let i=0;i<18;i++)pts.push([clamp(c[0]+gauss(r0)*.8,.2,9.8),clamp(c[1]+gauss(r0)*.8,.2,9.8)])});
+  const COL=['#4f5bd5','#0e9f8e','#d9780a','#8b5cf6','#ec4899','#92400e'];
+  let cents=[],asg=null,phase='assign',iter=0,conv=false,seed=1,test=null;
+  function init(){const r=rng(100+seed*17),k=+$('#kmK').value;cents=[];const idx=new Set();while(idx.size<k)idx.add(Math.floor(r()*pts.length));idx.forEach(i=>cents.push(pts[i].slice()));asg=null;phase='assign';iter=0;conv=false}
+  const near=p=>{let b=0,bd=1e9;cents.forEach((c,i)=>{const d=Math.hypot(p[0]-c[0],p[1]-c[1]);if(d<bd){bd=d;b=i}});return[b,bd]};
+  function step(){if(conv)return;if(phase==='assign'){const prev=asg;asg=pts.map(p=>near(p)[0]);if(prev&&prev.every((a,i)=>a===asg[i]))conv=true;phase='update'}else{cents=cents.map((c,i)=>{const m=pts.filter((p,j)=>asg[j]===i);return m.length?[m.reduce((a,p)=>a+p[0],0)/m.length,m.reduce((a,p)=>a+p[1],0)/m.length]:c});phase='assign';iter++}}
+  function draw(){if(!P.fit())return;P.clear();P.axes();
+    pts.forEach((p,i)=>P.dot(p[0],p[1],asg?COL[asg[i]]:'#98a3b8',4.5));
+    if(asg)pts.forEach((p,i)=>{const c=cents[asg[i]];P.line(p[0],p[1],c[0],c[1],COL[asg[i]]+'55',1)});
+    cents.forEach((c,i)=>{P.ctx.save();P.ctx.translate(P.X(c[0]),P.Y(c[1]));P.ctx.rotate(Math.PI/4);P.ctx.fillStyle=COL[i];P.ctx.strokeStyle='#fff';P.ctx.lineWidth=2;P.ctx.fillRect(-9,-9,18,18);P.ctx.strokeRect(-9,-9,18,18);P.ctx.restore()});
+    let tmsg='';
+    if(test){const[b,d]=near(test);const m=pts.filter((p,j)=>(asg?asg[j]:near(p)[0])===b);const avg=m.length?m.reduce((a,p)=>a+Math.hypot(p[0]-cents[b][0],p[1]-cents[b][1]),0)/m.length:1;const thr=avg*2.6,an=d>thr;
+      P.ctx.beginPath();P.ctx.arc(P.X(cents[b][0]),P.Y(cents[b][1]),thr*(P.w-P.pad-12)/10,0,7);P.ctx.setLineDash([4,4]);P.ctx.strokeStyle=COL[b];P.ctx.stroke();P.ctx.setLineDash([]);
+      P.dot(test[0],test[1],an?RED:'#222',8);P.ctx.beginPath();P.ctx.arc(P.X(test[0]),P.Y(test[1]),13,0,7);P.ctx.strokeStyle=an?RED:'#222';P.ctx.lineWidth=2;P.ctx.stroke();
+      tmsg=` Transacción de prueba: distancia al centroide más cercano <b>${d.toFixed(2)}</b> vs umbral ${thr.toFixed(2)} (2.6× la distancia media del grupo) → <b style="color:${an?RED:'#2a9455'}">${an?'🚨 ALERTA: comportamiento anómalo':'✅ comportamiento normal'}</b>.`}
+    const inertia=asg?pts.reduce((a,p,i)=>a+Math.hypot(p[0]-cents[asg[i]][0],p[1]-cents[asg[i]][1])**2,0):0;
+    $('#kmOut').innerHTML=`Iteración <b>${iter}</b> · próximo paso: <b>${conv?'—':phase==='assign'?'① asignar puntos':'② mover centroides'}</b>${conv?' · <b style="color:#2a9455">✓ convergió</b>':''}${asg?` · dispersión interna: ${inertia.toFixed(1)}`:''}.${tmsg||' Haz clic en el gráfico para probar una transacción nueva.'}`}
+  P.drag(p=>{test=[clamp(p[0],.1,9.9),clamp(p[1],.1,9.9)];draw()});
+  $('#kmStep').onclick=()=>{step();draw()};$('#kmRun').onclick=()=>{let g=0;while(!conv&&g++<80)step();draw()};
+  $('#kmReset').onclick=()=>{seed++;init();draw()};$('#kmK').oninput=()=>{$('#kmKV').textContent=$('#kmK').value;init();draw()};
+  init();window.addEventListener('resize',draw);draw();
+})();
+
+/* 3.9 Q-learning */
+(function(){
+  const N=6;let Q,state,hist,last,steps;
+  const reset=()=>{Q=Array.from({length:N},()=>Array(N).fill(0));state=0;hist=[];last=null;steps=0};reset();
+  const win=s=>[s%N,(s+1)%N,(s+2)%N];
+  function stepQ(){const eps=+$('#rlE').value,s=state;let a;if(Math.random()<eps)a=Math.floor(Math.random()*N);else{const m=Math.max(...Q[s]);const c=Q[s].map((q,i)=>q===m?i:-1).filter(i=>i>=0);a=c[Math.floor(Math.random()*c.length)]}
+    const s2=(s+1)%N,ok=!win(s2).includes(a),r=ok?1:-1;Q[s][a]+=.5*(r+.5*Math.max(...Q[s2])-Q[s][a]);state=s2;hist.push(ok?1:0);last={s,a,s2,ok};steps++}
+  const lanes=$('#rlLanes');lanes.innerHTML=Array.from({length:N},(_,i)=>`<div class="b" id="ln${i}">Canal ${i+1}<br><span id="lm${i}">·</span></div>`).join('');
+  const cv=$('#rlCv'),ctx=cv.getContext('2d');
+  function greedySafe(){let ok=0;for(let s=0;s<N;s++){const m=Math.max(...Q[s]);if(m===0&&Q[s].every(x=>x===0))continue;const a=Q[s].indexOf(m);if(!win((s+1)%N).includes(a))ok++}return ok}
+  function render(){
+    for(let i=0;i<N;i++){const b=$('#ln'+i);b.className='b';$('#lm'+i).textContent='·'}
+    if(last){win(last.s2).forEach(i=>{$('#ln'+i).classList.add('jam');$('#lm'+i).textContent='⚡jammer'});const p=$('#ln'+last.a);p.classList.add('pick');if(last.ok){p.classList.add('okp');$('#lm'+last.a).textContent='📡 libre ✓'}else $('#lm'+last.a).textContent='📡 bloqueado ✗'}
+    const w=hist.slice(-100),ma=w.length?w.reduce((a,b)=>a+b,0)/w.length:0;
+    $('#rlOut').innerHTML=`Pasos: <b>${steps}</b> · éxito (últimos 100): <b>${(ma*100).toFixed(0)} %</b> (azar ≈ 50 %) · estados donde la política voraz ya es segura: <b>${greedySafe()}/${N}</b>${steps===0?'<br>Pulsa «1 paso» para ver al agente equivocarse y aprender.':''}`;
+    // tabla Q
+    let t=`<table class="q"><tr><th></th>${Array.from({length:N},(_,i)=>`<th>c${i+1}</th>`).join('')}</tr>`;
+    for(let s=0;s<N;s++){t+=`<tr><th>J${s+1}</th>`;for(let a=0;a<N;a++){const q=Q[s][a],c=q>0?`rgba(42,148,85,${Math.min(.85,q*.6)})`:`rgba(214,69,69,${Math.min(.85,-q*.6)})`;t+=`<td style="background:${c}">${q.toFixed(1)}</td>`}t+='</tr>'}$('#rlQ').innerHTML=t+'</table><div class="note">J = posición actual del jammer. Verde = acción buena; rojo = mala.</div>';
+    // curva
+    const r=cv.getBoundingClientRect();if(!r.width)return;const d=window.devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,r.width,r.height);
+    const W=r.width,H=r.height,pad=26;ctx.strokeStyle='#e3e8f2';ctx.fillStyle='#6b778c';ctx.font='11px system-ui';[0,.5,1].forEach(v=>{const y=H-pad-v*(H-pad-8);ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-6,y);ctx.stroke();ctx.fillText(v*100+'%',2,y+4)});
+    ctx.setLineDash([5,4]);ctx.strokeStyle='#d64545';ctx.beginPath();const yb=H-pad-.5*(H-pad-8);ctx.moveTo(pad,yb);ctx.lineTo(W-6,yb);ctx.stroke();ctx.setLineDash([]);
+    if(hist.length>2){ctx.beginPath();const nn=hist.length;for(let i=0;i<nn;i++){const a=Math.max(0,i-49),m=hist.slice(a,i+1).reduce((x,y)=>x+y,0)/(i-a+1);const x=pad+(i/(Math.max(nn-1,1)))*(W-pad-6),y=H-pad-m*(H-pad-8);i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.strokeStyle=TEAL;ctx.lineWidth=2.5;ctx.stroke()}
+    ctx.fillStyle='#3a475f';ctx.fillText('pasos de entrenamiento →',pad+10,H-6)}
+  const run=n=>{for(let i=0;i<n;i++)stepQ();render()};
+  $('#rl1').onclick=()=>run(1);$('#rl100').onclick=()=>run(100);$('#rl1000').onclick=()=>run(1000);$('#rlReset').onclick=()=>{reset();render()};
+  $('#rlE').oninput=()=>$('#rlEV').textContent=(+$('#rlE').value).toFixed(2);
+  window.addEventListener('resize',render);render();
+})();
+
+/* 3.10 selector */
+(function(){
+  const T={s:{q:'¿Tus datos de entrenamiento incluyen la respuesta correcta (etiqueta) para cada ejemplo?',o:[['Sí, están etiquetados','s2'],['No, solo tengo entradas','u1']]},
+   s2:{q:'¿Qué tipo de salida quieres predecir?',o:[['Una categoría (ataque / normal, tipo de dispositivo…)','CLS'],['Un número continuo (temperatura, latencia…)','REG']]},
+   u1:{q:'¿Tu sistema aprende por prueba y error, recibiendo recompensas por sus acciones?',o:[['Sí: toma decisiones secuenciales y se premia/castiga','RL'],['No: solo quiero descubrir grupos o estructura','CLU']]},
+   CLS:{r:'Aprendizaje supervisado · Clasificación',d:'Usa SVM, árbol de decisión, Random Forest o KNN. En fog: detección de intrusiones, malware, DDoS, nodos suplantados.',c:'cloud'},
+   REG:{r:'Aprendizaje supervisado · Regresión',d:'Regresión lineal (y otras). En fog: predecir tendencias de sensores, retardo o latencia y reparar valores faltantes.',c:'cloud'},
+   RL:{r:'Aprendizaje por refuerzo',d:'Q-learning / Deep Q-network. En fog: anti-jamming eligiendo la sub-banda libre; navegación y decisiones en tiempo real.',c:'thing'},
+   CLU:{r:'Aprendizaje no supervisado · Clustering',d:'K-means. En fog: detección de anomalías, ataques Sybil, privacidad de datos. Menos eficaz que el supervisado en ataques ya conocidos.',c:'fog'}};
+  const root=$('#selector');let path=[];
+  function show(k){const n=T[k];let h=`<div class="crumbs">${path.map(p=>T[p].q?T[p].q.slice(0,40)+'…':'').join(' → ')}</div>`;
+    if(n.q)h+=`<b>${n.q}</b><div class="sel">${n.o.map(o=>`<button data-k="${o[1]}">${o[0]}</button>`).join('')}</div>`;
+    else h+=`<div class="key"><b class="t">Resultado</b><p><b style="font-size:18px">${n.r}</b><br>${n.d}</p></div><button class="btn ghost" id="selR">↺ Empezar de nuevo</button>`;
+    root.innerHTML='<b>🧭 Selector de algoritmo</b>'+h;
+    $$('.sel button',root).forEach(b=>b.onclick=()=>{path.push(k);show(b.dataset.k)});const r=$('#selR',root);if(r)r.onclick=()=>{path=[];show('s')}}
+  show('s');
+  renderQuiz($('#quiz3b'),[
+   {id:'p1',q:'Tienes un dataset etiquetado de paquetes «ataque / normal» y quieres detectar ataques nuevos. ¿Qué familia?',o:['Regresión','Clasificación supervisada','Clustering','Refuerzo'],a:1,w:'La salida es una categoría y hay etiquetas: clasificación supervisada (SVM, árbol, Random Forest, KNN).'},
+   {id:'p2',q:'Quieres predecir la latencia (en ms) de los próximos minutos a partir del histórico. ¿Qué familia?',o:['Regresión','Clasificación','Clustering','Refuerzo'],a:0,w:'La salida es un valor continuo: regresión.'},
+   {id:'p3',q:'Tienes miles de transacciones sin etiquetar y quieres descubrir patrones de gasto y detectar rarezas. ¿Qué usas?',o:['SVM','Regresión lineal','K-means (clustering)','Q-learning'],a:2,w:'Sin etiquetas, agrupar por similitud y marcar lo que queda lejos de todo grupo: clustering.'},
+   {id:'p4',q:'Un sistema inalámbrico debe elegir por ensayo y error la sub-banda sin interferencia de un jammer. ¿Qué enfoque?',o:['Aprendizaje por refuerzo','Árbol de decisión','Regresión lineal','Reducción de dimensionalidad'],a:0,w:'Decisiones secuenciales con recompensa: refuerzo (Q-learning), como en la simulación.'},
+   {id:'p5',q:'Faltan algunas lecturas en un flujo de sensores en tiempo real y quieres rellenarlas. ¿Cuál es la opción más sencilla?',o:['K-means','Regresión lineal','Random Forest de clasificación','Q-learning'],a:1,w:'El libro cita la regresión lineal para reparar valores faltantes en tiempo real.'}
+  ]);
+})();
+
+/* 3.11 fog + ML */
+(function(){
+  const F={res:{n:'Gestión de recursos',p:'Hay muchos dispositivos y sensores que piden recursos a la vez; sin gestión, el fog se satura.',s:['ML cognitivo para asignar recursos virtualizados (SDN) con mayor eficiencia energética.','Deep learning para repartir el cálculo del servidor central a los nodos fog (Li et al.).','«Smart fog»: ML + modelo de Markov en una red mallada direccional (DMN); decide qué datos van a la nube.','Algoritmos de predicción de recursos disponibles (Hong et al.) y MQTT (publicación/suscripción) para dispositivos limitados.','Supervisado (SVM, Random Forest, regresión, árbol) para aprovisionamiento y predicción de retardo.'],t:['SVM','Random Forest','Regresión','Clustering','Markov']},
+   acc:{n:'Exactitud',p:'Las aplicaciones en tiempo real necesitan datos reflejados a tiempo y con precisión.',s:['Hypothesis Transfer Learning (HTL) con SVM: aprendizaje parcial en distintos recolectores.','Predicción de tráfico de red con supervisado (UbeHealth) para decidir enrutamiento y optimizar velocidad.','Clasificación para reducir el volumen de datos que hay que procesar.','Regresión lineal, logística y redes neuronales para reconocer el estado de pacientes (Bagula et al.).'],t:['SVM','Regresión','Redes neuronales','Clasificación']},
+   sec:{n:'Seguridad',p:'Fog añade nodos nuevos y por tanto nuevas amenazas de seguridad y privacidad.',s:['Regresión lineal para agregar datos protegiendo la privacidad (Yang et al.).','KNN para predecir enfermedades protegiendo los historiales de pacientes.','CNN para ransomware y fraude; SVM para anomalías; red neuronal para phishing; perceptrón multicapa para detección de intrusiones.','Árboles/Random Forest/KNN para DDoS, Sybil, intrusos y suplantación; RL para anti-jamming.'],t:['CNN','SVM','Perceptrón multicapa','Random Forest','KNN','RL']}};
+  $('#fmSeg').innerHTML=Object.keys(F).map(k=>`<button data-k="${k}">${F[k].n}</button>`).join('');
+  function show(k){$$('#fmSeg button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));const f=F[k];$('#fmBox').innerHTML=`<b>${f.n}</b> — ${f.p}<ul>${f.s.map(x=>`<li>${x}</li>`).join('')}</ul><div>Técnicas: ${f.t.map(x=>`<span class="tag chk" style="margin-right:4px">${x}</span>`).join('')}</div>`}
+  $('#fmSeg').onclick=e=>{const b=e.target.closest('button');if(b)show(b.dataset.k)};show('res');
+  flipCards($('#challenges3'),[
+   ['🔓 ML usado por atacantes','Redes convolucionales entrenadas con CAPTCHAs pueden saltarse la verificación; sistemas autoaprendientes (RNN) podrían intentar descifrar comunicaciones cifradas.'],
+   ['💧 Fuga de privacidad','Los mecanismos de ML que protegen la privacidad también pueden filtrar datos y ser vulnerables; los datasets privados usados en entrenamiento pueden filtrarse.'],
+   ['🕳 Puertas traseras','Un atacante puede aprender qué métodos usa el detector y descubrir una puerta trasera para evadirlo.'],
+   ['🧩 Datos heterogéneos','La explosión de sensores y la complejidad de sus datos exigen nuevas implementaciones de arquitecturas IoT basadas en la nube.']
+  ]);
+})();
+
+/* ================= QUIZZES ================= */
+renderQuiz($('#quiz1'),[
+ {id:'a1',q:'¿Cuál es la función principal de un nodo fog entre dispositivos y nube?',o:['Sustituir por completo a la nube','Preprocesar, filtrar, almacenar temporalmente y decidir cerca del dato','Fabricar sensores más baratos','Solo cifrar los datos'],a:1,w:'El fog es un intermediario: reduce la cantidad de datos que sube y la latencia de decisión.'},
+ {id:'a2',q:'En la arquitectura de 3 niveles, ¿qué interfaces existen?',o:['Cloud–Cloud, Fog–Cloud y Edge–Edge','Fog–Dispositivos, Fog–Fog y Fog–Nube','Dispositivo–Nube directa y Fog–Nube','Solo Fog–Nube'],a:1,w:'Fog–Things (dispositivos), Fog–Fog y Fog–Cloud (a través del cloud gateway). Los dispositivos no hablan directo con la nube.'},
+ {id:'a3',q:'¿Cuál NO es una rama de la taxonomía del fog (Naha et al.)?',o:['Infraestructura','Plataforma','Aplicación','Almacenamiento masivo'],a:3,w:'Las tres ramas son Infraestructura, Plataforma y Aplicación.'},
+ {id:'a4',q:'En las seis capas de un nodo fog, ¿qué hace la capa de preprocesamiento?',o:['Cifra y descifra','Poda y filtra los datos','Sube los datos a la nube','Vigila las peticiones'],a:1,w:'Preprocesamiento = filtrado y poda. Cifrar es Seguridad, subir es Transporte y vigilar es Monitoreo.'},
+ {id:'a5',q:'En una granja inteligente con gateway fog, se corta el enlace a la nube. ¿Qué pasa?',o:['El riego se detiene','Las decisiones locales continúan y los datos agregados esperan en almacenamiento temporal','Se pierden todos los datos','El gateway se apaga'],a:1,w:'Por eso el fog aporta resiliencia: decide localmente y envía cuando vuelva la conexión.'}
+]);
+renderQuiz($('#quiz2'),[
+ {id:'b1',q:'«No hay fog sin una nube» significa que…',o:['El fog es inútil','Fog y nube se complementan: el fog no sustituye a la nube','La nube sustituye al fog','El fog solo existe en Cisco'],a:1,w:'Lo pesado, histórico y global sigue en la nube; lo urgente y local, en el fog.'},
+ {id:'b2',q:'Según el capítulo 2, ¿qué tiempo de reacción requieren la realidad aumentada o los vehículos autónomos?',o:['Más de 1 s','Alrededor de 500 ms','Por debajo de 20 ms','Da igual'],a:2,w:'Menos de 20 ms: no se puede conseguir con una comunicación estándar con la nube.'},
+ {id:'b3',q:'¿Quién introdujo el término «cloudlet» y en qué año (línea de tiempo)?',o:['Cisco, 2012','Satyanarayanan et al., 2009','Amazon, 2006','Akamai, 1990'],a:1,w:'En 2009 se propuso el modelo de dos niveles: nube (alta latencia) y cloudlets (baja latencia).'},
+ {id:'b4',q:'¿Cómo mejora el fog la seguridad de un sistema IoT?',o:['Conectando más dispositivos a la web','Reduciendo sensores expuestos y los datos sensibles que viajan por la red','Eliminando el cifrado','No la mejora'],a:1,w:'Menos superficie de ataque y procesamiento local de lo sensible.'},
+ {id:'b5',q:'Un sensor reporta 20 °C cada segundo y solo importan valores ≥ 40 °C. ¿Qué hace el fog?',o:['Envía todo a la nube','Filtra y solo sube lo relevante (y resúmenes)','Apaga el sensor','Duplica los datos'],a:1,w:'Filtrar antes de subir reduce coste de transmisión, almacenamiento y gestión.'}
+]);
+renderQuiz($('#quiz3'),[
+ {id:'c1',q:'¿Qué distingue el aprendizaje supervisado del no supervisado?',o:['El supervisado usa datos con etiquetas (salidas conocidas)','El no supervisado necesita más datos etiquetados','No hay diferencia','El supervisado solo sirve para juegos'],a:0,w:'En el supervisado hay pares (x, y); en el no supervisado solo hay x y el algoritmo busca estructura.'},
+ {id:'c2',q:'¿Para qué se usa K-means en fog, según el libro?',o:['Para cifrar datos','Para detectar comportamientos anómalos (aunque es menos eficaz que el supervisado en ataques conocidos)','Para mejorar el ancho de banda físico','Para reemplazar la nube'],a:1,w:'Agrupa comportamientos y marca lo que no encaja; también ayuda contra ataques Sybil.'},
+ {id:'c3',q:'En KNN, ¿qué suele pasar con k = 1 frente a un k mayor?',o:['k = 1 da una frontera más irregular y sensible a un solo vecino','k = 1 siempre es mejor','k no afecta al resultado','k = 1 ignora los datos'],a:0,w:'Con k = 1 un único vecino decide; k mayor suaviza (como viste en las regiones de decisión).'},
+ {id:'c4',q:'¿Qué hace un Random Forest para clasificar?',o:['Usa un único árbol muy profundo','Entrena muchos árboles y gana la clase más votada','Mueve centroides','Maximiza un margen con un hiperplano'],a:1,w:'Cada árbol vota; el bosque devuelve la mayoría.'},
+ {id:'c5',q:'¿Por qué el aprendizaje por refuerzo sirve para anti-jamming?',o:['Porque necesita muchos datos etiquetados de ataques','Porque el agente aprende por recompensa qué sub-banda evita la interferencia','Porque agrupa canales por similitud','Porque cifra la señal'],a:1,w:'No hay etiquetas: el agente prueba, recibe +1/−1 y aprende la política (Q-learning).'},
+ {id:'c6',q:'¿Qué riesgo plantea el ML en fog?',o:['Ninguno','Un atacante puede usarlo para romper CAPTCHAs o descubrir puertas traseras de los detectores; los modelos pueden filtrar datos','Reduce siempre la exactitud','Elimina la necesidad de seguridad'],a:1,w:'Es una herramienta de doble filo: protege, pero también puede ser usada o atacada.'}
+]);
+
+/* ================= REPASO ================= */
+(function(){
+  Graph($('#finalG'),{w:760,h:440,label:'Smart fog integrado',nodes:[
+   {id:'dev',x:110,y:360,w:170,h:60,label:'📡 Sensores y dispositivos\n(IoT heterogéneos)',k:'thing',info:'Cap. 1: nivel 1 de la arquitectura de 3 niveles.'},
+   {id:'pre',x:380,y:360,w:200,h:50,label:'Capa de preprocesamiento\n(poda y filtrado)',k:'fog',info:'Cap. 1 y 2: filtrar antes de subir ahorra coste y ancho de banda.'},
+   {id:'ml',x:380,y:250,w:230,h:60,label:'🧠 ML en el nodo fog\n(SVM / KNN / árbol…)',k:'ml',info:'Cap. 3: detección de intrusiones y anomalías, predicción de recursos, cerca del dato.'},
+   {id:'act',x:110,y:230,w:170,h:50,label:'🚿 Actuación local\n(decisión en ms)',k:'good',info:'Cap. 2: latencia < 20 ms posible solo cerca.'},
+   {id:'sto',x:640,y:300,w:180,h:44,label:'Almacenamiento temporal\n+ cifrado',k:'fog',info:'Cap. 1: capas de almacenamiento temporal y seguridad.'},
+   {id:'cl',x:560,y:100,w:230,h:70,label:'☁ Nube\nhistórico · análisis profundo\nentrenamiento de modelos',k:'cloud',info:'Cap. 2: no hay fog sin nube.'},
+   {id:'adm',x:150,y:90,w:190,h:50,label:'👤 Administrador\n(panel, políticas)',k:'user',info:'Plano de control: reglas y políticas.'}
+  ],edges:[['dev','pre'],['pre','ml'],['ml','act'],['ml','sto'],['sto','cl'],['cl','ml',{dash:1,label:'modelo actualizado'}],['cl','adm']],
+  steps:[{on:['dev'],edges:[],t:'<b>Cosas:</b> miles de dispositivos heterogéneos generan datos continuamente.'},{on:['dev','pre'],edges:['dev>pre'],t:'<b>Fog · preprocesamiento:</b> poda y filtra; lo normal se resume.'},{on:['pre','ml'],edges:['pre>ml'],t:'<b>Fog · ML:</b> un clasificador cerca del dato detecta anomalías o ataques (cap. 3).'},{on:['ml','act'],edges:['ml>act'],t:'<b>Decisión local:</b> la actuación ocurre sin esperar a la nube (cap. 2).'},{on:['ml','sto','cl'],edges:['ml>sto','sto>cl'],t:'<b>Subida selectiva:</b> solo datos relevantes, cifrados, viajan a la nube; si el enlace cae, esperan en almacenamiento temporal.'},{on:['cl','adm'],edges:['cl>adm'],t:'<b>Nube:</b> análisis profundo, histórico y paneles para el administrador.'},{on:['cl','ml'],edges:['cl>ml'],t:'<b>Ciclo de mejora (síntesis didáctica):</b> la nube puede reentrenar modelos con más datos y enviarlos de vuelta al fog.'}]});
+
+  const cards=[
+   ['¿Qué es fog computing?','Extensión de la nube hacia el borde: arquitectura geográficamente distribuida de dispositivos heterogéneos que ofrece cómputo, almacenamiento y comunicación en proximidad.'],
+   ['Los 3 niveles','Cosas/dispositivos → Fog (switches, gateways, routers) → Nube (centros de datos). Interfaces: Fog–Dispositivos, Fog–Fog, Fog–Nube.'],
+   ['Las 6 capas (de abajo arriba)','Física y virtualización → Monitoreo → Preprocesamiento → Almacenamiento temporal → Seguridad → Transporte.'],
+   ['Las 3 ramas de la taxonomía','Infraestructura · Plataforma · Aplicación.'],
+   ['5 dimensiones de la plataforma','Asignación y planificación de recursos · requisitos de servicio (fallos y QoS) · seguridad y privacidad · multi-tenencia · gestión.'],
+   ['¿Qué es el CVP?','Cloud Visitation Platform: descompone el fog en APIs e interfaces y conoce el hardware local (VMs/contenedores) para federar nube y fog.'],
+   ['Tiempo de reacción de AR / vehículos autónomos','Menos de 20 ms.'],
+   ['Los 3 objetivos del fog','① Menos datos a enviar a la nube. ② Datos cerca del usuario. ③ Seguridad y consistencia en la transmisión.'],
+   ['Cloudlet','Término de 2009 (Satyanarayanan et al.): nivel intermedio de baja latencia entre dispositivo y nube.'],
+   ['OpenFog Consortium','2015, Princeton + industria; Edge Lab de Mung Chiang.'],
+   ['5 razones de IoT para usar fog','Latencia · coste · cómputo · autonomía · seguridad.'],
+   ['Conclusión del cap. 2','No hay fog sin nube: se complementan.'],
+   ['Aprendizaje supervisado','Entradas y salidas conocidas; aprende y = f(x). Clasificación (categorías) y regresión (valores).'],
+   ['SVM','Hiperplano de máximo margen; los vectores soporte definen el modelo; compacto para dispositivos con poca memoria.'],
+   ['Random Forest','Muchos árboles de decisión que votan; gana la clase más votada.'],
+   ['KNN','Clasifica por voto de los k vecinos más cercanos (distancia euclídea).'],
+   ['Regresión lineal en fog','Predice tendencias y repara valores faltantes en tiempo real.'],
+   ['K-means','Agrupa en k clústeres: asignar al centroide más cercano y mover centroides. Detecta anomalías; menos eficaz que el supervisado en ataques conocidos.'],
+   ['Aprendizaje por refuerzo','Agente + recompensas (Q-learning, DQN). Ej.: anti-jamming eligiendo la sub-banda libre.'],
+   ['Riesgos del ML en fog','Atacantes que lo usan (CAPTCHAs, descifrado), fuga de privacidad, puertas traseras y datos heterogéneos.']
+  ];
+  const root=$('#flash');let deck=cards.map((c,i)=>i),cur=0,know=new Set(),flipped=false;
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function render(){
+    const left=deck.filter(i=>!know.has(i));
+    if(!left.length){root.innerHTML=`<div class="key"><b class="t">¡Mazo completo!</b><p>Dominas las ${cards.length} tarjetas. Repite en unos días: el repaso espaciado fija la memoria.</p></div><button class="btn" id="fAgain">↺ Empezar de nuevo</button>`;$('#fAgain').onclick=()=>{know.clear();deck=shuffle(cards.map((c,i)=>i));cur=0;flipped=false;render()};return}
+    if(cur>=left.length)cur=0;const i=left[cur],c=cards[i];
+    root.innerHTML=`<div class="flip fcard ${flipped?'f':''}" id="fcard"><div class="in"><div class="fa">${c[0]}<small>clic para voltear</small></div><div class="fb">${c[1]}</div></div></div>
+    <div class="btns"><button class="btn fog" id="fOk">✓ Lo sabía</button><button class="btn ghost" id="fNo">↻ Repasar</button><button class="btn ghost" id="fSh">🔀 Mezclar</button><span class="crumbs" style="align-self:center">${know.size}/${cards.length} dominadas</span></div>`;
+    $('#fcard').onclick=()=>{flipped=!flipped;$('#fcard').classList.toggle('f',flipped)};
+    $('#fOk').onclick=()=>{know.add(i);flipped=false;render()};$('#fNo').onclick=()=>{cur++;flipped=false;render()};$('#fSh').onclick=()=>{deck=shuffle(deck);cur=0;flipped=false;render()}}
+  render();
+})();
+function renderScore(){
+  const groups=[['Capítulo 1',['a1','a2','a3','a4','a5']],['Capítulo 2',['b1','b2','b3','b4','b5']],['Capítulo 3',['c1','c2','c3','c4','c5','c6']],['Selector de ML',['p1','p2','p3','p4','p5']]];
+  $('#scoreBox').innerHTML=groups.map(g=>{const ok=g[1].filter(id=>store[id]===1).length,pct=ok/g[1].length*100;return `<div class="meter"><span>${g[0]}</span><div class="bar"><i style="width:${pct}%;background:${pct===100?'#2a9455':TEAL}"></i></div><b>${ok}/${g[1].length}</b></div>`}).join('')+`<div class="btns"><button class="btn ghost" id="resetProg">Borrar mi progreso</button></div>`;
+  $('#resetProg').onclick=()=>{store={};save();$$('.qz').forEach(q=>{q.classList.remove('done');$$('.o',q).forEach(o=>o.classList.remove('ok','no'))});updProg()};
+}
+
+/* ================= ARRANQUE ================= */
+// restaurar estado visual de quizzes ya respondidos no se hace (se pueden reintentar); solo progreso global
+updProg();
+showTab(location.hash.slice(1)||'inicio');
+</script>
+</body>
+</html>
