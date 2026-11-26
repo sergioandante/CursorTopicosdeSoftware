@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amazon VPC networking: isolation, subnets and route tables — interactive guide</title>
+<style>
+:root{--cloud:#4f5bd5;--cloudbg:#e8eaff;--fog:#0e9f8e;--fogbg:#d9f4ef;--thing:#d9780a;--thingbg:#fdebd0;--bad:#d64545;--badbg:#fde4e4;--good:#2a9455;--goodbg:#dcf2e5;--ink:#1c2433;--muted:#5b6678;--bg:#f3f5fa;--card:#fff;--line:#dbe1ec;--r:14px;color-scheme:light}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 18px}
+header.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding-top:8px;padding-bottom:8px}
+.brand{font-weight:800;font-size:17px}.brand small{font-weight:500;color:var(--muted);margin-left:6px}
+#tabs{display:flex;gap:4px;flex-wrap:wrap}
+#tabs button{border:0;background:transparent;padding:7px 13px;border-radius:999px;font:600 14px system-ui;color:var(--muted);cursor:pointer}
+#tabs button:hover{background:#eef1f8}
+#tabs button.on{background:var(--ink);color:#fff}
+.prog{margin-left:auto;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.pbar{width:110px;height:8px;border-radius:9px;background:#e4e8f1;overflow:hidden}.pbar i{display:block;height:100%;width:0;background:var(--good);transition:width .4s}
+main{padding:22px 0 80px}
+.tab{display:none}.tab.on{display:block}
+h1{font-size:clamp(26px,4.5vw,40px);line-height:1.15;margin:.2em 0 .3em}
+h2.ch{font-size:clamp(22px,3.4vw,30px);margin:.2em 0}
+.chhead{border-radius:var(--r);padding:22px 24px;color:#fff;margin-bottom:18px}
+.chhead p{margin:.3em 0 0;opacity:.95;max-width:760px}
+.c1{background:linear-gradient(120deg,#0e9f8e,#2b7fd1)}.c2{background:linear-gradient(120deg,#4f5bd5,#8b5cf6)}.c3{background:linear-gradient(120deg,#d9780a,#d64545)}
+.goals{background:#fff;border:1px dashed #b9c3d8;border-radius:var(--r);padding:12px 18px;margin-bottom:18px}
+.goals b{display:block;margin-bottom:2px}.goals ul{margin:4px 0 0;padding-left:20px}
+.lesson{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin:0 0 22px;box-shadow:0 1px 2px rgba(20,30,60,.04)}
+.lesson>h3{margin:0 0 6px;font-size:21px;display:flex;align-items:center;gap:10px}
+.lesson>h3 .num{background:var(--ink);color:#fff;font-size:12.5px;border-radius:8px;padding:2px 8px;font-weight:700}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 10px}
+.tag{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 10px;background:#eef1f8;color:#43506a}
+.tag.sim{background:var(--fogbg);color:#08695d}.tag.pred{background:var(--thingbg);color:#8a4a05}.tag.chk{background:var(--cloudbg);color:#323da5}.tag.vis{background:#f3e8ff;color:#6b2fb3}
+.key{border-left:5px solid var(--fog);background:var(--fogbg);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.key b.t,.misc b.t,.ana b.t{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.misc{border-left:5px solid var(--bad);background:var(--badbg);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.ana{border-left:5px solid var(--thing);background:var(--thingbg);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.key p,.misc p,.ana p{margin:0}
+.viz{margin:12px 0;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fbfcfe}
+.gsvg{width:100%;height:auto;display:block;max-width:100%}
+.ctrls{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;margin:8px 0}
+.ctrls label{font-size:14px;display:flex;flex-direction:column;gap:2px;min-width:200px}
+.ctrls label.inl{flex-direction:row;align-items:center;gap:6px;min-width:0}
+input[type=range]{width:100%;accent-color:var(--fog)}
+.btn{border:0;background:var(--ink);color:#fff;border-radius:10px;padding:8px 15px;font:600 14px system-ui;cursor:pointer}
+.btn:hover{filter:brightness(1.2)}.btn.ghost{background:#e6eaf3;color:var(--ink)}.btn.fog{background:var(--fog)}.btn[disabled]{opacity:.45;cursor:default}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.predict{background:var(--thingbg);border-radius:10px;padding:8px 12px;margin:8px 0;font-size:14.5px}
+.predict label{margin-left:12px;cursor:pointer}
+.out{margin-top:8px;font-size:14.5px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+.stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}.stat b{display:block;font-size:22px;line-height:1.1}.stat span{font-size:12px;color:var(--muted)}
+.note{font-size:14px;background:#eef1f8;border-radius:10px;padding:8px 12px;margin-top:6px}
+.ginfo{font-size:14.5px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--fog);border-radius:8px;padding:8px 12px;margin-top:8px;min-height:44px}
+.gctl{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}.gctl .cnt{font-size:13px;color:var(--muted)}
+/* svg graph */
+.n rect{fill:#fff;stroke:#a9b4ca;stroke-width:1.5;transition:all .25s}
+.n.cloud rect{fill:var(--cloudbg);stroke:var(--cloud)}.n.fog rect{fill:var(--fogbg);stroke:var(--fog)}.n.thing rect{fill:var(--thingbg);stroke:var(--thing)}
+.n.user rect{fill:#f3e8ff;stroke:#8b5cf6}.n.bad rect{fill:var(--badbg);stroke:var(--bad)}.n.good rect{fill:var(--goodbg);stroke:var(--good)}.n.ml rect{fill:#fff3c4;stroke:#c49000}
+.n.group rect{fill:rgba(255,255,255,.55);stroke-dasharray:6 4;stroke:#98a3b8}
+.n text{font-size:12.5px;fill:var(--ink);text-anchor:middle;pointer-events:none}.n text.gl{text-anchor:start;font-weight:700;fill:#5b6678;font-size:12px}
+.n.clk{cursor:pointer}.n.clk:hover rect{stroke-width:2.6}
+.n.on rect{stroke-width:3.4;filter:drop-shadow(0 2px 5px rgba(0,0,0,.28))}.n.dim{opacity:.32}
+.e{fill:none;stroke:#98a3b8;stroke-width:1.7}.e.dash{stroke-dasharray:6 4}.e.on{stroke:var(--fog);stroke-width:3.2}.e.dim{opacity:.25}
+.elab{font-size:11.5px;fill:#5b6678;text-anchor:middle;paint-order:stroke;stroke:#fbfcfe;stroke-width:4px}
+/* tiers */
+.band{stroke-width:1.5;stroke-dasharray:7 5;fill:none}.bandc{stroke:var(--cloud);fill:rgba(79,91,213,.05)}.bandf{stroke:var(--fog);fill:rgba(14,159,142,.06)}.bandt{stroke:var(--thing);fill:rgba(217,120,10,.06)}
+.svgt{font-size:13px;fill:var(--ink)}.svgs{font-size:11.5px;fill:#5b6678}
+.lnk{stroke:#98a3b8;stroke-width:2}.lnk.cut{stroke:var(--bad);stroke-dasharray:5 5}
+/* layers */
+.stack{display:flex;flex-direction:column;gap:6px}
+.layer{display:grid;grid-template-columns:34px 190px 1fr;gap:10px;align-items:center;border:2px solid var(--line);background:#fff;border-radius:10px;padding:6px 10px;transition:all .3s;font-size:14px}
+.layer .no{font-weight:800;color:var(--muted)}
+.layer.on{border-color:var(--fog);background:var(--fogbg);transform:translateX(6px)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;min-height:36px;align-items:center}
+.chip{background:#fff;border:1px solid var(--line);border-radius:8px;padding:3px 9px;font:600 13px ui-monospace,Menlo,Consolas,monospace}.chip.w{background:var(--badbg);border-color:var(--bad)}.chip.s{background:#f1f3f8;color:#4a5670}.chip.g{background:var(--goodbg);border-color:var(--good)}
+/* canvases */
+canvas.cv{width:100%;height:380px;display:block;border:1px solid var(--line);border-radius:10px;background:#fff;touch-action:none}
+canvas.cv.short{height:200px}
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.twocol{grid-template-columns:1fr}.layer{grid-template-columns:28px 1fr}.layer .fx{grid-column:1/-1}}
+/* quiz */
+.qz{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;background:#fff}
+.qz p.q{margin:0 0 8px;font-weight:700}
+.qz .o{display:block;width:100%;text-align:left;background:#f6f8fc;border:1.5px solid var(--line);border-radius:9px;padding:8px 12px;margin:5px 0;font:inherit;cursor:pointer}
+.qz .o:hover{border-color:#8a96b0}.qz .o.ok{background:var(--goodbg);border-color:var(--good)}.qz .o.no{background:var(--badbg);border-color:var(--bad)}
+.qz .why{display:none;font-size:14px;margin-top:6px;color:#344058}.qz.done .why{display:block}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:10px 0}
+.flip{perspective:900px;min-height:150px;cursor:pointer}
+.flip .in{position:relative;width:100%;height:100%;min-height:150px;transition:transform .5s;transform-style:preserve-3d}
+.flip.f .in{transform:rotateY(180deg)}
+.flip .fa,.flip .fb{position:absolute;inset:0;border-radius:12px;padding:12px 14px;backface-visibility:hidden;border:1px solid var(--line);overflow:auto;font-size:14px}
+.flip .fa{background:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;font-weight:700;font-size:16px}
+.flip .fa small{font-weight:500;color:var(--muted);margin-top:6px}
+.flip .fb{background:var(--fogbg);transform:rotateY(180deg)}
+/* game */
+.task{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:6px 0;background:#fff}
+.task .tx{flex:1 1 280px;font-size:14.5px}.task .ch{display:flex;gap:6px}
+.task button{border:1.5px solid var(--line);background:#f6f8fc;border-radius:8px;padding:5px 11px;font:600 13px system-ui;cursor:pointer}
+.task button.ok{background:var(--goodbg);border-color:var(--good)}.task button.no{background:var(--badbg);border-color:var(--bad)}
+.task .fb{flex-basis:100%;font-size:13.5px;color:#344058;display:none}.task.done .fb{display:block}
+/* meters */
+.meter{display:grid;grid-template-columns:200px 1fr 42px;gap:8px;align-items:center;margin:5px 0;font-size:14px}
+.meter .bar{height:14px;background:#e9edf5;border-radius:9px;overflow:hidden}.meter .bar i{display:block;height:100%;border-radius:9px;transition:width .5s}
+@media(max-width:600px){.meter{grid-template-columns:1fr 1fr 38px}}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.seg button{border:0;background:transparent;padding:8px 14px;font:600 14px system-ui;cursor:pointer}.seg button.on{background:var(--ink);color:#fff}
+/* timeline */
+.tl{display:flex;overflow-x:auto;gap:0;padding:10px 4px 6px;scroll-snap-type:x proximity}
+.tl .ev{flex:0 0 auto;min-width:92px;text-align:center;cursor:pointer;scroll-snap-align:center;position:relative;padding-top:20px}
+.tl .ev:before{content:"";position:absolute;top:9px;left:0;right:0;height:3px;background:#cfd6e5}
+.tl .ev i{position:absolute;top:2px;left:50%;margin-left:-8px;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid #8a96b0}
+.tl .ev.on i{background:var(--fog);border-color:var(--fog);transform:scale(1.25)}
+.tl .ev b{display:block;font-size:14px}.tl .ev span{font-size:11.5px;color:var(--muted)}
+.tdetail{background:#fff;border:1px solid var(--line);border-left:5px solid var(--fog);border-radius:10px;padding:10px 14px;min-height:70px}
+/* ml tables */
+table.q{border-collapse:collapse;font:12.5px ui-monospace,Menlo,monospace}table.q td,table.q th{border:1px solid #fff;padding:4px 6px;text-align:center;min-width:42px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin:6px 0}.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.tpl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+.tree5{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:8px 0}
+.tcard{border:2px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;background:#fff;transition:all .25s}.tcard b{display:block}.tcard.bad{border-color:var(--bad);background:var(--badbg)}.tcard.good{border-color:var(--good);background:var(--goodbg)}.tcard.off{opacity:.35}
+.tcard button{margin-top:4px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
+.lanes{display:flex;gap:6px;margin:8px 0}.lanes .b{flex:1;text-align:center;border:2px solid var(--line);border-radius:10px;padding:10px 0;font-size:13px;background:#fff;position:relative}
+.lanes .b.jam{background:var(--badbg);border-color:var(--bad)}.lanes .b.pick{outline:3px solid var(--cloud)}.lanes .b.okp{background:var(--goodbg);border-color:var(--good)}
+.sel{display:flex;flex-direction:column;gap:6px;margin:8px 0}.sel button{text-align:left;background:#f6f8fc;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;cursor:pointer}.sel button:hover{border-color:var(--fog)}
+.crumbs{font-size:13px;color:var(--muted);margin:4px 0}
+.fcard{min-height:170px}
+.fcard .fa{font-size:18px}
+footer{color:var(--muted);font-size:13px;text-align:center;padding:30px 0}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:20px;align-items:center}
+@media(max-width:800px){.hero{grid-template-columns:1fr}}
+.journey{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:14px 0}
+.jc{border-radius:14px;padding:16px;color:#fff;cursor:pointer;transition:transform .2s}.jc:hover{transform:translateY(-3px)}.jc h4{margin:0 0 4px;font-size:18px}.jc p{margin:0;font-size:14px;opacity:.95}
+
+.snav{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 18px}.snav a{background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:5px 12px;font:600 13px system-ui;color:var(--ink);text-decoration:none}.snav a:hover{border-color:var(--fog)}
+.lk{cursor:pointer}.lk:hover{filter:brightness(.97)}
+.layer-on{stroke-width:4!important}
+.rtbox rect.bg{fill:#fff;stroke:#0b5a78;stroke-width:2}.rtbox .hd{fill:#0b5a78}.rtbox text{font-size:12.5px}.rtbox .row.hit rect{fill:#fff3c4}.rtbox .row.hit text{font-weight:700}.rtbox .row.bad rect{fill:#fde4e4}
+.steps{margin:8px 0;padding:0;list-style:none}.steps li{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 12px;margin:5px 0;font-size:14.5px;opacity:.45;transition:all .3s}.steps li.on{opacity:1;border-color:var(--ink);background:#f6f8fc}.steps li.ok{opacity:1;border-left:6px solid var(--good)}.steps li.no{opacity:1;border-left:6px solid var(--bad);background:var(--badbg)}.steps .n{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}
+.panelc{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px 18px;margin:8px 0;align-items:end}.panelc label{display:flex;flex-direction:column;gap:3px;font-size:13.5px}.panelc label.inl{flex-direction:row;align-items:center;gap:6px}
+input[type=text]{font:inherit;padding:6px 8px;border-radius:8px;border:1.5px solid var(--line);width:100%}
+.bits{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}.oct{display:flex;gap:2px}.bit{width:22px;height:30px;border-radius:5px;display:grid;place-items:center;font:700 13px ui-monospace,monospace;color:#fff;transition:background .25s}.bit.n{background:#4f5bd5}.bit.h{background:#98a3b8}
+.blocks{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin:8px 0}.blk{border:2px solid var(--line);background:#fff;border-radius:8px;padding:6px 4px;text-align:center;font-size:12px;cursor:pointer;transition:all .2s}.blk:hover{border-color:var(--fog)}.blk.A{background:#e7efc8;border-color:#7a8f1c}.blk.B{background:#d3eef4;border-color:#1d8fa8}.blk.sel{outline:3px solid var(--ink)}.blk b{display:block;font-size:12.5px}
+.tbl{border-collapse:collapse;width:100%;font-size:14px}.tbl th{background:#0b5a78;color:#fff;padding:6px 10px;text-align:left}.tbl td{border-bottom:1px solid var(--line);padding:6px 10px}.tbl tr.win td{background:#fff3c4;font-weight:700}.tbl tr.mt td{background:#eef7ee}
+.big{font:700 20px ui-monospace,monospace}
+</style></head><body>
+<header class="top"><div class="wrap"><div class="brand">☁️ Amazon VPC<small>interactive guide</small></div><div class="prog"><span id="progtxt">0/0</span><div class="pbar"><i id="progbar"></i></div></div></div></header>
+<main class="wrap">
+<div class="chhead" style="background:linear-gradient(120deg,#232f3e,#6b2fb3)"><h2 class="ch">How your AWS network is isolated, addressed and routed</h2><p>Four slides, taken apart piece by piece: <b>account resource isolation</b>, the <b>main route table</b>, <b>public subnets</b> and <b>private subnets</b>. Every flow is animated step by step, and you can break things on purpose to see where packets die.</p></div>
+<div class="key"><b class="t">The big picture in 30 seconds</b><p>An <b>AWS account</b> holds your resources. Inside a <b>Region</b> you get a <b>VPC</b> — your own private network — that spans the Region's <b>Availability Zones</b>. You carve the VPC's address range into <b>subnets</b> (each in one AZ). A <b>route table</b> decides where each packet goes. If a subnet's route table has a route to an <b>internet gateway</b>, the subnet is <b>public</b>; if not, it is <b>private</b>.</p></div>
+<div class="note">ℹ️ <b>Source of each statement:</b> everything shown in your slides is taken as given. Where I add general AWS knowledge that is <i>not</i> on the slides (default VPC address range, reserved addresses, NAT, security groups), it is marked <b>➕ beyond the slides</b>.</div>
+<nav class="snav"><a href="#s1">1 · Isolation</a><a href="#s2">2 · IP addresses &amp; CIDR</a><a href="#s3">3 · Main route table</a><a href="#s4">4 · Public subnets</a><a href="#s5">5 · Private subnets</a><a href="#s6">6 · Playground</a><a href="#s7">7 · Quiz</a></nav>
+
+<section class="lesson" id="s1"><h3><span class="num">1</span> Slide 1 · AWS account resource isolation</h3>
+ <div class="tags"><span class="tag vis">Click the layers</span><span class="tag sim">Simulation</span></div>
+ <p>The slide nests five containers: <b>AWS Cloud ⊃ AWS account ⊃ Region ⊃ Availability Zones</b>, and a <b>default Amazon VPC</b> that cuts across the three AZs with one EC2 instance in each. Click any layer to see what it is.</p>
+ <div class="viz"><svg viewBox="0 0 900 430" class="gsvg" id="iso"></svg><div class="ginfo" id="isoInfo">Click a layer of the diagram.</div></div>
+ <h4>🧪 Simulation A: an Availability Zone fails</h4>
+ <p>Each EC2 instance lives in one AZ. Knock out zones and see why spreading instances across AZs matters. <b>Predict first:</b> how many zones can you lose before the app is down?</p>
+ <div class="viz"><div class="btns"><button class="btn" data-az="0">💥 AZ 1</button><button class="btn" data-az="1">💥 AZ 2</button><button class="btn" data-az="2">💥 AZ 3</button><button class="btn ghost" id="azR">↺ Restore all</button></div><div class="out" id="azOut"></div></div>
+ <h4>🧪 Simulation B: who can talk to whom by default?</h4>
+ <p>Two accounts, each with its own VPC. Send a packet and watch where it stops.</p>
+ <div class="viz"><svg viewBox="0 0 900 270" class="gsvg" id="iso2"></svg><div class="btns"><button class="btn fog" id="b1">EC2 1 → EC2 3 (same VPC, other AZ)</button><button class="btn" id="b2" style="background:#a02020">EC2 1 → EC2 in another account's VPC</button></div><div class="out" id="isoOut"></div></div>
+ <div class="ana"><b class="t">➕ Beyond the slides</b><p>AWS gives every account a <b>default VPC</b> in each Region (range <code>172.31.0.0/16</code>, one public subnet per AZ, internet gateway attached). The next slides use <code>10.0.0.0/16</code>, which is a VPC you create yourself. Connecting different VPCs/accounts requires something explicit, e.g. VPC peering — isolation is the default.</p></div></section>
+
+<section class="lesson" id="s2"><h3><span class="num">2</span> Addresses first: private IPs and CIDR blocks</h3>
+ <div class="tags"><span class="tag vis">Bit-level visual</span><span class="tag sim">Simulation</span></div>
+ <p>The slides write <code>10.0.0.0/16</code> for the VPC and <code>10.0.0.0/20</code>, <code>10.0.128.0/20</code> for subnets. The number after the slash says <b>how many of the 32 address bits are fixed</b> (the <i>network</i> part). The rest are free for hosts.</p>
+ <h4>🔬 The 32 bits</h4>
+ <div class="viz"><div class="panelc"><label>IP address<input type="text" id="bIp" value="10.0.0.5"></label><label>Prefix length: <b id="bPV">16</b><input type="range" id="bP" min="8" max="28" value="16"></label></div><div class="bits" id="bits"></div><div class="legend"><span><i style="background:#4f5bd5"></i>network bits (fixed)</span><span><i style="background:#98a3b8"></i>host bits (free)</span></div><div class="out" id="bOut"></div></div>
+ <h4>🧩 Carving 10.0.0.0/16 into /20 subnets</h4>
+ <p>Going from /16 to /20 fixes <b>4 more bits</b> → 2⁴ = <b>16 subnets</b> of 4,096 addresses each. The slides' subnets are <b>block 0</b> (Subnet_A) and <b>block 8</b> (Subnet_B). Click a block, or test an IP:</p>
+ <div class="viz"><div class="blocks" id="blocks"></div><div class="panelc"><label>Which subnet is this IP in?<input type="text" id="ipT" value="10.0.134.60"></label><div class="btns" style="margin:0"><button class="btn ghost" data-ip="10.0.0.5">10.0.0.5</button><button class="btn ghost" data-ip="10.0.134.60">10.0.134.60</button><button class="btn ghost" data-ip="10.0.200.1">10.0.200.1</button><button class="btn ghost" data-ip="10.1.0.1">10.1.0.1</button><button class="btn ghost" data-ip="198.51.102.7">198.51.102.7</button></div></div><div class="out" id="ipOut"></div></div>
+ <div class="ana"><b class="t">➕ Beyond the slides</b><p>AWS reserves <b>5 addresses</b> in every subnet (the first four and the last), so a /20 offers 4,091 usable addresses. <code>198.51.102.7</code> is a <b>public</b> address; <code>10.x.x.x</code> addresses are <b>private</b> — not routable on the internet.</p></div></section>
+
+<section class="lesson" id="s3"><h3><span class="num">3</span> Slide 2 · The main route table</h3>
+ <div class="tags"><span class="tag vis">Animated flow</span><span class="tag sim">Simulation</span></div>
+ <p>Slide: <b>Amazon VPC 10.0.0.0/16</b> with <b>Subnet_A 10.0.0.0/20</b> (EC2 instance A, <code>10.0.0.5</code>) and <b>Subnet_B 10.0.128.0/20</b> (EC2 instance B, <code>10.0.134.60</code>), both using the <b>main VPC route table</b> that has a single route: <code>10.0.0.0/16 → local</code>.</p>
+ <div class="key"><b class="t">What the route says</b><p>«Any packet whose destination is inside 10.0.0.0/16 is delivered <b>locally</b>, inside the VPC.» That is why A and B can reach each other <b>without any gateway</b>, even though they are in different subnets.</p></div>
+ <h4>🔎 How the table is read: longest prefix match</h4>
+ <p>A route table can have several routes that match one destination. The <b>most specific one wins</b> (longest prefix). Try destinations. (The third route is an extra example, ➕ beyond the slides.)</p>
+ <div class="viz"><div class="panelc"><label>Destination IP<input type="text" id="lkIp" value="10.0.134.60"></label><div class="btns" style="margin:0"><button class="btn ghost" data-lk="10.0.134.60">10.0.134.60</button><button class="btn ghost" data-lk="10.0.0.5">10.0.0.5</button><button class="btn ghost" data-lk="8.8.8.8">8.8.8.8</button><button class="btn ghost" data-lk="172.16.5.5">172.16.5.5</button></div></div><table class="tbl" id="lkT"></table><div class="out" id="lkOut"></div></div>
+ <h4>🧪 Send a packet through the main route table</h4>
+ <div class="viz" id="lab3"></div></section>
+
+<section class="lesson" id="s4"><h3><span class="num">4</span> Slide 3 · Public subnets</h3>
+ <div class="tags"><span class="tag vis">Animated flow</span><span class="tag sim">Break it on purpose</span></div>
+ <p>Slide: a public subnet <b>with an associated internet gateway</b> allows direct access to the internet, and <b>every instance in a public subnet requires a private <i>and</i> a public IP address</b> to gain internet access. Its route table has two routes: <code>10.0.0.0/16 → local</code> and <code>0.0.0.0/0 → Internet gateway ID</code>.</p>
+ <div class="key"><b class="t">Reading 0.0.0.0/0</b><p>A /0 prefix fixes <b>zero bits</b>: it matches <b>every</b> address. It is the <b>default route</b> — the catch-all for anything that isn't more specific (like the VPC's own /16). Packets to the internet fall through to it.</p></div>
+ <p><b>Experiment:</b> run the outbound packet, then break it: remove the public IP, detach the gateway, or delete the default route. Each failure dies at a different place.</p>
+ <div class="viz" id="lab4"></div>
+ <div class="ana"><b class="t">What the internet gateway does (➕ beyond the slides)</b><p>Your instance only knows its private address <code>10.0.0.5</code>. The IGW performs a <b>one-to-one address translation</b>: outbound it rewrites the source to the public IP <code>198.51.102.7</code>; for the reply it rewrites the destination back to <code>10.0.0.5</code>. Without a public IP there is nothing to translate to. Security groups and network ACLs also filter traffic; this guide doesn't model them.</p></div></section>
+
+<section class="lesson" id="s5"><h3><span class="num">5</span> Slide 4 · Private subnets</h3>
+ <div class="tags"><span class="tag vis">Animated flow</span><span class="tag sim">Simulation</span></div>
+ <p>Slide: a private subnet <b>does not have direct access to the internet</b>. Its route table contains only <code>10.0.0.0/16 → local</code>; the instance has only a private IP. Same instance, same VPC — only the <b>route table</b> differs.</p>
+ <div class="viz" id="lab5"></div>
+ <div class="misc"><b class="t">Key insight</b><p>«Public» and «private» aren't properties you set on a subnet — they come from <b>its route table</b>. Tick <i>«Add 0.0.0.0/0 → IGW to this table»</i> above: the subnet turns public instantly. But the instance <b>still</b> can't reach the internet until it also has a public IP: two independent conditions.</p></div>
+ <div class="ana"><b class="t">➕ Beyond the slides</b><p>Private-subnet instances that must reach the internet (e.g. for updates) usually go through a <b>NAT gateway</b> placed in a public subnet: the private route table gets <code>0.0.0.0/0 → NAT gateway</code>, so outbound works but nothing can start a connection <i>into</i> the instance.</p></div></section>
+
+<section class="lesson" id="s6"><h3><span class="num">6</span> Playground: build your own VPC and test traffic</h3>
+ <p>All the knobs at once. Choose which route table each subnet uses, attach or detach the gateway, give instances public IPs, edit routes, and send packets in either direction. Try to predict the verdict before you press the button.</p>
+ <div class="viz" id="lab6"></div>
+ <h4>Challenges</h4>
+ <div class="cards"><div class="key"><b class="t">1</b><p>Make <b>instance B</b> reach <code>203.0.113.10</code> on the internet.</p></div><div class="key"><b class="t">2</b><p>Make the <b>internet reach instance A</b> (inbound). What must be true?</p></div><div class="key"><b class="t">3</b><p>Give instance A a public IP but <b>remove</b> the default route. Predict, then test.</p></div><div class="key"><b class="t">4</b><p>Keep B private but still let A and B talk to each other. Which route makes that work?</p></div></div></section>
+
+<section class="lesson" id="s7"><h3><span class="num">7</span> Check what you learned</h3><div id="quiz"></div></section>
+<footer>Educational simulation based on four course slides. Address ranges and behavior beyond the slides are marked.</footer>
+</main>
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const NS='http://www.w3.org/2000/svg';
+/* ---- ip helpers ---- */
+const validIp=s=>/^(\d{1,3}\.){3}\d{1,3}$/.test(s)&&s.split('.').every(x=>+x<=255);
+const ip2n=s=>s.split('.').reduce((a,b)=>a*256+(+b),0);
+const n2ip=n=>[24,16,8,0].map(sh=>Math.floor(n/2**sh)%256).join('.');
+const inCidr=(ip,c)=>{const [b,l]=c.split('/');return Math.floor(ip2n(ip)/2**(32-l))===Math.floor(ip2n(b)/2**(32-l))};
+const lookup=(rt,dst)=>{let best=null;rt.forEach((r,i)=>{if(inCidr(dst,r.dest)){const l=+r.dest.split('/')[1];if(!best||l>best.l)best={l,i,r}}});return best};
+const T=(x,y,s,o={})=>`<text x="${x}" y="${y}" font-size="${o.s||13}" fill="${o.c||'#1c2433'}" text-anchor="${o.a||'start'}" font-weight="${o.b?700:400}">${s}</text>`;
+/* ---- quiz progress ---- */
+let store={};try{store=JSON.parse(localStorage.getItem('vpcq')||'{}')}catch(e){}const QS=[];
+const prog=()=>{const ok=QS.filter(i=>store[i]===1).length;$('#progtxt').textContent=ok+'/'+QS.length;$('#progbar').style.width=QS.length?ok/QS.length*100+'%':'0'};
+/* =============== 1. ISOLATION =============== */
+(function(){
+  const INFO={cloud:['AWS Cloud','The whole AWS global infrastructure and services. Everything below lives inside it.'],account:['AWS account','The container for <b>your</b> resources, permissions and billing — a security boundary. Resources in one account are isolated from other accounts by default.'],region:['Region','A geographic area with several Availability Zones. A VPC belongs to <b>one</b> Region; resources you create are placed in a Region.'],az:['Availability Zone','One or more separate data centers with independent power and networking inside a Region. A <b>subnet</b> lives in exactly one AZ.'],vpc:['Default Amazon VPC','A logically isolated virtual network in your account. It <b>spans all the AZs</b> of the Region (note how the purple box crosses the three dashed AZ boxes). Instances in the same VPC can reach each other via the local route.'],ec2:['EC2 instance','A virtual server launched into a subnet — so it sits in one AZ and one VPC.']};
+  const down=[false,false,false];
+  function draw(sel){const azx=[110,345,580],ix=[215,450,685];let s='';
+    const R=(k,x,y,w,h,st,fill,dash)=>`<rect class="lk" data-k="${k}" x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="${fill}" stroke="${st}" stroke-width="${sel===k?5:2.5}" ${dash?'stroke-dasharray="8 5"':''}/>`;
+    s+=R('cloud',10,8,880,412,'#222','#fff');s+=T(30,34,'☁ AWS Cloud',{b:1,s:15});
+    s+=R('account',30,45,840,360,'#d6336c','rgba(214,51,108,.03)');s+=T(48,70,'🏢 AWS account',{b:1,s:15});
+    s+=R('region',50,82,800,310,'#1d8fa8','rgba(29,143,168,.04)',1);s+=T(68,106,'🚩 Region',{b:1,s:15});
+    azx.forEach((x,i)=>{s+=R('az',x,118,210,255,down[i]?'#d64545':'#1d8fa8',down[i]?'rgba(214,69,69,.12)':'rgba(255,255,255,.6)',1);s+=T(x+105,142,'Availability Zone '+(i+1)+(down[i]?' ✖':''),{a:'middle',b:1,c:down[i]?'#d64545':'#1c2433'})});
+    s+=R('vpc',80,170,740,150,'#8b5cf6','rgba(139,92,246,.05)');s+=T(95,194,'🛡 Default Amazon VPC',{b:1,s:14,c:'#6b2fb3'});
+    ix.forEach((x,i)=>{s+=`<g class="lk" data-k="ec2"><rect x="${x-30}" y="222" width="60" height="50" rx="6" fill="${down[i]?'#fde4e4':'#fdebd0'}" stroke="${down[i]?'#d64545':'#d9780a'}" stroke-width="2.5"/><text x="${x}" y="255" font-size="26" text-anchor="middle">${down[i]?'❌':'🖥'}</text></g>`+T(x,296,'EC2 instance '+(i+1),{a:'middle',b:1})});
+    $('#iso').innerHTML=s;$$('#iso .lk').forEach(e=>e.onclick=()=>{const k=e.dataset.k;$('#isoInfo').innerHTML=`<b>${INFO[k][0]}</b> — ${INFO[k][1]}`;draw(k)})}
+  draw();
+  function azOut(){const up=down.filter(d=>!d).length;$('#azOut').innerHTML=up===3?'All three zones healthy: <b>3 of 3 instances up</b>.':up===0?'❌ <b>All instances are down.</b> The app is offline: every instance was in a failed zone.':`⚠ ${3-up} zone${3-up>1?'s':''} down → <b>${up} of 3 instances still serving traffic</b>. The app stays up because the VPC spans the surviving zones and instances are spread across AZs.`}
+  $$('[data-az]').forEach(b=>b.onclick=()=>{const i=+b.dataset.az;down[i]=!down[i];draw();azOut()});$('#azR').onclick=()=>{down.fill(false);draw();azOut()};azOut();
+  /* sim B */
+  function d2(){let s='';const acc=(x,l)=>`<rect x="${x}" y="8" width="420" height="250" rx="10" fill="rgba(214,51,108,.04)" stroke="#d6336c" stroke-width="2.5"/>`+T(x+14,32,'🏢 '+l,{b:1,s:14})+`<rect x="${x+20}" y="48" width="380" height="190" rx="10" fill="rgba(139,92,246,.06)" stroke="#8b5cf6" stroke-width="2.5"/>`+T(x+34,72,'🛡 VPC',{b:1,c:'#6b2fb3'});s+=acc(20,'Account 1')+acc(460,'Account 2');
+    [[80,160,'EC2 1','AZ 1'],[320,160,'EC2 3','AZ 3'],[570,160,'EC2 ★','']].forEach(p=>{s+=`<rect x="${p[0]-28}" y="${p[1]-26}" width="56" height="48" rx="6" fill="#fdebd0" stroke="#d9780a" stroke-width="2.5"/><text x="${p[0]}" y="${p[1]+8}" font-size="26" text-anchor="middle">🖥</text>`+T(p[0],p[1]+44,p[2],{a:'middle',b:1})});
+    s+=`<g id="p2"></g>`;$('#iso2').innerHTML=s}
+  d2();let busy=false;
+  async function send(ok){if(busy)return;busy=true;d2();const g=$('#p2'),c=document.createElementNS(NS,'circle');c.setAttribute('r',9);c.setAttribute('fill',ok?'#2a9455':'#d64545');c.setAttribute('stroke','#fff');c.setAttribute('stroke-width','2.5');g.appendChild(c);const x0=80,y=160,x1=ok?320:420;c.setAttribute('cy',y);
+    await new Promise(r=>{const t0=performance.now(),D=1400;(function f(t){const k=clamp((t-t0)/D,0,1);c.setAttribute('cx',x0+(x1-x0)*k);if(k<1)requestAnimationFrame(f);else r()})(t0)});
+    if(ok){$('#isoOut').innerHTML='✅ <b>Delivered.</b> Both instances are in the <b>same VPC</b> (different AZs): the VPC\'s local route carries the packet across zones.'}else{g.insertAdjacentHTML('beforeend',`<text x="428" y="${y-30}" font-size="30" text-anchor="middle">🚫</text>`);$('#isoOut').innerHTML='🚫 <b>Blocked at the VPC border.</b> The destination is in a different VPC (and a different account). Isolation is the default: no route exists to it. (➕ You would have to connect the VPCs explicitly, e.g. with VPC peering.)'}busy=false}
+  $('#b1').onclick=()=>send(true);$('#b2').onclick=()=>send(false);
+})();
+/* =============== 2. CIDR =============== */
+(function(){
+  function bits(){const ipS=$('#bIp').value.trim(),p=+$('#bP').value;$('#bPV').textContent=p;if(!validIp(ipS)){$('#bOut').innerHTML='⚠ Enter a valid IPv4 address.';return}
+    const n=ip2n(ipS);let h='';for(let o=0;o<4;o++){h+='<div class="oct">';for(let b=0;b<8;b++){const i=o*8+b,v=Math.floor(n/2**(31-i))%2;h+=`<div class="bit ${i<p?'n':'h'}">${v}</div>`}h+=`</div>`}$('#bits').innerHTML=h;
+    const base=Math.floor(n/2**(32-p))*2**(32-p),cnt=2**(32-p);$('#bOut').innerHTML=`<b>${ipS}/${p}</b> → first <b>${p}</b> bits fixed. Network starts at <span class="big">${n2ip(base)}</span> · ends at <span class="big">${n2ip(base+cnt-1)}</span> · <b>${cnt.toLocaleString('en')}</b> addresses (2<sup>${32-p}</sup>).${p===16?' ← the VPC in the slides.':p===20?' ← the subnets in the slides.':''}`}
+  $('#bIp').oninput=bits;$('#bP').oninput=bits;bits();
+  const B=$('#blocks');let sel=0;B.innerHTML=Array.from({length:16},(_,i)=>`<div class="blk ${i===0?'A':i===8?'B':''}" data-i="${i}"><b>10.0.${i*16}.0/20</b>${i===0?'Subnet_A':i===8?'Subnet_B':'free'}</div>`).join('');
+  function show(i,ipx){$$('.blk',B).forEach((b,j)=>b.classList.toggle('sel',j===i));const s=i*16;$('#ipOut').innerHTML=`${ipx?ipx:''}Block <b>${i}</b>: <b>10.0.${s}.0/20</b> → addresses <b>10.0.${s}.0 – 10.0.${s+15}.255</b> · 4,096 addresses${i===0?' · <b>Subnet_A</b> (instance A = 10.0.0.5)':i===8?' · <b>Subnet_B</b> (instance B = 10.0.134.60)':''}.`}
+  B.onclick=e=>{const b=e.target.closest('.blk');if(b)show(+b.dataset.i)};
+  function chk(){const ip=$('#ipT').value.trim();if(!validIp(ip)){$('#ipOut').textContent='⚠ Enter a valid IPv4 address.';return}if(!inCidr(ip,'10.0.0.0/16')){$$('.blk',B).forEach(b=>b.classList.remove('sel'));$('#ipOut').innerHTML=`❌ <b>${ip}</b> is <b>outside</b> the VPC range 10.0.0.0/16 — not an address inside this VPC. ${ip.startsWith('198.')?'(It is a public address, like the one the slide gives to the instance.)':''}`;return}const i=Math.floor(+ip.split('.')[2]/16);show(i,`✅ <b>${ip}</b> is inside the VPC. `)}
+  $('#ipT').oninput=chk;$$('[data-ip]').forEach(b=>b.onclick=()=>{$('#ipT').value=b.dataset.ip;chk()});chk();
+})();
+/* =============== 3. lookup demo =============== */
+(function(){
+  const RT=[{dest:'10.0.0.0/16',target:'local',note:'from the slide'},{dest:'0.0.0.0/0',target:'igw-xxxx (Internet gateway)',note:'from the public-subnet slide'},{dest:'172.16.0.0/12',target:'vgw-yyyy (example)',note:'➕ extra example'}];
+  function go(){const ip=$('#lkIp').value.trim();if(!validIp(ip)){$('#lkOut').innerHTML='⚠ Enter a valid IPv4 address.';return}const best=lookup(RT,ip);
+    $('#lkT').innerHTML=`<tr><th>Destination</th><th>Target</th><th>Prefix</th><th>Matches ${ip}?</th></tr>`+RT.map((r,i)=>{const m=inCidr(ip,r.dest);return `<tr class="${best&&best.i===i?'win':m?'mt':''}"><td>${r.dest}</td><td>${r.target}<br><small style="color:#6b778c">${r.note}</small></td><td>/${r.dest.split('/')[1]}</td><td>${m?(best&&best.i===i?'✅ yes — <b>most specific</b>':'✅ yes (less specific)'):'—'}</td></tr>`}).join('');
+    $('#lkOut').innerHTML=best?`Winner: <b>${best.r.dest} → ${best.r.target}</b> (prefix /${best.l}). ${best.l===0?'Only the default route matched.':'More specific than the default route 0.0.0.0/0, so it wins.'}`:'No route matches → the packet is dropped.'}
+  $('#lkIp').oninput=go;$$('[data-lk]').forEach(b=>b.onclick=()=>{$('#lkIp').value=b.dataset.lk;go()});go();
+})();
+/* =============== LAB ENGINE =============== */
+const IP={A:'10.0.0.5',B:'10.0.134.60'},PUB={A:'198.51.102.7',B:'198.51.102.88'},TNAME={main:'Main VPC route table',pub:'Public subnet route table',priv:'Private subnet route table'};
+let LID=0;
+function Lab(el,cfg){const id=++LID,st=JSON.parse(JSON.stringify(cfg.state));let src=cfg.src||'A',dstK=cfg.dst||'peer',dir='out',busy=false,customIp='203.0.113.10';
+  const routes=t=>{const r=[{dest:'10.0.0.0/16',target:'local'}];if(st.igwRoute[t])r.push({dest:'0.0.0.0/0',target:'igw'});return r};
+  const tables=()=>[...new Set([st.assoc.A,st.assoc.B])];
+  const subPublic=k=>st.igwRoute[st.assoc[k]];
+  function geom(){const ts=tables(),g={};if(ts.length===1){g.rt={[ts[0]]:{y:250,h:null}};g.ptRT={A:[400,250],B:[400,250]}}else{g.ptRT={A:[400,155],B:[400,345]};g.rt={[st.assoc.A]:{y:155},[st.assoc.B]:{y:345}}}return g}
+  const P={A:[170,150],B:[170,340],IGW:[660,250],NET:[815,250]};
+  function dstIp(){return dstK==='peer'?IP[src==='A'?'B':'A']:dstK==='net'?'203.0.113.10':dstK==='unused'?'10.0.50.9':customIp}
+  function svg(hit){const g=geom(),pubA=subPublic('A'),pubB=subPublic('B');let s=`<defs><marker id="m${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8a96b0"/></marker></defs>`;
+    s+=`<rect x="20" y="15" width="640" height="440" rx="10" fill="rgba(139,92,246,.04)" stroke="#8b5cf6" stroke-width="3"/>`+T(36,40,'🛡 Amazon VPC 10.0.0.0/16',{b:1,s:14,c:'#6b2fb3'});
+    s+=`<rect x="40" y="55" width="600" height="385" rx="8" fill="none" stroke="#1d8fa8" stroke-width="2" stroke-dasharray="8 5"/>`+T(52,76,'Availability Zone',{c:'#1d8fa8',s:12});
+    [['A',75,'10.0.0.0/20',pubA],['B',265,'10.0.128.0/20',pubB]].forEach(([k,y,c,pb])=>{const col=pb?'#7a8f1c':'#1d8fa8';s+=`<rect x="60" y="${y}" width="300" height="165" rx="8" fill="${pb?'rgba(122,143,28,.07)':'rgba(29,143,168,.07)'}" stroke="${col}" stroke-width="2.5"/>`+T(72,y+22,`🔒 Subnet_${k} ${c}`,{b:1,c:col})+T(72,y+39,pb?'public subnet (route to IGW)':'private subnet (no route to IGW)',{s:11.5,c:col});
+     const p=P[k];s+=`<g><rect x="${p[0]-28}" y="${p[1]-24}" width="56" height="48" rx="6" fill="#fdebd0" stroke="#d9780a" stroke-width="2.5"/><text x="${p[0]}" y="${p[1]+9}" font-size="26" text-anchor="middle">🖥</text></g>`+T(p[0]+40,p[1]-14,'EC2 instance '+k,{b:1,s:12.5})+T(p[0]+40,p[1]+2,'Private IP: '+IP[k],{s:12})+T(p[0]+40,p[1]+18,st.pub[k]?'Public IP: '+PUB[k]:'(no public IP)',{s:12,c:st.pub[k]?'#2a9455':'#98a3b8'})});
+    Object.keys(g.rt).forEach(t=>{const rs=routes(t),h=34+26+rs.length*26+8,y0=g.rt[t].y-h/2,x0=400,w=220;s+=`<g class="rtbox"><rect class="bg" x="${x0}" y="${y0}" width="${w}" height="${h}" rx="6"/><rect class="hd" x="${x0}" y="${y0}" width="${w}" height="26" rx="6"/><text x="${x0+w/2}" y="${y0+18}" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">${TNAME[t]}</text><rect x="${x0}" y="${y0+26}" width="${w}" height="22" fill="#e3edf2"/><text x="${x0+10}" y="${y0+42}" font-size="11.5" font-weight="700">Destination</text><text x="${x0+130}" y="${y0+42}" font-size="11.5" font-weight="700">Target</text>`+rs.map((r,i)=>`<g class="row ${hit&&hit.t===t&&hit.i===i?(hit.bad?'bad':'hit'):''}"><rect x="${x0}" y="${y0+48+i*26}" width="${w}" height="26" fill="${hit&&hit.t===t&&hit.i===i?(hit.bad?'#fde4e4':'#fff3c4'):'#fff'}" stroke="#e3e8f2"/><text x="${x0+10}" y="${y0+66+i*26}" font-size="12" ${hit&&hit.t===t&&hit.i===i?'font-weight="700"':''}>${r.dest}</text><text x="${x0+130}" y="${y0+66+i*26}" font-size="12" ${hit&&hit.t===t&&hit.i===i?'font-weight="700"':''}>${r.target==='igw'?'Internet gateway':'local'}</text></g>`).join('')+`</g>`});
+    ['A','B'].forEach(k=>{const p=P[k],q=g.ptRT[k];s+=`<line x1="${p[0]+175}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#8a96b0" stroke-width="2" stroke-dasharray="5 4"/>`});
+    const igwOn=st.igw,any=tables().some(t=>st.igwRoute[t]);
+    s+=`<g><circle cx="${P.IGW[0]}" cy="${P.IGW[1]}" r="28" fill="${igwOn?'#eef1ff':'#f1f3f8'}" stroke="${igwOn?'#6b2fb3':'#b3bdd0'}" stroke-width="3" ${igwOn?'':'stroke-dasharray="5 4"'}/><text x="${P.IGW[0]}" y="${P.IGW[1]+8}" font-size="24" text-anchor="middle">⛩</text></g>`+T(P.IGW[0],P.IGW[1]+48,igwOn?'Internet gateway':'Internet gateway',{a:'middle',b:1,s:12})+T(P.IGW[0],P.IGW[1]+63,igwOn?'(attached)':'(NOT attached)',{a:'middle',s:11.5,c:igwOn?'#2a9455':'#d64545'});
+    s+=`<text x="${P.NET[0]}" y="${P.NET[1]+10}" font-size="46" text-anchor="middle">🌐</text>`+T(P.NET[0],P.NET[1]+42,'Internet',{a:'middle',b:1})+T(P.NET[0],P.NET[1]+58,'203.0.113.10',{a:'middle',s:11,c:'#6b778c'});
+    if(igwOn)s+=`<line x1="${P.IGW[0]+28}" y1="${P.IGW[1]}" x2="${P.NET[0]-30}" y2="${P.NET[1]}" stroke="#8a96b0" stroke-width="2.5"/>`;
+    Object.keys(g.rt).forEach(t=>{if(st.igwRoute[t]){const rs=routes(t),h=34+26+rs.length*26+8,y0=g.rt[t].y-h/2;s+=`<path d="M620 ${y0+48+26+13} C640 ${y0+74+13}, 640 ${P.IGW[1]}, ${P.IGW[0]-28} ${P.IGW[1]}" fill="none" stroke="${igwOn?'#6b2fb3':'#d64545'}" stroke-width="2.5" stroke-dasharray="${igwOn?'0':'5 4'}"/>`}});
+    s+='<g id="pk'+id+'"></g>';return s}
+  function pts(){const g=geom();return{src:P[src],rt:g.ptRT[src],peer:P[src==='A'?'B':'A'],igw:P.IGW,net:P.NET}}
+  function plan(){const S=[],p=pts(),t=st.assoc[src],rs=routes(t),peerK=src==='A'?'B':'A';
+    if(dir==='in'){const pip=st.pub[src]?PUB[src]:null;S.push({pt:p.net,hl:'net',text:`A host on the internet sends a packet to <b>${pip||'the instance'}</b> (the instance's public address).`});
+      if(!st.igw){S.push({pt:p.igw,hl:'igw',ok:false,text:'There is <b>no internet gateway attached</b> to the VPC: the packet cannot enter. ❌ Dropped.'});return S}
+      if(!pip){S.push({pt:p.net,hl:'net',ok:false,text:`<b>Instance ${src} has no public IP</b>: the internet has no address to send to. ❌ Nothing can start a connection to it.`});return S}
+      S.push({pt:p.igw,hl:'igw',text:`The internet gateway receives it and <b>translates the destination</b> ${pip} → ${IP[src]} (private).`});
+      if(!st.igwRoute[t]){S.push({pt:p.rt,hl:'rt',bad:true,tbl:t,ri:0,ok:false,text:`The subnet's route table (<b>${TNAME[t]}</b>) has <b>no 0.0.0.0/0 → Internet gateway</b> route, so this is not a public subnet: the instance could not answer. ❌ Connection cannot complete.`});return S}
+      S.push({pt:p.rt,hl:'rt',tbl:t,ri:rs.length-1,text:`Route table check: <b>0.0.0.0/0 → Internet gateway</b> exists, so replies can go back out.`});S.push({pt:p.src,hl:'src',ok:true,text:`✅ <b>Delivered</b> to instance ${src} (${IP[src]}). (➕ Security groups would still need to allow the traffic.)`});return S}
+    const d=dstIp();if(!validIp(d)){S.push({pt:p.src,hl:'src',ok:false,text:'⚠ Enter a valid destination IP.'});return S}
+    S.push({pt:p.src,hl:'src',text:`Instance ${src} (<b>${IP[src]}</b>) sends a packet to <b>${d}</b>.`});
+    const b=lookup(rs,d);
+    if(!b){S.push({pt:p.rt,hl:'rt',bad:true,tbl:t,ri:0,ok:false,text:`Route lookup in <b>${TNAME[t]}</b>: <b>no route matches ${d}</b> (the table only knows 10.0.0.0/16 → local). ❌ Packet dropped — this subnet has no path to the internet.`});return S}
+    S.push({pt:p.rt,hl:'rt',tbl:t,ri:b.i,text:`Route lookup in <b>${TNAME[t]}</b>: <b>${b.r.dest} → ${b.r.target==='igw'?'Internet gateway':'local'}</b> is the most specific match.`});
+    if(b.r.target==='local'){const host=Object.keys(IP).find(k=>IP[k]===d&&k!==src);
+      if(!host){S.push({pt:p.peer,hl:'peer',ok:false,text:`"Local" means «deliver inside the VPC», but <b>no instance has the address ${d}</b>. ❌ Nobody answers (timeout).`});return S}
+      S.push({pt:p.peer,hl:'peer',text:`Delivered <b>inside the VPC</b> to instance ${host} (${IP[host]}, ${host==='A'?'Subnet_A':'Subnet_B'}). No gateway involved.`});S.push({pt:p.src,hl:'src',ok:true,text:`✅ The reply takes the same local path back. <b>Round trip complete.</b>`});return S}
+    if(!st.igw){S.push({pt:p.igw,hl:'igw',ok:false,text:'The route points at an internet gateway, but <b>none is attached</b> to this VPC. ❌ The route is a blackhole: packet dropped.'});return S}
+    if(!st.pub[src]){S.push({pt:p.igw,hl:'igw',ok:false,text:`The packet reaches the internet gateway, but <b>instance ${src} has only a private IP</b> (${IP[src]}): it cannot be translated to an internet-routable address. ❌ Dropped. (Slide: «every instance in a public subnet requires a private and a public IP».)`});return S}
+    S.push({pt:p.igw,hl:'igw',text:`The internet gateway <b>translates the source</b> ${IP[src]} → <b>${PUB[src]}</b> (public).`});
+    S.push({pt:p.net,hl:'net',text:`The packet reaches <b>${d}</b> on the internet, seen as coming from ${PUB[src]}.`});
+    S.push({pt:p.igw,hl:'igw',col:'#2a9455',text:`Reply to ${PUB[src]} arrives at the internet gateway, which <b>translates it back</b> to ${IP[src]}.`});
+    S.push({pt:p.rt,hl:'rt',col:'#2a9455',tbl:t,ri:b.i,text:'The reply crosses the subnet\'s route table (local delivery to the instance).'});
+    S.push({pt:p.src,hl:'src',ok:true,col:'#2a9455',text:`✅ <b>Round trip complete</b>: instance ${src} has internet access.`});return S}
+  function ui(){const c=cfg.controls,H=[];
+    if(c.includes('src'))H.push(`<label>Send from<select id="sr${id}"><option value="A">Instance A (Subnet_A ${IP.A})</option><option value="B">Instance B (Subnet_B ${IP.B})</option></select></label>`);
+    if(c.includes('dir'))H.push(`<label>Direction<select id="d${id}"><option value="out">Outbound (instance → destination)</option><option value="in">Inbound (internet → instance's public IP)</option></select></label>`);
+    if(c.includes('dst'))H.push(`<label>Destination<select id="x${id}"><option value="peer">The other instance (private IP)</option><option value="net">Internet host 203.0.113.10</option><option value="unused">Unused VPC address 10.0.50.9</option><option value="custom">Custom IP…</option></select></label><label id="cw${id}" style="display:none">Custom IP<input type="text" id="ci${id}" value="${customIp}"></label>`);
+    if(c.includes('assoc'))H.push(`<label>Subnet_A uses<select id="aA${id}">${Object.keys(TNAME).map(t=>`<option value="${t}">${TNAME[t]}</option>`).join('')}</select></label><label>Subnet_B uses<select id="aB${id}">${Object.keys(TNAME).map(t=>`<option value="${t}">${TNAME[t]}</option>`).join('')}</select></label>`);
+    if(c.includes('igw'))H.push(`<label class="inl"><input type="checkbox" id="g${id}"> Internet gateway attached to the VPC</label>`);
+    if(c.includes('pub'))H.push(`<label class="inl"><input type="checkbox" id="pA${id}"> Instance A has a public IP</label><label class="inl"><input type="checkbox" id="pB${id}"> Instance B has a public IP</label>`);
+    if(c.includes('route'))H.push(`<div id="rr${id}" style="display:contents"></div>`);
+    el.innerHTML=`<div class="panelc">${H.join('')}</div><svg viewBox="0 0 900 470" class="gsvg" id="sv${id}"></svg><div class="btns"><button class="btn fog" id="go${id}">▶ Send packet</button><button class="btn ghost" id="rs${id}">↺ Reset experiment</button></div><ul class="steps" id="st${id}"></ul><div class="verdict" id="vd${id}" style="font-weight:600">Press «Send packet» to watch the flow.</div>`}
+  function syncUi(){const q=s=>$(s+id,el);const set=(s,v,k='value')=>{const e=q(s);if(e)e[k]=v};set('#sr',src);set('#d',dir);set('#x',dstK);set('#g',st.igw,'checked');set('#pA',st.pub.A,'checked');set('#pB',st.pub.B,'checked');set('#aA',st.assoc.A);set('#aB',st.assoc.B);const cw=q('#cw');if(cw)cw.style.display=dstK==='custom'?'flex':'none';
+    const rr=q('#rr');if(rr)rr.innerHTML=tables().map(t=>`<label class="inl"><input type="checkbox" data-t="${t}" ${st.igwRoute[t]?'checked':''}> Add 0.0.0.0/0 → IGW to <b>${TNAME[t].replace(' route table','')}</b> table</label>`).join('');
+    $$('[data-t]',el).forEach(c=>c.onchange=()=>{st.igwRoute[c.dataset.t]=c.checked;redraw()})}
+  function redraw(hit){$('#sv'+id,el).innerHTML=svg(hit);$('#st'+id,el).innerHTML='';$('#vd'+id,el).className='verdict';$('#vd'+id,el).textContent='Press «Send packet» to watch the flow.';syncUi()}
+  async function run(){if(busy)return;busy=true;redraw();const S=plan(),ul=$('#st'+id,el);ul.innerHTML=S.map((s,i)=>`<li id="l${id}_${i}"><span class="n">${i+1}</span><span>${s.text}</span></li>`).join('');
+    const g=$('#pk'+id,el),dot=document.createElementNS(NS,'circle');dot.setAttribute('r',9);dot.setAttribute('fill','#d9780a');dot.setAttribute('stroke','#fff');dot.setAttribute('stroke-width','2.5');g.appendChild(dot);let cur=S[0].pt;dot.setAttribute('cx',cur[0]);dot.setAttribute('cy',cur[1]);
+    for(let i=0;i<S.length;i++){const s=S[i],li=$('#l'+id+'_'+i);li.classList.add('on');if(s.col)dot.setAttribute('fill',s.col);
+      await new Promise(r=>{const a=cur,b=s.pt,t0=performance.now(),D=a[0]===b[0]&&a[1]===b[1]?200:750;(function f(t){const k=clamp((t-t0)/D,0,1);dot.setAttribute('cx',a[0]+(b[0]-a[0])*k);dot.setAttribute('cy',a[1]+(b[1]-a[1])*k);if(k<1)requestAnimationFrame(f);else r()})(t0)});cur=s.pt;
+      if(s.tbl){$('#sv'+id,el).innerHTML=svg({t:s.tbl,i:s.ri,bad:s.bad});const g2=$('#pk'+id,el);g2.appendChild(dot)}
+      li.classList.remove('on');li.classList.add(s.ok===false?'no':'ok');
+      if(s.ok===false){dot.setAttribute('fill','#d64545');g.insertAdjacentHTML('beforeend',`<text x="${s.pt[0]}" y="${s.pt[1]-18}" font-size="30" text-anchor="middle">🚫</text>`);break}await sleep(380)}
+    const last=S[S.length-1],ok=last.ok===true,v=$('#vd'+id,el);v.className='verdict '+(ok?'neg':'pos');v.innerHTML=ok?'✅ Traffic flows.':'❌ Traffic blocked — see the last red step for the exact reason.';busy=false}
+  ui();redraw();
+  const on=(s,f)=>{const e=$(s+id,el);if(e)e.onchange=f};
+  on('#sr',e=>{src=e.target.value;redraw()});on('#d',e=>{dir=e.target.value;redraw()});on('#x',e=>{dstK=e.target.value;redraw()});const ci=$('#ci'+id,el);if(ci)ci.oninput=e=>{customIp=e.target.value};
+  on('#g',e=>{st.igw=e.target.checked;redraw()});on('#pA',e=>{st.pub.A=e.target.checked;redraw()});on('#pB',e=>{st.pub.B=e.target.checked;redraw()});on('#aA',e=>{st.assoc.A=e.target.value;redraw()});on('#aB',e=>{st.assoc.B=e.target.value;redraw()});
+  $('#go'+id,el).onclick=run;$('#rs'+id,el).onclick=()=>{if(busy)return;Object.assign(st,JSON.parse(JSON.stringify(cfg.state)));src=cfg.src||'A';dstK=cfg.dst||'peer';dir='out';redraw()};
+}
+const IR={main:false,pub:true,priv:false};
+Lab($('#lab3'),{state:{assoc:{A:'main',B:'main'},igw:false,igwRoute:{...IR},pub:{A:false,B:false}},controls:['src','dst'],dst:'peer'});
+Lab($('#lab4'),{state:{assoc:{A:'pub',B:'main'},igw:true,igwRoute:{...IR},pub:{A:true,B:false}},controls:['src','dst','dir','igw','pub','route'],dst:'net'});
+Lab($('#lab5'),{state:{assoc:{A:'pub',B:'priv'},igw:true,igwRoute:{...IR},pub:{A:true,B:false}},controls:['src','dst','dir','pub','route'],src:'B',dst:'net'});
+Lab($('#lab6'),{state:{assoc:{A:'main',B:'main'},igw:false,igwRoute:{...IR},pub:{A:false,B:false}},controls:['src','dst','dir','assoc','igw','pub','route'],dst:'net'});
+/* =============== QUIZ =============== */
+(function(){const Q=[
+ {id:'v1',q:'What is the relationship between an AWS account and a VPC?',o:['A VPC is a logically isolated virtual network inside your account, in one Region','A VPC is another name for an AWS account','A VPC contains several AWS accounts','A VPC exists only in the default Availability Zone'],a:0,w:'Account → Region → VPC. The VPC is your isolated network; by default nothing outside it can reach it.'},
+ {id:'v2',q:'How does a VPC relate to Availability Zones?',o:['A VPC lives in a single AZ','A VPC spans all the AZs of its Region; each subnet lives in exactly one AZ','Each AZ needs its own VPC','AZs are inside the VPC\'s subnets'],a:1,w:'On the slide the purple VPC box crosses the three AZ boxes. Subnets, however, are tied to one AZ.'},
+ {id:'v3',q:'How many addresses does a /20 block (like 10.0.0.0/20) contain?',o:['256','1,024','4,096','65,536'],a:2,w:'32 − 20 = 12 host bits → 2¹² = 4,096 addresses. (A /16 has 65,536; AWS reserves 5 in each subnet.)'},
+ {id:'v4',q:'Which route lets instance A (Subnet_A) reach instance B (Subnet_B) in the slide\'s main route table?',o:['0.0.0.0/0 → Internet gateway','10.0.0.0/16 → local','10.0.128.0/20 → Subnet_B','They cannot talk to each other'],a:1,w:'The local route covers the whole VPC range, so any destination inside 10.0.0.0/16 is delivered within the VPC.'},
+ {id:'v5',q:'What makes a subnet «public»?',o:['Its name','Having an instance with a public IP','Its route table has a route to an internet gateway (0.0.0.0/0)','Being in the first AZ'],a:2,w:'Public vs private is defined by routing: a route to the internet gateway. (The instance additionally needs a public IP.)'},
+ {id:'v6',q:'An instance in a public subnet has the default route to the IGW but only a private IP. What happens when it contacts the internet?',o:['It works normally','The IGW cannot translate its private address, so the traffic is dropped','The VPC assigns a public IP automatically on the spot','The packet is delivered locally'],a:1,w:'Slide: every instance in a public subnet needs both a private and a public IP to gain internet access.'},
+ {id:'v7',q:'The private subnet\'s route table only has 10.0.0.0/16 → local. The instance pings 8.8.8.8. What happens?',o:['The IGW forwards it','No route matches, so the packet is dropped','It is delivered to Subnet_A','It goes through the main route table'],a:1,w:'8.8.8.8 is outside 10.0.0.0/16 and there is no default route: no match → drop.'},
+ {id:'v8',q:'Which of these addresses belongs to Subnet_B (10.0.128.0/20)?',o:['10.0.0.5','10.0.200.1','10.0.134.60','10.0.16.9'],a:2,w:'Subnet_B covers 10.0.128.0 – 10.0.143.255. 10.0.134.60 is inside; 10.0.200.1 is in a different /20 block.'}];
+ Q.forEach(it=>{QS.push(it.id);const d=document.createElement('div');d.className='qz';d.innerHTML=`<p class="q">${it.q}</p>`+it.o.map((o,i)=>`<button class="o" data-i="${i}">${o}</button>`).join('')+'<div class="why"></div>';
+  $$('.o',d).forEach(b=>b.onclick=()=>{if(d.classList.contains('done'))return;const ok=+b.dataset.i===it.a;b.classList.add(ok?'ok':'no');if(!ok)$$('.o',d)[it.a].classList.add('ok');d.classList.add('done');$('.why',d).innerHTML=(ok?'✅ <b>Correct.</b> ':'❌ <b>Not quite.</b> ')+it.w;if(store[it.id]!==1){store[it.id]=ok?1:0;try{localStorage.setItem('vpcq',JSON.stringify(store))}catch(e){}}prog()});$('#quiz').appendChild(d)});prog()})();
+</script></body></html>
