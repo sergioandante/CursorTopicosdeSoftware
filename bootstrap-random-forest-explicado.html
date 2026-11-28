@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bootstrap y bosque aleatorio, explicado a detalle</title>
+<style>
+:root{--cloud:#4f5bd5;--cloudbg:#e8eaff;--fog:#0e9f8e;--fogbg:#d9f4ef;--thing:#d9780a;--thingbg:#fdebd0;--bad:#d64545;--badbg:#fde4e4;--good:#2a9455;--goodbg:#dcf2e5;--ink:#1c2433;--muted:#5b6678;--bg:#f3f5fa;--card:#fff;--line:#dbe1ec;--r:14px;color-scheme:light}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 18px}
+header.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding-top:8px;padding-bottom:8px}
+.brand{font-weight:800;font-size:17px}.brand small{font-weight:500;color:var(--muted);margin-left:6px}
+#tabs{display:flex;gap:4px;flex-wrap:wrap}
+#tabs button{border:0;background:transparent;padding:7px 13px;border-radius:999px;font:600 14px system-ui;color:var(--muted);cursor:pointer}
+#tabs button:hover{background:#eef1f8}
+#tabs button.on{background:var(--ink);color:#fff}
+.prog{margin-left:auto;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.pbar{width:110px;height:8px;border-radius:9px;background:#e4e8f1;overflow:hidden}.pbar i{display:block;height:100%;width:0;background:var(--good);transition:width .4s}
+main{padding:22px 0 80px}
+.tab{display:none}.tab.on{display:block}
+h1{font-size:clamp(26px,4.5vw,40px);line-height:1.15;margin:.2em 0 .3em}
+h2.ch{font-size:clamp(22px,3.4vw,30px);margin:.2em 0}
+.chhead{border-radius:var(--r);padding:22px 24px;color:#fff;margin-bottom:18px}
+.chhead p{margin:.3em 0 0;opacity:.95;max-width:760px}
+.c1{background:linear-gradient(120deg,#0e9f8e,#2b7fd1)}.c2{background:linear-gradient(120deg,#4f5bd5,#8b5cf6)}.c3{background:linear-gradient(120deg,#d9780a,#d64545)}
+.goals{background:#fff;border:1px dashed #b9c3d8;border-radius:var(--r);padding:12px 18px;margin-bottom:18px}
+.goals b{display:block;margin-bottom:2px}.goals ul{margin:4px 0 0;padding-left:20px}
+.lesson{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin:0 0 22px;box-shadow:0 1px 2px rgba(20,30,60,.04)}
+.lesson>h3{margin:0 0 6px;font-size:21px;display:flex;align-items:center;gap:10px}
+.lesson>h3 .num{background:var(--ink);color:#fff;font-size:12.5px;border-radius:8px;padding:2px 8px;font-weight:700}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 10px}
+.tag{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 10px;background:#eef1f8;color:#43506a}
+.tag.sim{background:var(--fogbg);color:#08695d}.tag.pred{background:var(--thingbg);color:#8a4a05}.tag.chk{background:var(--cloudbg);color:#323da5}.tag.vis{background:#f3e8ff;color:#6b2fb3}
+.key{border-left:5px solid var(--fog);background:var(--fogbg);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.key b.t,.misc b.t,.ana b.t{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.misc{border-left:5px solid var(--bad);background:var(--badbg);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.ana{border-left:5px solid var(--thing);background:var(--thingbg);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.key p,.misc p,.ana p{margin:0}
+.viz{margin:12px 0;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fbfcfe}
+.gsvg{width:100%;height:auto;display:block;max-width:100%}
+.ctrls{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;margin:8px 0}
+.ctrls label{font-size:14px;display:flex;flex-direction:column;gap:2px;min-width:200px}
+.ctrls label.inl{flex-direction:row;align-items:center;gap:6px;min-width:0}
+input[type=range]{width:100%;accent-color:var(--fog)}
+.btn{border:0;background:var(--ink);color:#fff;border-radius:10px;padding:8px 15px;font:600 14px system-ui;cursor:pointer}
+.btn:hover{filter:brightness(1.2)}.btn.ghost{background:#e6eaf3;color:var(--ink)}.btn.fog{background:var(--fog)}.btn[disabled]{opacity:.45;cursor:default}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.predict{background:var(--thingbg);border-radius:10px;padding:8px 12px;margin:8px 0;font-size:14.5px}
+.predict label{margin-left:12px;cursor:pointer}
+.out{margin-top:8px;font-size:14.5px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+.stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}.stat b{display:block;font-size:22px;line-height:1.1}.stat span{font-size:12px;color:var(--muted)}
+.note{font-size:14px;background:#eef1f8;border-radius:10px;padding:8px 12px;margin-top:6px}
+.ginfo{font-size:14.5px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--fog);border-radius:8px;padding:8px 12px;margin-top:8px;min-height:44px}
+.gctl{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}.gctl .cnt{font-size:13px;color:var(--muted)}
+/* svg graph */
+.n rect{fill:#fff;stroke:#a9b4ca;stroke-width:1.5;transition:all .25s}
+.n.cloud rect{fill:var(--cloudbg);stroke:var(--cloud)}.n.fog rect{fill:var(--fogbg);stroke:var(--fog)}.n.thing rect{fill:var(--thingbg);stroke:var(--thing)}
+.n.user rect{fill:#f3e8ff;stroke:#8b5cf6}.n.bad rect{fill:var(--badbg);stroke:var(--bad)}.n.good rect{fill:var(--goodbg);stroke:var(--good)}.n.ml rect{fill:#fff3c4;stroke:#c49000}
+.n.group rect{fill:rgba(255,255,255,.55);stroke-dasharray:6 4;stroke:#98a3b8}
+.n text{font-size:12.5px;fill:var(--ink);text-anchor:middle;pointer-events:none}.n text.gl{text-anchor:start;font-weight:700;fill:#5b6678;font-size:12px}
+.n.clk{cursor:pointer}.n.clk:hover rect{stroke-width:2.6}
+.n.on rect{stroke-width:3.4;filter:drop-shadow(0 2px 5px rgba(0,0,0,.28))}.n.dim{opacity:.32}
+.e{fill:none;stroke:#98a3b8;stroke-width:1.7}.e.dash{stroke-dasharray:6 4}.e.on{stroke:var(--fog);stroke-width:3.2}.e.dim{opacity:.25}
+.elab{font-size:11.5px;fill:#5b6678;text-anchor:middle;paint-order:stroke;stroke:#fbfcfe;stroke-width:4px}
+/* tiers */
+.band{stroke-width:1.5;stroke-dasharray:7 5;fill:none}.bandc{stroke:var(--cloud);fill:rgba(79,91,213,.05)}.bandf{stroke:var(--fog);fill:rgba(14,159,142,.06)}.bandt{stroke:var(--thing);fill:rgba(217,120,10,.06)}
+.svgt{font-size:13px;fill:var(--ink)}.svgs{font-size:11.5px;fill:#5b6678}
+.lnk{stroke:#98a3b8;stroke-width:2}.lnk.cut{stroke:var(--bad);stroke-dasharray:5 5}
+/* layers */
+.stack{display:flex;flex-direction:column;gap:6px}
+.layer{display:grid;grid-template-columns:34px 190px 1fr;gap:10px;align-items:center;border:2px solid var(--line);background:#fff;border-radius:10px;padding:6px 10px;transition:all .3s;font-size:14px}
+.layer .no{font-weight:800;color:var(--muted)}
+.layer.on{border-color:var(--fog);background:var(--fogbg);transform:translateX(6px)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;min-height:36px;align-items:center}
+.chip{background:#fff;border:1px solid var(--line);border-radius:8px;padding:3px 9px;font:600 13px ui-monospace,Menlo,Consolas,monospace}.chip.w{background:var(--badbg);border-color:var(--bad)}.chip.s{background:#f1f3f8;color:#4a5670}.chip.g{background:var(--goodbg);border-color:var(--good)}
+/* canvases */
+canvas.cv{width:100%;height:380px;display:block;border:1px solid var(--line);border-radius:10px;background:#fff;touch-action:none}
+canvas.cv.short{height:200px}
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.twocol{grid-template-columns:1fr}.layer{grid-template-columns:28px 1fr}.layer .fx{grid-column:1/-1}}
+/* quiz */
+.qz{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;background:#fff}
+.qz p.q{margin:0 0 8px;font-weight:700}
+.qz .o{display:block;width:100%;text-align:left;background:#f6f8fc;border:1.5px solid var(--line);border-radius:9px;padding:8px 12px;margin:5px 0;font:inherit;cursor:pointer}
+.qz .o:hover{border-color:#8a96b0}.qz .o.ok{background:var(--goodbg);border-color:var(--good)}.qz .o.no{background:var(--badbg);border-color:var(--bad)}
+.qz .why{display:none;font-size:14px;margin-top:6px;color:#344058}.qz.done .why{display:block}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:10px 0}
+.flip{perspective:900px;min-height:150px;cursor:pointer}
+.flip .in{position:relative;width:100%;height:100%;min-height:150px;transition:transform .5s;transform-style:preserve-3d}
+.flip.f .in{transform:rotateY(180deg)}
+.flip .fa,.flip .fb{position:absolute;inset:0;border-radius:12px;padding:12px 14px;backface-visibility:hidden;border:1px solid var(--line);overflow:auto;font-size:14px}
+.flip .fa{background:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;font-weight:700;font-size:16px}
+.flip .fa small{font-weight:500;color:var(--muted);margin-top:6px}
+.flip .fb{background:var(--fogbg);transform:rotateY(180deg)}
+/* game */
+.task{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:6px 0;background:#fff}
+.task .tx{flex:1 1 280px;font-size:14.5px}.task .ch{display:flex;gap:6px}
+.task button{border:1.5px solid var(--line);background:#f6f8fc;border-radius:8px;padding:5px 11px;font:600 13px system-ui;cursor:pointer}
+.task button.ok{background:var(--goodbg);border-color:var(--good)}.task button.no{background:var(--badbg);border-color:var(--bad)}
+.task .fb{flex-basis:100%;font-size:13.5px;color:#344058;display:none}.task.done .fb{display:block}
+/* meters */
+.meter{display:grid;grid-template-columns:200px 1fr 42px;gap:8px;align-items:center;margin:5px 0;font-size:14px}
+.meter .bar{height:14px;background:#e9edf5;border-radius:9px;overflow:hidden}.meter .bar i{display:block;height:100%;border-radius:9px;transition:width .5s}
+@media(max-width:600px){.meter{grid-template-columns:1fr 1fr 38px}}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.seg button{border:0;background:transparent;padding:8px 14px;font:600 14px system-ui;cursor:pointer}.seg button.on{background:var(--ink);color:#fff}
+/* timeline */
+.tl{display:flex;overflow-x:auto;gap:0;padding:10px 4px 6px;scroll-snap-type:x proximity}
+.tl .ev{flex:0 0 auto;min-width:92px;text-align:center;cursor:pointer;scroll-snap-align:center;position:relative;padding-top:20px}
+.tl .ev:before{content:"";position:absolute;top:9px;left:0;right:0;height:3px;background:#cfd6e5}
+.tl .ev i{position:absolute;top:2px;left:50%;margin-left:-8px;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid #8a96b0}
+.tl .ev.on i{background:var(--fog);border-color:var(--fog);transform:scale(1.25)}
+.tl .ev b{display:block;font-size:14px}.tl .ev span{font-size:11.5px;color:var(--muted)}
+.tdetail{background:#fff;border:1px solid var(--line);border-left:5px solid var(--fog);border-radius:10px;padding:10px 14px;min-height:70px}
+/* ml tables */
+table.q{border-collapse:collapse;font:12.5px ui-monospace,Menlo,monospace}table.q td,table.q th{border:1px solid #fff;padding:4px 6px;text-align:center;min-width:42px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin:6px 0}.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.tpl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+.tree5{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:8px 0}
+.tcard{border:2px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;background:#fff;transition:all .25s}.tcard b{display:block}.tcard.bad{border-color:var(--bad);background:var(--badbg)}.tcard.good{border-color:var(--good);background:var(--goodbg)}.tcard.off{opacity:.35}
+.tcard button{margin-top:4px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
+.lanes{display:flex;gap:6px;margin:8px 0}.lanes .b{flex:1;text-align:center;border:2px solid var(--line);border-radius:10px;padding:10px 0;font-size:13px;background:#fff;position:relative}
+.lanes .b.jam{background:var(--badbg);border-color:var(--bad)}.lanes .b.pick{outline:3px solid var(--cloud)}.lanes .b.okp{background:var(--goodbg);border-color:var(--good)}
+.sel{display:flex;flex-direction:column;gap:6px;margin:8px 0}.sel button{text-align:left;background:#f6f8fc;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;cursor:pointer}.sel button:hover{border-color:var(--fog)}
+.crumbs{font-size:13px;color:var(--muted);margin:4px 0}
+.fcard{min-height:170px}
+.fcard .fa{font-size:18px}
+footer{color:var(--muted);font-size:13px;text-align:center;padding:30px 0}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:20px;align-items:center}
+@media(max-width:800px){.hero{grid-template-columns:1fr}}
+.journey{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:14px 0}
+.jc{border-radius:14px;padding:16px;color:#fff;cursor:pointer;transition:transform .2s}.jc:hover{transform:translateY(-3px)}.jc h4{margin:0 0 4px;font-size:18px}.jc p{margin:0;font-size:14px;opacity:.95}
+
+.hl2{outline:3px solid var(--thing);outline-offset:2px}
+.focus g[data-k]{opacity:.15;transition:opacity .3s}.focus g[data-k].hl{opacity:1}
+.alist{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.alist button{text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;font:inherit;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+.alist button:hover{border-color:var(--fog)}.alist button.on{border-color:var(--ink);background:#f3f6fb}
+.alist .bd{flex:0 0 auto;background:var(--ink);color:#fff;border-radius:50%;width:24px;height:24px;display:grid;place-items:center;font-weight:700;font-size:13px}
+.snav{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 18px}.snav a{background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:5px 12px;font:600 13px system-ui;color:var(--ink);text-decoration:none}.snav a:hover{border-color:var(--fog)}
+.hist{display:flex;gap:6px;align-items:flex-end;height:110px;margin:8px 0;padding:0 4px}
+.hist .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;font-size:12px;height:100%}
+.hist .col i{display:block;width:100%;border-radius:6px 6px 0 0;min-height:2px;transition:height .4s}
+.hist .col.zero b{color:var(--bad)}
+.tblw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+table.bt{border-collapse:collapse;width:100%;font-size:13px}table.bt th,table.bt td{border:1px solid #eef1f8;padding:5px 7px;text-align:center;white-space:nowrap}
+table.bt td.o{background:#eceff5;color:#9aa5bb}table.bt td.r{background:var(--thingbg);font-weight:800;color:#8a4a05}
+table.bt th .dc{display:inline-block;width:22px;height:22px;border-radius:50%;color:#fff;line-height:22px;font-size:12px}
+.vchips{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0}.vchips span{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:700}
+.fc{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+.fc div{border:2px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff;font-size:13.5px;transition:all .3s}
+.fc div.cand{border-color:var(--cloud);background:var(--cloudbg)}.fc div.win{border-color:#2a9455;background:var(--goodbg)}.fc div.out{opacity:.4;text-decoration:line-through}
+details{border:1px solid var(--line);border-radius:10px;padding:8px 14px;margin:6px 0;background:#fff}summary{cursor:pointer;font-weight:700}details p{margin:6px 0 2px}
+.formula{font:600 17px ui-monospace,Menlo,monospace;background:#f3f6fb;border-radius:10px;padding:10px 14px;margin:8px 0;overflow-x:auto}
+table.gl{border-collapse:collapse;width:100%;font-size:14px}table.gl td{border-bottom:1px solid var(--line);padding:6px 8px;vertical-align:top}table.gl td:first-child{font-weight:700;white-space:nowrap}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch;margin:10px 0}.flow .st{flex:1 1 140px;border:2px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff;font-size:13.5px}.flow .st b{display:block}.flow .ar{align-self:center;font-size:20px;color:var(--muted)}
+.a{opacity:0;animation:pop .5s ease forwards;animation-delay:var(--d,0s);transform-box:fill-box;transform-origin:center}
+@keyframes pop{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:none}}
+.flash{animation:fl2 .9s ease}@keyframes fl2{0%{transform:scale(1)}40%{transform:scale(1.5)}100%{transform:scale(1)}}
+</style></head><body>
+<header class="top"><div class="wrap"><div class="brand">🌲 Bootstrap y Random Forest<small>explicado a detalle</small></div><div class="prog"><span id="progtxt">0/0</span><div class="pbar"><i id="progbar"></i></div></div></div></header>
+<main class="wrap">
+<div class="chhead c1" style="background:linear-gradient(120deg,#2a9455,#0e9f8e)"><h2 class="ch">¿Qué significan «Muestra 1, 2, 3» y los anillos naranja?</h2><p>Esa figura muestra el <b>muestreo con reemplazo (bootstrap)</b>: la forma en que un bosque aleatorio le da a cada árbol datos distintos. Aquí lo desarmamos pieza por pieza, con simulaciones.</p></div>
+<div class="key"><b class="t">Resumen en 30 segundos</b><p>Tienes 10 datos. Para cada árbol, <b>sacas 10 veces un dato de una bolsa, devolviéndolo cada vez</b>. Resultado: una lista de 10 con algunos datos <b>repetidos</b> y otros <b>ausentes</b>. Cada árbol aprende de su propia lista, así que cada uno es ligeramente distinto. Al final todos <b>votan</b>.</p></div>
+<div class="note">📖 <b>Qué es del libro y qué no:</b> el Cap. 3 solo dice que un Random Forest es «muchos árboles de decisión individuales que votan». El detalle de bootstrap, OOB y características aleatorias es <b>conocimiento general de machine learning</b> que añado para explicar la figura.</div>
+<nav class="snav"><a href="#s1">1 · La figura</a><a href="#s2">2 · El sorteo</a><a href="#s3">3 · La matemática</a><a href="#s4">4 · Árboles y OOB</a><a href="#s5">5 · Características</a><a href="#s6">6 · Todo junto</a><a href="#s7">7 · Preguntas</a><a href="#s8">8 · Quiz</a></nav>
+
+<section class="lesson" id="s1"><h3><span class="num">1</span> Anatomía de la figura</h3>
+ <p>Haz clic en cada elemento de la lista para iluminarlo en el dibujo.</p>
+ <div class="viz"><svg viewBox="0 0 760 360" class="gsvg" id="anat"></svg></div>
+ <div class="alist" id="alist"></div><div class="ginfo" id="ainfo">Elige un elemento de la lista.</div></section>
+
+<section class="lesson" id="s2"><h3><span class="num">2</span> El sorteo, con tus propias manos</h3>
+ <p>Una <b>bolsa</b> con 10 bolas numeradas (color = clase: 🔵 normal, 🔴 ataque). Sacas una bola, anotas su número en la lista y, <b>si el sorteo es «con reemplazo», la devuelves a la bolsa</b>. Repites 10 veces. <b>Predice:</b> ¿saldrán las 10 bolas distintas?</p>
+ <div class="viz"><div class="ctrls"><label class="inl"><input type="radio" name="mode" value="r" checked> Con reemplazo (bootstrap)</label><label class="inl"><input type="radio" name="mode" value="s"> Sin reemplazo</label></div>
+ <svg viewBox="0 0 760 250" class="gsvg" id="urn"></svg>
+ <div class="btns"><button class="btn fog" id="uOne">🎲 Sacar 1</button><button class="btn" id="uAll">⏩ Sacar las 10</button><button class="btn ghost" id="uReset">↺ Nueva bolsa</button></div>
+ <div id="uHist"></div><div class="out" id="uOut"></div></div>
+ <h4>Seis muestras seguidas</h4><p>Cada fila es un árbol distinto. Fíjate cuánto varían <b>con reemplazo</b>: así cada árbol recibe una «versión» distinta de los mismos datos.</p>
+ <div class="viz"><div id="gal"></div><div class="btns"><button class="btn" id="galB">🎲 Nuevas muestras</button></div></div></section>
+
+<section class="lesson" id="s3"><h3><span class="num">3</span> La matemática: ¿por qué faltan datos? (≈ 37 %)</h3>
+ <p>¿Cuál es la probabilidad de que <b>un dato concreto</b> no salga nunca en la muestra? En un sorteo, no salir tiene probabilidad <b>1 − 1/n</b>. Los n sorteos son independientes (porque se devuelve la bola), así que:</p>
+ <div class="formula">P(no sale) = (1 − 1/n)ⁿ  →  e⁻¹ ≈ 0.368  (36.8 %)</div>
+ <p>Para n = 10: 0.9¹⁰ = 0.349 → unos 3.5 datos ausentes de 10 por muestra, como en la figura (2–3 ausentes). Y por tanto ≈ <b>63.2 %</b> de los datos distintos aparecen. Comprueba con una simulación de 3 000 muestras:</p>
+ <div class="viz"><div class="ctrls"><label>Tamaño del conjunto n: <b id="nV">10</b><input type="range" id="nS" min="2" max="100" value="10"></label></div>
+ <div class="twocol"><div><b>Probabilidad de que un dato falte, según n</b><canvas class="cv short" id="cvCurve" style="height:240px"></canvas></div><div><b>¿Cuántas veces sale un dato? (3 000 muestras)</b><canvas class="cv short" id="cvCnt" style="height:240px"></canvas></div></div>
+ <div class="out" id="mOut"></div></div>
+ <div class="ana"><b class="t">Cómo leerlo</b><p>Un dato sale <b>0 veces</b> en ~37 % de las muestras (ausente / OOB), <b>1 vez</b> en ~37 %, <b>2 veces</b> en ~18 % (anillo naranja) y 3 o más en ~8 %. Es una distribución de Poisson(1): la barra azul es la teoría; la naranja, tu simulación.</p></div></section>
+
+<section class="lesson" id="s4"><h3><span class="num">4</span> De la muestra al árbol (y los datos «OOB»)</h3>
+ <p>Los datos que <b>no aparecen</b> en la muestra de un árbol se llaman <b>OOB</b> (<i>out-of-bag</i>, «fuera de la bolsa»). Ese árbol <b>nunca los vio</b>, así que sirven como un <b>examen gratis</b>. Aquí cada «árbol» es muy simple (un solo corte sobre x = número del dato) para que veas todo el proceso. El dato <b>8</b> es azul entre rojos: un dato raro.</p>
+ <div class="viz"><div class="ctrls"><label>Número de árboles T: <b id="tV">7</b><input type="range" id="tS" min="3" max="25" value="7"></label><button class="btn fog" id="tNew">🎲 Entrenar un bosque nuevo</button></div>
+  <div class="tblw" id="tbl"></div>
+  <div class="legend" style="margin-top:8px"><span><b style="background:#eceff5;padding:0 7px;border-radius:4px">·</b> OOB: el árbol no vio ese dato</span><span><b style="background:var(--thingbg);padding:0 7px;border-radius:4px">2</b> repetido</span><span><b>1</b> aparece una vez</span></div>
+  <div class="out" id="oobOut"></div></div>
+ <h4>Y ahora, que voten</h4><p>Mueve el dato nuevo: cada árbol aplica su corte y vota. Gana la mayoría.</p>
+ <div class="viz"><div class="ctrls"><label>Dato nuevo con x = <b id="xV">3.0</b><input type="range" id="xS" min="0" max="11" step="0.1" value="3"></label></div><div class="vchips" id="vch"></div><div class="out" id="vOut"></div></div></section>
+
+<section class="lesson" id="s5"><h3><span class="num">5</span> La segunda aleatoriedad: ¿qué característica miro?</h3>
+ <p>Tener datos distintos no basta. Si una característica (p. ej. «fallos de login») es mucho mejor que las demás, <b>todos</b> los árboles la usarían en su primer corte y saldrían casi iguales. Por eso, <b>en cada corte</b>, el árbol solo puede mirar un <b>subconjunto aleatorio</b> de características (<i>mtry</i>). Cada tarjeta muestra cuánta impureza reduciría esa característica en este corte.</p>
+ <div class="viz"><div class="ctrls"><label>Características que puede mirar (mtry): <b id="mV">2</b> de 4<input type="range" id="mS" min="1" max="4" value="2"></label><button class="btn fog" id="mGo">🎲 Hacer un corte</button></div>
+  <div class="fc" id="fc"></div><div class="out" id="mOut2"></div>
+  <b>En 1 000 cortes, ¿qué característica gana?</b><div class="hist" id="mHist"></div><div class="out" id="mOut3"></div></div>
+ <div class="misc"><b class="t">Observa</b><p>Con mtry = 4 gana <b>siempre</b> «fallos de login»: árboles clones. Con mtry bajo, a veces esa característica ni se mira y otra ocupa su lugar: árboles distintos entre sí → votos que se compensan. Pero con mtry = 1 los cortes pueden ser malos: hay un equilibrio.</p></div></section>
+
+<section class="lesson" id="s6"><h3><span class="num">6</span> Todo junto: receta del Random Forest</h3>
+ <div class="flow"><div class="st"><b>① Datos</b>n ejemplos etiquetados</div><div class="ar">→</div><div class="st"><b>② Bootstrap</b>sacar n con reemplazo → muestra del árbol</div><div class="ar">→</div><div class="st"><b>③ Árbol</b>en cada corte, solo mira mtry características al azar</div><div class="ar">→</div><div class="st"><b>④ Repetir</b>T veces (decenas–cientos)</div><div class="ar">→</div><div class="st"><b>⑤ Votar</b>gana la clase más votada</div></div>
+ <table class="gl"><tr><td>Bagging</td><td>Bootstrap + agregar (votar/promediar) los modelos. Solo la parte ②, ④ y ⑤.</td></tr><tr><td>Random Forest</td><td>Bagging <b>+</b> características aleatorias en cada corte (③). Árboles más distintos entre sí.</td></tr><tr><td>In-bag</td><td>Datos que sí aparecen en la muestra de un árbol (≈ 63 %).</td></tr><tr><td>OOB</td><td>Datos que no aparecen (≈ 37 %): sirven para estimar el error sin separar datos de prueba.</td></tr><tr><td>mtry</td><td>Nº de características que cada corte puede mirar.</td></tr></table>
+ <div class="ana"><b class="t">En un nodo fog</b><p>El entrenamiento suele hacerse en la nube; el nodo fog solo <b>ejecuta</b> los T árboles y cuenta votos. Más árboles = más estable, pero más memoria y tiempo de inferencia en el nodo: T es un parámetro a ajustar según los recursos.</p></div></section>
+
+<section class="lesson" id="s7"><h3><span class="num">7</span> Preguntas que surgen</h3>
+ <details><summary>¿Por qué «con reemplazo»? ¿No bastaría sortear sin devolver?</summary><p>Sin reemplazo, sacar 10 de 10 siempre da <b>los 10 datos, una vez cada uno</b> (solo cambia el orden). Todas las muestras serían iguales, todos los árboles también, y votar no aportaría nada. Pruébalo en la sección 2.</p></details>
+ <details><summary>¿Por qué 10 sorteos de 10, y no menos?</summary><p>Se usa el mismo tamaño n del conjunto original para que cada árbol vea «tantos» datos como el original (aunque ≈ 63 % distintos). Se puede usar un tamaño menor (submuestreo), pero el estándar es n.</p></details>
+ <details><summary>Si cada árbol pierde ≈ 37 % de los datos, ¿no se pierde información?</summary><p>Cada árbol sí, el bosque no: lo que un árbol no vio, otros árboles sí lo vieron. Esa diversidad es justamente lo que se busca.</p></details>
+ <details><summary>¿Qué pasa con un dato raro (como el 8)?</summary><p>Unos árboles no lo ven (no los afecta), otros lo ven una o dos veces y se «ajustan» a él. Al votar, el voto de esos pocos queda diluido por la mayoría: el ruido se <b>promedia</b>.</p></details>
+ <details><summary>¿Cuántos árboles uso?</summary><p>Normalmente decenas o cientos. Más árboles no provocan sobreajuste; el acierto se estabiliza y solo suben memoria y coste (importante en el fog). En el laboratorio del otro artefacto verás la curva «acierto vs nº de árboles».</p></details>
+ <details><summary>¿Qué relación tiene esto con el libro?</summary><p>El capítulo 3 describe el Random Forest como árboles individuales que votan y lo aplica a detectar nodos fog suplantados, anomalías y DDoS. Bootstrap y mtry son los mecanismos que hacen que esos árboles sean distintos.</p></details></section>
+
+<section class="lesson" id="s8"><h3><span class="num">8</span> Comprueba lo aprendido</h3><div id="quiz"></div></section>
+<footer>Simulaciones didácticas simplificadas. Conocimiento general de ML salvo indicación contraria.</footer>
+</main>
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const BLUE='#4f5bd5',RED='#d64545',TEAL='#0e9f8e',ORG='#d9780a';
+const CL=[0,0,0,0,1,1,1,0,1,1],col=i=>CL[i-1]?RED:BLUE,ids=[1,2,3,4,5,6,7,8,9,10];
+const NS='http://www.w3.org/2000/svg';
+const dotN=(x,y,n,c,r=15,ex='')=>`<g ${ex}><circle cx="${x}" cy="${y}" r="${r}" fill="${c}" stroke="#fff" stroke-width="2"/><text x="${x}" y="${y+4.5}" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">${n}</text></g>`;
+const T=(x,y,s,o={})=>`<text x="${x}" y="${y}" font-size="${o.s||13}" fill="${o.c||'#1c2433'}" text-anchor="${o.a||'middle'}" font-weight="${o.b?700:400}">${s}</text>`;
+/* progreso */
+let store={};try{store=JSON.parse(localStorage.getItem('fogboot')||'{}')}catch(e){}
+const QS=[];function prog(){const ok=QS.filter(i=>store[i]===1).length;$('#progtxt').textContent=ok+'/'+QS.length;$('#progbar').style.width=QS.length?ok/QS.length*100+'%':'0'}
+/* ===== 1. Anatomía ===== */
+(function(){
+  const SMP=[[1,1,3,4,6,6,7,9,10,10],[2,2,2,3,5,7,8,8,9,10],[1,3,4,4,5,6,8,9,9,10]],X=i=>190+i*46;let s='';
+  s+=`<g data-k="orig">${T(30,38,'Datos originales',{a:'start',b:1})}${ids.map((n,i)=>dotN(X(i),34,n,col(n))).join('')}${T(30,58,'(10 dispositivos)',{a:'start',s:11,c:'#6b778c'})}</g>`;
+  SMP.forEach((r,k)=>{const y=130+k*95,seen={};s+=`<g data-k="sorteo">${T(30,y+4,'Muestra '+(k+1),{a:'start',b:1})}${r.map((n,i)=>{return dotN(X(i),y,n,col(n))}).join('')}${r.map((n,i)=>T(X(i),y+30,(i+1)+'º',{s:10,c:'#98a3b8'})).join('')}</g>`;
+   s+=`<g data-k="rep">${r.map((n,i)=>{seen[n]=(seen[n]||0)+1;return seen[n]>1?`<circle cx="${X(i)}" cy="${y}" r="20" fill="none" stroke="${ORG}" stroke-width="4"/>`:''}).join('')}</g>`;
+   const miss=ids.filter(x=>!r.includes(x));s+=`<g data-k="oob">${T(X(0)-16,y+50,'no aparecen (OOB): '+miss.join(', '),{a:'start',s:12,c:'#6b778c'})}</g>`;
+   s+=`<g data-k="arrow"><line x1="${X(9)+30}" y1="${y}" x2="${X(9)+68}" y2="${y}" stroke="#555" stroke-width="3"/><path d="M${X(9)+68} ${y-7}L${X(9)+80} ${y}L${X(9)+68} ${y+7}z" fill="#555"/></g>`;
+   s+=`<g data-k="tree">${T(722,y+4,'🌳',{s:30})}${T(722,y+30,'Árbol '+(k+1),{b:1,s:12})}</g>`});
+  const svg=$('#anat');svg.innerHTML=s;
+  const A=[['orig','Datos originales','Tu conjunto de entrenamiento: 10 dispositivos. El <b>número</b> es solo un identificador; el <b>color</b> es la clase (azul = normal, rojo = ataque). Fíjate en el 8: azul entre rojos, un dato raro.'],
+   ['sorteo','Una muestra = 10 sorteos','Cada fila es lo que recibe <b>un árbol</b>. Cada casilla es <b>un sorteo</b> (1º, 2º… 10º): el número que ves es qué dato salió de la bolsa en ese sorteo. Hay 10 casillas porque la muestra tiene el mismo tamaño que el conjunto original.'],
+   ['rep','Anillo naranja = dato repetido','Ese dato ya había salido antes en la misma muestra. Como la bola se devolvía a la bolsa, podía volver a salir. Un árbol que ve un dato dos veces le da más peso.'],
+   ['oob','«No aparecen» = OOB','Son los datos que <b>nunca salieron</b> en esa muestra. Ese árbol no los vio durante su entrenamiento: sirven como «examen» para ese árbol (error <i>out-of-bag</i>).'],
+   ['arrow','La flecha','Cada muestra se usa para entrenar <b>un árbol distinto</b>. Árbol 1 aprende solo de la Muestra 1, y así sucesivamente.'],
+   ['tree','Los árboles','Cada árbol solo conoce su muestra, así que comete errores distintos a los de los demás. En la predicción final <b>todos votan</b> y gana la mayoría (secciones 4 y 6).']];
+  const L=$('#alist');L.innerHTML=A.map((a,i)=>`<button data-i="${i}"><span class="bd">${i+1}</span><span><b>${a[1]}</b></span></button>`).join('');let cur=-1;
+  L.onclick=e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.i;cur=cur===i?-1:i;$$('button',L).forEach((x,j)=>x.classList.toggle('on',j===cur));svg.classList.toggle('focus',cur>=0);$$('g[data-k]',svg).forEach(g=>g.classList.toggle('hl',cur>=0&&g.dataset.k===A[cur][0]));$('#ainfo').innerHTML=cur>=0?A[cur][2]:'Elige un elemento de la lista.'}
+})();
+/* ===== 2. Urna ===== */
+(function(){
+  const svg=$('#urn');let drawn,avail,busy=false;
+  const bp=i=>[60+(i%5)*52,70+Math.floor(i/5)*62];
+  function init(){drawn=[];avail=ids.slice();render();$('#uOut').textContent='Pulsa «Sacar 1» o «Sacar las 10».'}
+  const mode=()=>$('input[name=mode]:checked').value;
+  function render(last){let s=`<rect x="14" y="30" width="300" height="170" rx="40" fill="#fff8e8" stroke="#d9a441" stroke-width="3"/>${T(164,22,'🛍 La bolsa',{b:1})}`;
+    ids.forEach((n,i)=>{const [x,y]=bp(i),gone=mode()==='s'&&drawn.includes(n);s+=`<g opacity="${gone?.12:1}" ${last===n?'class="flash" style="transform-box:fill-box;transform-origin:center"':''}>${dotN(x+10,y+20,n,col(n),18)}</g>`;if(last===n)s+=`<circle cx="${x+10}" cy="${y+20}" r="24" fill="none" stroke="#222" stroke-width="3"/>`});
+    s+=T(330,30,'Tu muestra (en orden de sorteo):',{a:'start',b:1});for(let i=0;i<10;i++){const x=345+i*40,y=90;s+=`<rect x="${x-17}" y="${y-17}" width="34" height="34" rx="8" fill="#fff" stroke="#c9d1e3" stroke-dasharray="4 3"/>`+T(x,y+42,(i+1)+'º',{s:10,c:'#98a3b8'});if(drawn[i]!==undefined){const n=drawn[i],rep=drawn.slice(0,i).includes(n);s+=`<g class="a" style="--d:0s">${dotN(x,y,n,col(n),15)}${rep?`<circle cx="${x}" cy="${y}" r="19" fill="none" stroke="${ORG}" stroke-width="4"/>`:''}</g>`}}
+    if(last!==undefined&&mode()==='r')s+=T(540,175,'↩ la bola vuelve a la bolsa',{c:ORG,b:1});
+    svg.innerHTML=s;hist()}
+  function hist(){const cnt=ids.map(n=>drawn.filter(d=>d===n).length),mx=Math.max(2,...cnt);$('#uHist').innerHTML=`<div class="hist">${ids.map((n,i)=>`<div class="col${cnt[i]===0&&drawn.length===10?' zero':''}"><b>${cnt[i]||''}</b><i style="height:${cnt[i]/mx*80}%;background:${col(n)}"></i><span>${n}${cnt[i]===0&&drawn.length===10?'<br>OOB':''}</span></div>`).join('')}</div>`}
+  function one(){if(drawn.length>=10)return false;const pool=mode()==='r'?ids:avail;const n=pool[Math.floor(Math.random()*pool.length)];drawn.push(n);if(mode()==='s')avail=avail.filter(x=>x!==n);render(n);
+    if(drawn.length===10){const u=new Set(drawn).size,miss=ids.filter(x=>!drawn.includes(x));$('#uOut').innerHTML=mode()==='r'?`Muestra completa: <b>${u} datos distintos</b>, <b>${10-u} repeticiones</b>. No aparecen (OOB): <b>${miss.length?miss.join(', '):'ninguno esta vez'}</b>. Repite varias veces: en promedio faltan unos 3–4.`:`<b>Los 10 datos, una vez cada uno</b>: solo cambió el orden. Si todos los árboles recibieran esto serían <b>idénticos</b> y votar no serviría. Por eso se usa «con reemplazo».`}else $('#uOut').innerHTML=`Sorteo ${drawn.length} de 10: salió el <b>${n}</b>${mode()==='r'&&drawn.slice(0,-1).includes(n)?' (¡repetido!)':''}.`;return true}
+  $('#uOne').onclick=()=>{if(!busy)one()};$('#uAll').onclick=()=>{if(busy)return;busy=true;(function f(){if(one())setTimeout(f,420);else busy=false})()};$('#uReset').onclick=()=>{busy=false;init()};$$('input[name=mode]').forEach(r=>r.onchange=init);init();
+  function gal(){$('#gal').innerHTML=Array.from({length:6},(_,k)=>{const r=Array.from({length:10},()=>1+Math.floor(Math.random()*10)),seen={};const miss=ids.filter(x=>!r.includes(x));return `<div style="display:flex;gap:4px;align-items:center;margin:5px 0;flex-wrap:wrap"><b style="width:70px;font-size:13px">Árbol ${k+1}</b>${r.map(n=>{seen[n]=(seen[n]||0)+1;return `<svg width="34" height="34" viewBox="0 0 34 34">${dotN(17,17,n,col(n),14)}${seen[n]>1?`<circle cx="17" cy="17" r="16" fill="none" stroke="${ORG}" stroke-width="3"/>`:''}</svg>`}).join('')}<span style="font-size:12px;color:#6b778c;margin-left:6px">OOB: ${miss.join(', ')||'—'}</span></div>`}).join('')}
+  $('#galB').onclick=gal;gal();
+})();
+/* ===== 3. Matemática ===== */
+(function(){
+  function fit(cv){const r=cv.getBoundingClientRect();if(!r.width)return null;const d=window.devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;const c=cv.getContext('2d');c.setTransform(d,0,0,d,0,0);c.clearRect(0,0,r.width,r.height);return[c,r.width,r.height]}
+  function draw(){const n=+$('#nS').value;$('#nV').textContent=n;
+    const th=Math.pow(1-1/n,n);const trials=3000,cnt=[0,0,0,0,0,0];let miss=0;const r=rng(n*7+1);
+    for(let t=0;t<trials;t++){const c=new Array(n).fill(0);for(let i=0;i<n;i++)c[Math.floor(r()*n)]++;c.forEach(v=>{cnt[Math.min(v,5)]++;if(!v)miss++})}
+    const sim=miss/(trials*n);
+    $('#mOut').innerHTML=`n = <b>${n}</b>: teoría (1−1/n)ⁿ = <b>${(th*100).toFixed(1)} %</b> · simulación = <b style="color:${ORG}">${(sim*100).toFixed(1)} %</b> de datos ausentes → en promedio <b>${(n*th).toFixed(1)}</b> ausentes y <b>${(n*(1-th)).toFixed(1)}</b> distintos de ${n} (<b>${((1-th)*100).toFixed(1)} %</b>).`;
+    let f=fit($('#cvCurve'));if(f){const [c,W,H]=f,pad=40,X=v=>pad+(v-2)/98*(W-pad-12),Y=v=>H-30-(v-.25)/.25*(H-48);c.font='11px system-ui';c.fillStyle='#6b778c';c.strokeStyle='#e3e8f2';[.25,.3,.35,.4,.45,.5].forEach(v=>{c.beginPath();c.moveTo(pad,Y(v));c.lineTo(W-8,Y(v));c.stroke();c.textAlign='right';c.fillText(Math.round(v*100)+'%',pad-4,Y(v)+4)});c.textAlign='center';[2,25,50,75,100].forEach(v=>c.fillText(v,X(v),H-14));c.fillText('n →',W/2,H-2);
+      c.setLineDash([5,4]);c.strokeStyle=RED;c.beginPath();c.moveTo(pad,Y(.3679));c.lineTo(W-8,Y(.3679));c.stroke();c.setLineDash([]);c.fillStyle=RED;c.textAlign='left';c.fillText('límite e⁻¹ = 36.8 %',pad+6,Y(.3679)-6);
+      c.beginPath();for(let v=2;v<=100;v++){const y=Math.pow(1-1/v,v);v===2?c.moveTo(X(v),Y(y)):c.lineTo(X(v),Y(y))}c.strokeStyle=TEAL;c.lineWidth=3;c.stroke();c.beginPath();c.arc(X(n),Y(th),7,0,7);c.fillStyle=ORG;c.fill()}
+    f=fit($('#cvCnt'));if(f){const [c,W,H]=f,pad=34,po=[.3679,.3679,.1839,.0613,.0153,.0037+.0006],tot=trials*n,bw=(W-pad-10)/6;c.font='12px system-ui';c.textAlign='center';c.fillStyle='#6b778c';
+      for(let k=0;k<6;k++){const x=pad+k*bw,hs=po[k]/.45*(H-50),hm=cnt[k]/tot/.45*(H-50);c.fillStyle='rgba(79,91,213,.55)';c.fillRect(x+4,H-28-hs,bw/2-6,hs);c.fillStyle=ORG;c.fillRect(x+bw/2-1,H-28-hm,bw/2-6,hm);c.fillStyle='#3a475f';c.fillText(k===5?'5+':k+(k===1?' vez':' veces'),x+bw/2,H-12);c.fillStyle='#6b778c';c.fillText((cnt[k]/tot*100).toFixed(0)+'%',x+bw*.75-4,H-32-hm)}
+      c.fillStyle=BLUE;c.textAlign='left';c.fillText('■ teoría Poisson(1)',pad+4,14);c.fillStyle=ORG;c.fillText('■ simulado',pad+130,14)}}
+  $('#nS').oninput=draw;window.addEventListener('resize',draw);setTimeout(draw,50);
+})();
+/* ===== 4. Bosque de stumps ===== */
+(function(){
+  let seed=11,forest=[];
+  function stump(cnt){const pts=[];ids.forEach(n=>{for(let k=0;k<cnt[n-1];k++)pts.push([n,CL[n-1]])});const s=new Set(pts.map(p=>p[1]));if(s.size<2)return{c:[...s][0]};
+    const xs=[...new Set(pts.map(p=>p[0]))].sort((a,b)=>a-b);let best=null;
+    for(let i=0;i<xs.length-1;i++){const t=(xs[i]+xs[i+1])/2,L=pts.filter(p=>p[0]<=t),R=pts.filter(p=>p[0]>t),mj=a=>a.filter(p=>p[1]).length*2>a.length?1:0,l=mj(L),r=mj(R),err=L.filter(p=>p[1]!==l).length+R.filter(p=>p[1]!==r).length;if(!best||err<best.err)best={t,l,r,err}}
+    return best}
+  const pred=(s,x)=>s.c!==undefined?s.c:(x<=s.t?s.l:s.r);
+  function train(){const r=rng(seed*101+3);forest=Array.from({length:25},()=>{const cnt=new Array(10).fill(0);for(let i=0;i<10;i++)cnt[Math.floor(r()*10)]++;return{cnt,st:stump(cnt)}})}
+  const E=c=>c?'🔴':'🔵';
+  function render(){const Tn=+$('#tS').value;$('#tV').textContent=Tn;const F=forest.slice(0,Tn),shown=F.slice(0,10);
+    let h=`<table class="bt"><tr><th>Árbol</th>${ids.map(n=>`<th><span class="dc" style="background:${col(n)}">${n}</span></th>`).join('')}<th>Su regla (aprendida de su muestra)</th><th>Acierto en sus OOB</th></tr>`;
+    shown.forEach((f,k)=>{const oob=ids.filter(n=>!f.cnt[n-1]),ok=oob.filter(n=>pred(f.st,n)===CL[n-1]).length;h+=`<tr><td><b>${k+1}</b></td>${f.cnt.map(v=>`<td class="${v===0?'o':v>1?'r':''}">${v===0?'·':v}</td>`).join('')}<td style="text-align:left">${f.st.c!==undefined?'siempre '+E(f.st.c)+' (solo vio una clase)':`x ≤ ${f.st.t} → ${E(f.st.l)}, si no → ${E(f.st.r)}`}</td><td>${oob.length?`${ok}/${oob.length}`:'—'}</td></tr>`});
+    if(Tn>10)h+=`<tr><td colspan="13" style="color:#6b778c">… y ${Tn-10} árboles más (no se muestran, pero votan igual)</td></tr>`;
+    h+=`<tr><th>Voto OOB por dato</th>${ids.map(n=>{const v=F.filter(f=>!f.cnt[n-1]).map(f=>pred(f.st,n)),r=v.filter(x=>x).length,b=v.length-r;const p=v.length?(r>b?1:b>r?0:-1):-2;return `<td style="font-size:11px;background:${p<0?'#f3f6fb':p===CL[n-1]?'#dcf2e5':'#fde4e4'}">🔵${b}<br>🔴${r}<br><b>${p===-2?'—':p===-1?'=':p===CL[n-1]?'✓':'✗'}</b></td>`}).join('')}<td colspan="2" style="text-align:left;font-size:12px">cada dato lo juzgan solo los árboles que <b>no</b> lo vieron</td></tr></table>`;
+    $('#tbl').innerHTML=h;
+    let ok=0,tot=0;ids.forEach(n=>{const v=F.filter(f=>!f.cnt[n-1]).map(f=>pred(f.st,n)),r=v.filter(x=>x).length,b=v.length-r;if(v.length&&r!==b){tot++;if((r>b?1:0)===CL[n-1])ok++}});
+    $('#oobOut').innerHTML=`<b>Exactitud OOB del bosque: ${tot?(ok/tot*100).toFixed(0):'—'} %</b> (${ok} de ${tot} datos bien juzgados por árboles que no los vieron) — una estimación del error <b>sin necesidad de separar datos de prueba</b>. El dato <b>8</b> (azul entre rojos) casi siempre sale ✗: es el dato raro.`;
+    vote()}
+  function vote(){const Tn=+$('#tS').value,x=+$('#xS').value;$('#xV').textContent=x.toFixed(1);const v=forest.slice(0,Tn).map(f=>pred(f.st,x)),r=v.filter(a=>a).length,b=Tn-r;
+    $('#vch').innerHTML=v.map((c,i)=>`<span title="Árbol ${i+1}" style="background:${c?RED:BLUE}">${i+1}</span>`).join('');
+    $('#vOut').innerHTML=`🔵 normal: <b>${b}</b> votos · 🔴 ataque: <b>${r}</b> votos → <b style="color:${r>b?RED:r<b?BLUE:ORG}">${r>b?'🔴 ATAQUE':r<b?'🔵 NORMAL':'⚖ EMPATE'}</b>${Math.abs(r-b)<=Math.max(1,Tn*.15)?' · votación reñida: zona de duda (cerca de la frontera).':''}`}
+  $('#tS').oninput=render;$('#xS').oninput=vote;$('#tNew').onclick=()=>{seed++;train();render()};train();render();
+})();
+/* ===== 5. mtry ===== */
+(function(){
+  const F=[['Fallos de login',.30],['Tráfico',.22],['Tamaño de paquete',.12],['Hora del día',.05]];
+  const pick=m=>{const a=[0,1,2,3];for(let i=3;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a.slice(0,m)};
+  const best=s=>s.reduce((b,i)=>F[i][1]>F[b][1]?i:b,s[0]);
+  function cards(sub,w){$('#fc').innerHTML=F.map((f,i)=>`<div class="${sub?(sub.includes(i)?(i===w?'win':'cand'):'out'):''}"><b>${f[0]}</b><br>mejora: <b>${f[1].toFixed(2)}</b><br>${sub?(sub.includes(i)?(i===w?'🏆 elegida para este corte':'se mira'):'no se mira'):''}</div>`).join('')}
+  function sim(){const m=+$('#mS').value;$('#mV').textContent=m;const c=[0,0,0,0];for(let t=0;t<1000;t++)c[best(pick(m))]++;
+    $('#mHist').innerHTML=F.map((f,i)=>`<div class="col"><b>${(c[i]/10).toFixed(0)}%</b><i style="height:${c[i]/10}%;background:${[RED,ORG,TEAL,BLUE][i]}"></i><span style="font-size:11px;text-align:center">${f[0]}</span></div>`).join('');
+    $('#mOut3').innerHTML=c[0]>=995?'Con mtry = 4, <b>todos los árboles abren con «fallos de login»</b>: se parecen demasiado (árboles correlacionados).':`«Fallos de login» gana el ${(c[0]/10).toFixed(0)} % de los cortes; en el resto otras características toman su lugar → árboles más distintos.`;cards(null)}
+  $('#mS').oninput=sim;$('#mGo').onclick=()=>{const m=+$('#mS').value,s=pick(m),w=best(s);cards(s,w);$('#mOut2').innerHTML=`Miraba solo <b>${s.map(i=>F[i][0]).join(' y ')}</b> → elige <b>${F[w][0]}</b>${w!==0?'. ¡«Fallos de login» no estaba entre las candidatas, así que este árbol se construye distinto!':'.'}`};sim();
+})();
+/* ===== 8. Quiz ===== */
+(function(){
+  const Q=[{id:'q1',q:'¿Qué significa «muestreo con reemplazo»?',o:['Cada dato solo puede salir una vez','Tras sacar un dato se devuelve a la bolsa, así que puede salir otra vez','Se descartan los datos repetidos','Se ordenan los datos al azar'],a:1,w:'Por eso en la figura hay datos repetidos (anillo naranja) y otros que no aparecen.'},
+   {id:'q2',q:'En la figura, un anillo naranja alrededor de un dato indica…',o:['Que es un dato de ataque','Que ya había salido antes en esa misma muestra (repetido)','Que es un dato OOB','Que el árbol lo ignoró'],a:1,w:'Un dato repetido: el árbol lo ve dos o más veces y le da más peso.'},
+   {id:'q3',q:'En una muestra bootstrap grande, ¿qué porcentaje de datos distintos aparece, en promedio?',o:['≈ 37 %','≈ 50 %','≈ 63 %','100 %'],a:2,w:'Un dato falta con probabilidad (1−1/n)ⁿ → 36.8 %, así que aparece ≈ 63.2 %.'},
+   {id:'q4',q:'Los datos que «no aparecen» en la muestra de un árbol (OOB) sirven para…',o:['Entrenar ese árbol más','Estimar su error sin separar datos de prueba','Borrarlos del conjunto','Duplicar la muestra'],a:1,w:'Ese árbol nunca los vio, así que funcionan como un examen gratuito.'},
+   {id:'q5',q:'Si muestreáramos 10 de 10 SIN reemplazo, ¿qué pasaría?',o:['Cada muestra sería distinta','Todas las muestras tendrían los mismos 10 datos → árboles idénticos','Faltarían datos','Habría más ruido'],a:1,w:'Sin reemplazo siempre salen los 10 datos una vez; solo cambia el orden. Votar no aportaría nada.'},
+   {id:'q6',q:'¿Para qué se limita a un subconjunto aleatorio de características (mtry) en cada corte?',o:['Para que el árbol sea más rápido solamente','Para que los árboles no usen todos la misma característica dominante y sean distintos entre sí','Para eliminar el ruido','Para aumentar el número de clases'],a:1,w:'Sin mtry, una característica muy buena abriría todos los árboles y saldrían casi clones.'}];
+  $('#quiz').innerHTML='';Q.forEach(it=>{QS.push(it.id);const d=document.createElement('div');d.className='qz';d.innerHTML=`<p class="q">${it.q}</p>`+it.o.map((o,i)=>`<button class="o" data-i="${i}">${o}</button>`).join('')+'<div class="why"></div>';
+   $$('.o',d).forEach(b=>b.onclick=()=>{if(d.classList.contains('done'))return;const ok=+b.dataset.i===it.a;b.classList.add(ok?'ok':'no');if(!ok)$$('.o',d)[it.a].classList.add('ok');d.classList.add('done');$('.why',d).innerHTML=(ok?'✅ <b>¡Correcto!</b> ':'❌ <b>No exactamente.</b> ')+it.w;if(store[it.id]!==1){store[it.id]=ok?1:0;try{localStorage.setItem('fogboot',JSON.stringify(store))}catch(e){}}prog()});$('#quiz').appendChild(d)});prog();
+})();
+</script></body></html>

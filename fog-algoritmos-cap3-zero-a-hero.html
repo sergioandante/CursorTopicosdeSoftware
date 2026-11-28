@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Algoritmos de ML en Fog Computing — de cero a héroe</title><style>
+:root{--cloud:#4f5bd5;--cloudbg:#e8eaff;--fog:#0e9f8e;--fogbg:#d9f4ef;--thing:#d9780a;--thingbg:#fdebd0;--bad:#d64545;--badbg:#fde4e4;--good:#2a9455;--goodbg:#dcf2e5;--ink:#1c2433;--muted:#5b6678;--bg:#f3f5fa;--card:#fff;--line:#dbe1ec;--r:14px;color-scheme:light}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 18px}
+header.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding-top:8px;padding-bottom:8px}
+.brand{font-weight:800;font-size:17px}.brand small{font-weight:500;color:var(--muted);margin-left:6px}
+#tabs{display:flex;gap:4px;flex-wrap:wrap}
+#tabs button{border:0;background:transparent;padding:7px 13px;border-radius:999px;font:600 14px system-ui;color:var(--muted);cursor:pointer}
+#tabs button:hover{background:#eef1f8}
+#tabs button.on{background:var(--ink);color:#fff}
+.prog{margin-left:auto;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.pbar{width:110px;height:8px;border-radius:9px;background:#e4e8f1;overflow:hidden}.pbar i{display:block;height:100%;width:0;background:var(--good);transition:width .4s}
+main{padding:22px 0 80px}
+.tab{display:none}.tab.on{display:block}
+h1{font-size:clamp(26px,4.5vw,40px);line-height:1.15;margin:.2em 0 .3em}
+h2.ch{font-size:clamp(22px,3.4vw,30px);margin:.2em 0}
+.chhead{border-radius:var(--r);padding:22px 24px;color:#fff;margin-bottom:18px}
+.chhead p{margin:.3em 0 0;opacity:.95;max-width:760px}
+.c1{background:linear-gradient(120deg,#0e9f8e,#2b7fd1)}.c2{background:linear-gradient(120deg,#4f5bd5,#8b5cf6)}.c3{background:linear-gradient(120deg,#d9780a,#d64545)}
+.goals{background:#fff;border:1px dashed #b9c3d8;border-radius:var(--r);padding:12px 18px;margin-bottom:18px}
+.goals b{display:block;margin-bottom:2px}.goals ul{margin:4px 0 0;padding-left:20px}
+.lesson{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin:0 0 22px;box-shadow:0 1px 2px rgba(20,30,60,.04)}
+.lesson>h3{margin:0 0 6px;font-size:21px;display:flex;align-items:center;gap:10px}
+.lesson>h3 .num{background:var(--ink);color:#fff;font-size:12.5px;border-radius:8px;padding:2px 8px;font-weight:700}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 10px}
+.tag{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 10px;background:#eef1f8;color:#43506a}
+.tag.sim{background:var(--fogbg);color:#08695d}.tag.pred{background:var(--thingbg);color:#8a4a05}.tag.chk{background:var(--cloudbg);color:#323da5}.tag.vis{background:#f3e8ff;color:#6b2fb3}
+.key{border-left:5px solid var(--fog);background:var(--fogbg);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.key b.t,.misc b.t,.ana b.t{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.misc{border-left:5px solid var(--bad);background:var(--badbg);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.ana{border-left:5px solid var(--thing);background:var(--thingbg);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.key p,.misc p,.ana p{margin:0}
+.viz{margin:12px 0;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fbfcfe}
+.gsvg{width:100%;height:auto;display:block;max-width:100%}
+.ctrls{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;margin:8px 0}
+.ctrls label{font-size:14px;display:flex;flex-direction:column;gap:2px;min-width:200px}
+.ctrls label.inl{flex-direction:row;align-items:center;gap:6px;min-width:0}
+input[type=range]{width:100%;accent-color:var(--fog)}
+.btn{border:0;background:var(--ink);color:#fff;border-radius:10px;padding:8px 15px;font:600 14px system-ui;cursor:pointer}
+.btn:hover{filter:brightness(1.2)}.btn.ghost{background:#e6eaf3;color:var(--ink)}.btn.fog{background:var(--fog)}.btn[disabled]{opacity:.45;cursor:default}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.predict{background:var(--thingbg);border-radius:10px;padding:8px 12px;margin:8px 0;font-size:14.5px}
+.predict label{margin-left:12px;cursor:pointer}
+.out{margin-top:8px;font-size:14.5px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+.stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}.stat b{display:block;font-size:22px;line-height:1.1}.stat span{font-size:12px;color:var(--muted)}
+.note{font-size:14px;background:#eef1f8;border-radius:10px;padding:8px 12px;margin-top:6px}
+.ginfo{font-size:14.5px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--fog);border-radius:8px;padding:8px 12px;margin-top:8px;min-height:44px}
+.gctl{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}.gctl .cnt{font-size:13px;color:var(--muted)}
+/* svg graph */
+.n rect{fill:#fff;stroke:#a9b4ca;stroke-width:1.5;transition:all .25s}
+.n.cloud rect{fill:var(--cloudbg);stroke:var(--cloud)}.n.fog rect{fill:var(--fogbg);stroke:var(--fog)}.n.thing rect{fill:var(--thingbg);stroke:var(--thing)}
+.n.user rect{fill:#f3e8ff;stroke:#8b5cf6}.n.bad rect{fill:var(--badbg);stroke:var(--bad)}.n.good rect{fill:var(--goodbg);stroke:var(--good)}.n.ml rect{fill:#fff3c4;stroke:#c49000}
+.n.group rect{fill:rgba(255,255,255,.55);stroke-dasharray:6 4;stroke:#98a3b8}
+.n text{font-size:12.5px;fill:var(--ink);text-anchor:middle;pointer-events:none}.n text.gl{text-anchor:start;font-weight:700;fill:#5b6678;font-size:12px}
+.n.clk{cursor:pointer}.n.clk:hover rect{stroke-width:2.6}
+.n.on rect{stroke-width:3.4;filter:drop-shadow(0 2px 5px rgba(0,0,0,.28))}.n.dim{opacity:.32}
+.e{fill:none;stroke:#98a3b8;stroke-width:1.7}.e.dash{stroke-dasharray:6 4}.e.on{stroke:var(--fog);stroke-width:3.2}.e.dim{opacity:.25}
+.elab{font-size:11.5px;fill:#5b6678;text-anchor:middle;paint-order:stroke;stroke:#fbfcfe;stroke-width:4px}
+/* tiers */
+.band{stroke-width:1.5;stroke-dasharray:7 5;fill:none}.bandc{stroke:var(--cloud);fill:rgba(79,91,213,.05)}.bandf{stroke:var(--fog);fill:rgba(14,159,142,.06)}.bandt{stroke:var(--thing);fill:rgba(217,120,10,.06)}
+.svgt{font-size:13px;fill:var(--ink)}.svgs{font-size:11.5px;fill:#5b6678}
+.lnk{stroke:#98a3b8;stroke-width:2}.lnk.cut{stroke:var(--bad);stroke-dasharray:5 5}
+/* layers */
+.stack{display:flex;flex-direction:column;gap:6px}
+.layer{display:grid;grid-template-columns:34px 190px 1fr;gap:10px;align-items:center;border:2px solid var(--line);background:#fff;border-radius:10px;padding:6px 10px;transition:all .3s;font-size:14px}
+.layer .no{font-weight:800;color:var(--muted)}
+.layer.on{border-color:var(--fog);background:var(--fogbg);transform:translateX(6px)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;min-height:36px;align-items:center}
+.chip{background:#fff;border:1px solid var(--line);border-radius:8px;padding:3px 9px;font:600 13px ui-monospace,Menlo,Consolas,monospace}.chip.w{background:var(--badbg);border-color:var(--bad)}.chip.s{background:#f1f3f8;color:#4a5670}.chip.g{background:var(--goodbg);border-color:var(--good)}
+/* canvases */
+canvas.cv{width:100%;height:380px;display:block;border:1px solid var(--line);border-radius:10px;background:#fff;touch-action:none}
+canvas.cv.short{height:200px}
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.twocol{grid-template-columns:1fr}.layer{grid-template-columns:28px 1fr}.layer .fx{grid-column:1/-1}}
+/* quiz */
+.qz{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;background:#fff}
+.qz p.q{margin:0 0 8px;font-weight:700}
+.qz .o{display:block;width:100%;text-align:left;background:#f6f8fc;border:1.5px solid var(--line);border-radius:9px;padding:8px 12px;margin:5px 0;font:inherit;cursor:pointer}
+.qz .o:hover{border-color:#8a96b0}.qz .o.ok{background:var(--goodbg);border-color:var(--good)}.qz .o.no{background:var(--badbg);border-color:var(--bad)}
+.qz .why{display:none;font-size:14px;margin-top:6px;color:#344058}.qz.done .why{display:block}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:10px 0}
+.flip{perspective:900px;min-height:150px;cursor:pointer}
+.flip .in{position:relative;width:100%;height:100%;min-height:150px;transition:transform .5s;transform-style:preserve-3d}
+.flip.f .in{transform:rotateY(180deg)}
+.flip .fa,.flip .fb{position:absolute;inset:0;border-radius:12px;padding:12px 14px;backface-visibility:hidden;border:1px solid var(--line);overflow:auto;font-size:14px}
+.flip .fa{background:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;font-weight:700;font-size:16px}
+.flip .fa small{font-weight:500;color:var(--muted);margin-top:6px}
+.flip .fb{background:var(--fogbg);transform:rotateY(180deg)}
+/* game */
+.task{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:6px 0;background:#fff}
+.task .tx{flex:1 1 280px;font-size:14.5px}.task .ch{display:flex;gap:6px}
+.task button{border:1.5px solid var(--line);background:#f6f8fc;border-radius:8px;padding:5px 11px;font:600 13px system-ui;cursor:pointer}
+.task button.ok{background:var(--goodbg);border-color:var(--good)}.task button.no{background:var(--badbg);border-color:var(--bad)}
+.task .fb{flex-basis:100%;font-size:13.5px;color:#344058;display:none}.task.done .fb{display:block}
+/* meters */
+.meter{display:grid;grid-template-columns:200px 1fr 42px;gap:8px;align-items:center;margin:5px 0;font-size:14px}
+.meter .bar{height:14px;background:#e9edf5;border-radius:9px;overflow:hidden}.meter .bar i{display:block;height:100%;border-radius:9px;transition:width .5s}
+@media(max-width:600px){.meter{grid-template-columns:1fr 1fr 38px}}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.seg button{border:0;background:transparent;padding:8px 14px;font:600 14px system-ui;cursor:pointer}.seg button.on{background:var(--ink);color:#fff}
+/* timeline */
+.tl{display:flex;overflow-x:auto;gap:0;padding:10px 4px 6px;scroll-snap-type:x proximity}
+.tl .ev{flex:0 0 auto;min-width:92px;text-align:center;cursor:pointer;scroll-snap-align:center;position:relative;padding-top:20px}
+.tl .ev:before{content:"";position:absolute;top:9px;left:0;right:0;height:3px;background:#cfd6e5}
+.tl .ev i{position:absolute;top:2px;left:50%;margin-left:-8px;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid #8a96b0}
+.tl .ev.on i{background:var(--fog);border-color:var(--fog);transform:scale(1.25)}
+.tl .ev b{display:block;font-size:14px}.tl .ev span{font-size:11.5px;color:var(--muted)}
+.tdetail{background:#fff;border:1px solid var(--line);border-left:5px solid var(--fog);border-radius:10px;padding:10px 14px;min-height:70px}
+/* ml tables */
+table.q{border-collapse:collapse;font:12.5px ui-monospace,Menlo,monospace}table.q td,table.q th{border:1px solid #fff;padding:4px 6px;text-align:center;min-width:42px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin:6px 0}.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.tpl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+.tree5{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:8px 0}
+.tcard{border:2px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;background:#fff;transition:all .25s}.tcard b{display:block}.tcard.bad{border-color:var(--bad);background:var(--badbg)}.tcard.good{border-color:var(--good);background:var(--goodbg)}.tcard.off{opacity:.35}
+.tcard button{margin-top:4px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
+.lanes{display:flex;gap:6px;margin:8px 0}.lanes .b{flex:1;text-align:center;border:2px solid var(--line);border-radius:10px;padding:10px 0;font-size:13px;background:#fff;position:relative}
+.lanes .b.jam{background:var(--badbg);border-color:var(--bad)}.lanes .b.pick{outline:3px solid var(--cloud)}.lanes .b.okp{background:var(--goodbg);border-color:var(--good)}
+.sel{display:flex;flex-direction:column;gap:6px;margin:8px 0}.sel button{text-align:left;background:#f6f8fc;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;cursor:pointer}.sel button:hover{border-color:var(--fog)}
+.crumbs{font-size:13px;color:var(--muted);margin:4px 0}
+.fcard{min-height:170px}
+.fcard .fa{font-size:18px}
+footer{color:var(--muted);font-size:13px;text-align:center;padding:30px 0}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:20px;align-items:center}
+@media(max-width:800px){.hero{grid-template-columns:1fr}}
+.journey{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:14px 0}
+.jc{border-radius:14px;padding:16px;color:#fff;cursor:pointer;transition:transform .2s}.jc:hover{transform:translateY(-3px)}.jc h4{margin:0 0 4px;font-size:18px}.jc p{margin:0;font-size:14px;opacity:.95}
+
+.ladder{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.ladder button{flex:1 1 120px;border:2px solid var(--line);background:#fff;border-radius:10px;padding:8px 6px;font:700 13.5px system-ui;cursor:pointer;color:var(--muted)}
+.ladder button.past{background:var(--fogbg);border-color:var(--fog);color:#08695d}
+.ladder button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.lvlbar{height:6px;background:#e4e8f1;border-radius:9px;overflow:hidden;margin-bottom:8px}.lvlbar i{display:block;height:100%;width:20%;background:linear-gradient(90deg,var(--fog),var(--thing));transition:width .4s}
+.lvlcard{border:1px solid var(--line);border-radius:12px;padding:12px 16px;background:#fbfcfe}
+.lvh{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:4px}
+.bdg{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 10px}.bdg.libro{background:var(--cloudbg);color:#323da5}.bdg.extra{background:var(--thingbg);color:#8a4a05}.bdg.mixto{background:#f3e8ff;color:#6b2fb3}
+select{font:inherit;padding:4px 6px;border-radius:8px;border:1.5px solid var(--line)}
+.story svg{background:#fbfcfe;border:1px solid var(--line);border-radius:12px}
+.sdots{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap}.sdots button{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:#fff;font:700 13px system-ui;cursor:pointer;color:var(--muted)}.sdots button.past{background:var(--fogbg);border-color:var(--fog);color:#08695d}.sdots button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.stitle{font-weight:800;font-size:18px;margin:4px 0}.stext{font-size:15.5px;background:#fff;border:1px solid var(--line);border-left:5px solid var(--fog);border-radius:10px;padding:10px 14px;margin-top:8px;line-height:1.6}
+.a{opacity:0;animation:pop .55s ease forwards;animation-delay:var(--d,0s);transform-box:fill-box;transform-origin:center}
+@keyframes pop{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:none}}
+.fl{opacity:0;animation:flm 1s ease forwards;animation-delay:var(--d,0s)}
+@keyframes flm{from{opacity:1;transform:translate(var(--dx,0),var(--dy,0))}to{opacity:1;transform:none}}
+.dr{stroke-dasharray:1;stroke-dashoffset:1;animation:drw .9s ease forwards;animation-delay:var(--d,0s)}
+@keyframes drw{to{stroke-dashoffset:0}}
+.fd{opacity:0;animation:fdi .5s ease forwards;animation-delay:var(--d,0s)}
+@keyframes fdi{to{opacity:1}}
+.pulse{animation-name:pop,pu;animation-duration:.55s,1.2s;animation-iteration-count:1,infinite;animation-delay:var(--d,0s),calc(var(--d,0s) + .6s);animation-fill-mode:forwards,none}
+@keyframes pu{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+</style></head><body>
+
+<header class="top"><div class="wrap">
+  <div class="brand">🧠 Algoritmos de ML en Fog<small>Cap. 3 · de cero a héroe</small></div>
+  <nav id="tabs"><button data-t="mapa">🗺 Mapa</button><button data-t="svm">SVM</button><button data-t="arbol">Árbol</button><button data-t="bosque">Bosque</button><button data-t="knn">KNN</button><button data-t="regresion">Regresión</button><button data-t="kmeans">K-means</button><button data-t="rl">Refuerzo</button></nav>
+  <div class="prog"><span id="progtxt">0/0</span><div class="pbar"><i id="progbar"></i></div></div>
+</div></header>
+<main class="wrap">
+<section class="tab" id="t-mapa">
+  <div class="chhead" style="background:linear-gradient(120deg,#d9780a,#d64545)"><h2 class="ch">Los 7 algoritmos del Capítulo 3, de cero a héroe</h2><p>Cada algoritmo tiene una <b>escalera de 5 niveles</b> (🌱 Zero → 🏆 Hero), un <b>laboratorio interactivo</b>, <b>2 casos de uso en fog</b> animados y una pregunta de comprobación.</p></div>
+  <div class="lesson"><h3>🗺 Elige un algoritmo</h3><div class="journey" id="mapCards"></div>
+   <div class="key"><b class="t">Cómo leer las etiquetas</b><p><span class="bdg libro">📖 Del libro (Cap. 3)</span> lo que dice el capítulo · <span class="bdg extra">➕ Más allá del libro</span> contenido que añado para llevarte a nivel Hero (conocimiento general de ML) · <span class="bdg mixto">📖➕ Mencionado y ampliado</span>. Así sabes qué es del libro y qué no.</p></div>
+   <div class="ana"><b class="t">Familias (Fig. 3.3 del libro)</b><p><b>Supervisado</b> (con etiquetas): clasificación → SVM, árbol, bosque, KNN; regresión → regresión lineal. <b>No supervisado</b>: K-means. <b>Refuerzo</b>: Q-learning / DQN.</p></div></div>
+  <div class="lesson"><h3>⚖ Compáralos para un nodo fog</h3><div class="seg" id="cmpSeg" style="flex-wrap:wrap"></div><div class="viz" id="cmpBox"></div></div>
+</section>
+<footer>Basado en el Cap. 3 de <i>Fog Computing: Concepts, Frameworks and Applications</i>. Los niveles marcados «Más allá del libro» son conocimiento general de ML; las simulaciones son modelos didácticos simplificados.</footer>
+</main>
+<script>
+/* ================= UTILIDADES ================= */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(r){let u=0;while(!u)u=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*r())}
+const SV='http://www.w3.org/2000/svg';
+let store={};try{store=JSON.parse(localStorage.getItem('fogalg')||'{}')}catch(e){}
+function save(){try{localStorage.setItem('fogalg',JSON.stringify(store))}catch(e){}}
+const ALLQ=[];
+function updProg(){const n=ALLQ.length;const ok=ALLQ.filter(id=>store[id]===1).length;$('#progtxt').textContent=ok+'/'+n+' comprobaciones';$('#progbar').style.width=(n?ok/n*100:0)+'%';const sb=$('#scoreBox');if(sb)renderScore()}
+
+/* ================= TABS ================= */
+const TABS=['mapa','svm','arbol','bosque','knn','regresion','kmeans','rl'];
+function showTab(t){if(!TABS.includes(t))t='mapa';$$('.tab').forEach(s=>s.classList.toggle('on',s.id==='t-'+t));$$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));window.scrollTo(0,0);setTimeout(()=>window.dispatchEvent(new Event('resize')),30)}
+$$('#tabs button').forEach(b=>b.onclick=()=>{location.hash=b.dataset.t});
+$$('[data-go]').forEach(b=>b.onclick=()=>{location.hash=b.dataset.go});
+window.addEventListener('hashchange',()=>showTab(location.hash.slice(1)));
+
+/* ================= QUIZ ================= */
+function renderQuiz(el,items){
+  el.innerHTML='';
+  items.forEach(it=>{
+    if(!ALLQ.includes(it.id))ALLQ.push(it.id);
+    const d=document.createElement('div');d.className='qz';
+    d.innerHTML=`<p class="q">${it.q}</p>`+it.o.map((o,i)=>`<button class="o" data-i="${i}">${o}</button>`).join('')+`<div class="why"></div>`;
+    d.querySelectorAll('.o').forEach(b=>b.onclick=()=>{
+      if(d.classList.contains('done'))return;
+      const i=+b.dataset.i;const ok=i===it.a;
+      b.classList.add(ok?'ok':'no');
+      if(!ok)d.querySelectorAll('.o')[it.a].classList.add('ok');
+      d.classList.add('done');
+      d.querySelector('.why').innerHTML=(ok?'✅ <b>¡Correcto!</b> ':'❌ <b>No exactamente.</b> ')+it.w;
+      if(store[it.id]!==1){store[it.id]=ok?1:0;save()}
+      updProg();
+    });
+    el.appendChild(d);
+  });
+}
+
+/* ================= GRAPH (diagramas con pasos) ================= */
+let GID=0;
+function Graph(el,cfg){
+  const id=++GID,W=cfg.w,H=cfg.h,es=cfg.edgeStyle||'line';
+  const N={};cfg.nodes.forEach(n=>N[n.id]=n);
+  const bp=(n,tx,ty)=>{const dx=tx-n.x,dy=ty-n.y;if(!dx&&!dy)return[n.x,n.y];const s=Math.min((n.w/2)/Math.abs(dx),(n.h/2)/Math.abs(dy));return[n.x+dx*s,n.y+dy*s]};
+  let s=`<svg viewBox="0 0 ${W} ${H}" class="gsvg" role="img" aria-label="${cfg.label||'diagrama'}"><defs>
+   <marker id="ar${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#98a3b8"/></marker>
+   <marker id="ao${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0e9f8e"/></marker></defs>`;
+  const nodeSvg=n=>{
+    const lines=(n.label||'').split('\n'),lh=15,y0=n.y-(lines.length-1)*lh/2+1;
+    const clk=n.info?' clk':'';
+    let g=`<g class="n ${n.k||''}${n.k==='group'?'':''}${clk}" data-id="${n.id}"><rect x="${n.x-n.w/2}" y="${n.y-n.h/2}" width="${n.w}" height="${n.h}" rx="${n.k==='group'?16:9}"/>`;
+    if(n.k==='group')g+=`<text class="gl" x="${n.x-n.w/2+12}" y="${n.y-n.h/2+17}">${n.label}</text>`;
+    else g+=lines.map((l,i)=>`<text x="${n.x}" y="${y0+i*lh}" dominant-baseline="central">${l}</text>`).join('');
+    return g+'</g>';
+  };
+  cfg.nodes.filter(n=>n.k==='group').forEach(n=>s+=nodeSvg(n));
+  const E=[];
+  cfg.edges.forEach(e=>{
+    const a=N[e[0]],b=N[e[1]],o=e[2]||{};let d,mx,my;
+    if(es==='tb'){const x0=a.x,y0=a.y+a.h/2,x1=b.x,y1=b.y-b.h/2,m=(y0+y1)/2;d=`M${x0} ${y0}C${x0} ${m},${x1} ${m},${x1} ${y1}`;mx=(x0+x1)/2;my=m}
+    else if(es==='lr'){const x0=a.x+a.w/2,y0=a.y,x1=b.x-b.w/2,y1=b.y,m=(x0+x1)/2;d=`M${x0} ${y0}C${m} ${y0},${m} ${y1},${x1} ${y1}`;mx=m;my=(y0+y1)/2}
+    else{const p0=bp(a,b.x,b.y),p1=bp(b,a.x,a.y);d=`M${p0[0]} ${p0[1]}L${p1[0]} ${p1[1]}`;mx=(p0[0]+p1[0])/2;my=(p0[1]+p1[1])/2}
+    const arrow=cfg.noArrow?'':` marker-end="url(#ar${id})"`;
+    s+=`<path class="e${o.dash?' dash':''}" id="e${id}_${e[0]}_${e[1]}" d="${d}"${arrow}/>`;
+    if(o.label)s+=`<text class="elab" x="${mx}" y="${my-4}">${o.label}</text>`;
+    E.push(e[0]+'>'+e[1]);
+  });
+  cfg.nodes.filter(n=>n.k!=='group').forEach(n=>s+=nodeSvg(n));
+  s+=`<g id="pk${id}"></g></svg><div class="ginfo">${cfg.hint||'Haz clic en un componente para ver qué hace.'}</div>`;
+  if(cfg.steps)s+=`<div class="gctl"><button class="btn ghost" data-a="prev">◀</button><button class="btn fog" data-a="next">Siguiente ▶</button><button class="btn ghost" data-a="auto">▶ Auto</button><button class="btn ghost" data-a="reset">↺</button><span class="cnt"></span></div>`;
+  el.innerHTML=s;
+  const svg=$('svg',el),info=$('.ginfo',el),pk=$('#pk'+id,el);
+  const nodeEl=i=>$(`.n[data-id="${i}"]`,el),edgeEl=(a,b)=>$(`#e${id}_${a}_${b}`,el);
+  const api={};
+  api.set=(ns,es2)=>{
+    const any=(ns&&ns.length)||(es2&&es2.length);
+    $$('.n',el).forEach(g=>{const on=ns&&ns.includes(g.dataset.id);g.classList.toggle('on',!!on);g.classList.toggle('dim',!!any&&!on&&!g.classList.contains('group'))});
+    cfg.edges.forEach(e=>{const p=edgeEl(e[0],e[1]),on=es2&&es2.includes(e[0]+'>'+e[1]);p.classList.toggle('on',!!on);p.classList.toggle('dim',!!any&&!on);if(!cfg.noArrow)p.setAttribute('marker-end',`url(#${on?'ao':'ar'}${id})`)});
+  };
+  api.say=t=>info.innerHTML=t;
+  function fly(a,b){const p=edgeEl(a,b);if(!p)return;const L=p.getTotalLength();const c=document.createElementNS(SV,'circle');c.setAttribute('r',6);c.setAttribute('fill','#0e9f8e');c.setAttribute('stroke','#fff');c.setAttribute('stroke-width','2');pk.appendChild(c);const t0=performance.now(),D=800;(function f(t){const k=clamp((t-t0)/D,0,1);const pt=p.getPointAtLength(L*k);c.setAttribute('cx',pt.x);c.setAttribute('cy',pt.y);if(k<1)requestAnimationFrame(f);else c.remove()})(t0)}
+  api.fly=fly;
+  el.addEventListener('click',ev=>{const g=ev.target.closest('.n');if(!g)return;const n=N[g.dataset.id];if(n&&n.info&&!api.noInfo){api.say(`<b>${(n.label||'').replace(/\n/g,' ')}</b> — ${n.info}`);if(!cfg.steps)api.set([n.id],[])}});
+  if(cfg.steps){
+    let i=-1,timer=null;const cnt=$('.cnt',el);
+    const go=k=>{i=clamp(k,-1,cfg.steps.length-1);if(i<0){api.set([],[]);api.say(cfg.hint||'');cnt.textContent='';return}const st=cfg.steps[i];api.set(st.on||[],st.edges||[]);api.say(`<b>Paso ${i+1}/${cfg.steps.length}.</b> ${st.t}`);cnt.textContent=`${i+1} / ${cfg.steps.length}`;(st.edges||[]).forEach(x=>{const [a,b]=x.split('>');fly(a,b)})};
+    const stop=()=>{clearInterval(timer);timer=null;const b=$('[data-a=auto]',el);b.textContent='▶ Auto'};
+    $('[data-a=next]',el).onclick=()=>{stop();go(i>=cfg.steps.length-1?0:i+1)};
+    $('[data-a=prev]',el).onclick=()=>{stop();go(i-1)};
+    $('[data-a=reset]',el).onclick=()=>{stop();go(-1)};
+    $('[data-a=auto]',el).onclick=function(){if(timer){stop();return}this.textContent='⏸ Pausa';if(i>=cfg.steps.length-1)go(0);else go(i+1);timer=setInterval(()=>{if(i>=cfg.steps.length-1){stop();return}go(i+1)},2400)};
+  }
+  api.nodes=N;return api;
+}
+
+/* ================= PLOT (canvas) ================= */
+function Plot(cv,o){
+  const ctx=cv.getContext('2d'),P={ctx,pad:38,w:0,h:0};
+  P.fit=()=>{const r=cv.getBoundingClientRect();if(!r.width)return false;const d=window.devicePixelRatio||1;cv.width=Math.round(r.width*d);cv.height=Math.round(r.height*d);ctx.setTransform(d,0,0,d,0,0);P.w=r.width;P.h=r.height;return true};
+  P.X=x=>P.pad+(x-o.xmin)/(o.xmax-o.xmin)*(P.w-P.pad-12);
+  P.Y=y=>P.h-P.pad-(y-o.ymin)/(o.ymax-o.ymin)*(P.h-P.pad-12);
+  P.ix=px=>o.xmin+(px-P.pad)/(P.w-P.pad-12)*(o.xmax-o.xmin);
+  P.iy=py=>o.ymin+(P.h-P.pad-py)/(P.h-P.pad-12)*(o.ymax-o.ymin);
+  P.clear=()=>ctx.clearRect(0,0,P.w,P.h);
+  P.axes=()=>{ctx.save();ctx.strokeStyle='#e3e8f2';ctx.fillStyle='#6b778c';ctx.font='11px system-ui';ctx.lineWidth=1;
+    const sx=o.sx||2,sy=o.sy||2;
+    for(let x=Math.ceil(o.xmin/sx)*sx;x<=o.xmax;x+=sx){ctx.beginPath();ctx.moveTo(P.X(x),P.Y(o.ymin));ctx.lineTo(P.X(x),P.Y(o.ymax));ctx.stroke();ctx.textAlign='center';ctx.fillText(x,P.X(x),P.h-P.pad+14)}
+    for(let y=Math.ceil(o.ymin/sy)*sy;y<=o.ymax;y+=sy){ctx.beginPath();ctx.moveTo(P.X(o.xmin),P.Y(y));ctx.lineTo(P.X(o.xmax),P.Y(y));ctx.stroke();ctx.textAlign='right';ctx.fillText(y,P.pad-5,P.Y(y)+4)}
+    ctx.fillStyle='#3a475f';ctx.font='12px system-ui';ctx.textAlign='center';ctx.fillText(o.xl||'',P.pad+(P.w-P.pad)/2,P.h-6);
+    ctx.save();ctx.translate(12,P.pad+(P.h-P.pad)/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl||'',0,0);ctx.restore();ctx.restore()};
+  P.dot=(x,y,c,r=5,hollow)=>{ctx.beginPath();ctx.arc(P.X(x),P.Y(y),r,0,7);if(hollow){ctx.strokeStyle=c;ctx.lineWidth=2;ctx.stroke()}else{ctx.fillStyle=c;ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.2;ctx.stroke()}};
+  P.line=(x0,y0,x1,y1,c,w=2,dash)=>{ctx.save();ctx.beginPath();ctx.moveTo(P.X(x0),P.Y(y0));ctx.lineTo(P.X(x1),P.Y(y1));ctx.strokeStyle=c;ctx.lineWidth=w;if(dash)ctx.setLineDash(dash);ctx.stroke();ctx.restore()};
+  P.pos=e=>{const b=cv.getBoundingClientRect();return[P.ix(e.clientX-b.left),P.iy(e.clientY-b.top)]};
+  P.drag=(fn)=>{let d=false;cv.addEventListener('pointerdown',e=>{d=true;cv.setPointerCapture(e.pointerId);fn(P.pos(e),e)});cv.addEventListener('pointermove',e=>{if(d)fn(P.pos(e),e)});cv.addEventListener('pointerup',()=>d=false);cv.addEventListener('pointercancel',()=>d=false)};
+  return P;
+}
+const BLUE='#4f5bd5',RED='#d64545',TEAL='#0e9f8e',ORG='#d9780a';
+
+
+/* ================= DATOS DE LOS ALGORITMOS ================= */
+const LV=['🌱 Zero','🌿 Básico','🌳 Intermedio','🚀 Avanzado','🏆 Hero'];
+const BADGE={libro:'📖 Del libro (Cap. 3)',extra:'➕ Más allá del libro',mixto:'📖➕ Mencionado en el libro, ampliado aquí'};
+const ALG=[
+{id:'svm',name:'Support Vector Machine (SVM)',emoji:'📏',grad:'linear-gradient(120deg,#4f5bd5,#8b5cf6)',fam:'Supervisado · Clasificación',
+ pitch:'Traza la frontera que separa dos clases con el mayor margen posible. Compacto y preciso: muy usado para detectar intrusiones y malware en fog.',
+ analogy:'Imagina dos grupos de gente en una plaza. La SVM no pone la valla pegada a un grupo: dibuja la <b>calle más ancha</b> posible entre ambos. Solo las personas que están justo al borde de esa calle (los <b>vectores soporte</b>) importan para decidir dónde va.',
+ levels:[
+  {t:'Zero · La calle más ancha',b:'libro',d:'Hay dos tipos de datos (p. ej. tráfico <i>normal</i> y <i>ataque</i>). Buscamos una línea que los separe lo mejor posible, y entre todas las líneas válidas elegimos la que deja más espacio a ambos lados.',lab:'Laboratorio ①: mueve C y observa la calle (margen).'},
+  {t:'Básico · Hiperplano y vectores soporte',b:'libro',d:'Según el libro, la SVM crea un <b>hiperplano divisorio</b> maximizando la distancia (margen) a los puntos de cada clase. Los <b>vectores soporte</b> son los puntos más cercanos al hiperplano e influyen en su orientación. Con 2 características el hiperplano es una recta; con 3, un plano; con más, un hiperplano.',f:'En fog guarda solo los vectores soporte → poca memoria, adecuado para dispositivos limitados.'},
+  {t:'Intermedio · Margen blando (C)',b:'extra',d:'Los datos reales se solapan y tienen ruido. El <b>margen blando</b> permite algunos errores a cambio de un margen más ancho. Se minimiza ½‖w‖² + C·Σ pérdida-hinge, donde hinge = max(0, 1 − y·f(x)). <b>C alto</b> = estricto (margen estrecho, riesgo de sobreajuste); <b>C bajo</b> = flexible (margen ancho, tolera outliers).',lab:'Laboratorio ①: pruébalo con el outlier.'},
+  {t:'Avanzado · Kernels',b:'extra',d:'¿Y si no existe ninguna recta que separe? El <b>truco del kernel</b> eleva los datos a más dimensiones (sin calcularlas explícitamente) donde sí hay un hiperplano. Kernels: lineal, polinomial y <b>RBF (gaussiano)</b>. Hay que ajustar C y γ (ancho del RBF) con validación cruzada.',lab:'Laboratorio ②: eleva el 1D a (x, x²).'},
+  {t:'Hero · Multiclase, SVR y One-Class',b:'extra',d:'Para varias clases: one-vs-rest / one-vs-one. <b>SVR</b> hace regresión con un «tubo» ε. <b>One-Class SVM</b> aprende solo lo «normal» y marca lo raro (anomalías sin ejemplos de ataque). Entrenamiento a gran escala: SMO, SVM lineales con SGD, y aproximaciones de kernel (Nyström, random Fourier features) para correr en el borde.',f:'One-Class SVM + fog = detector de anomalías local sin etiquetas de ataque.'}],
+ uses:[
+  {n:'Detección de intrusión y malware en el entorno fog',tag:'libro',src:'Tráfico de dispositivos IoT',prep:'Extrae características: tamaño de paquetes, frecuencia, puertos',model:'SVM clasifica: normal / malware',act:'Aísla o bloquea el dispositivo sospechoso',cloud:'Envía solo la alerta y estadísticas',why:'Las aplicaciones IoT en fog tienen poca memoria; la SVM solo almacena los vectores soporte y separa bien con pocos datos.'},
+  {n:'Ataques de manipulación en smart grid / medidores inteligentes',tag:'libro',src:'Lecturas de medidores eléctricos',prep:'El gateway agrega consumo y calcula patrones',model:'SVM detecta lecturas manipuladas',act:'Marca el medidor y descarta datos falsos',cloud:'Auditoría y facturación con datos limpios',why:'El libro señala que la seguridad es la gran preocupación en redes inteligentes; detectar manipulación cerca del medidor reduce latencia y congestión.'}],
+ quiz:{id:'z1',q:'En una SVM, ¿qué son los «vectores soporte»?',o:['Todos los puntos del conjunto de entrenamiento','Los puntos más cercanos al hiperplano, que determinan su orientación','Los puntos mal clasificados','Los centroides de cada clase'],a:1,w:'Solo los puntos del borde del margen definen la frontera; por eso el modelo es compacto.'}},
+
+{id:'arbol',name:'Árbol de decisión',emoji:'🌳',grad:'linear-gradient(120deg,#0e9f8e,#2b7fd1)',fam:'Supervisado · Clasificación / Regresión',
+ pitch:'Clasifica con una cadena de preguntas sí/no. Es el algoritmo más fácil de leer y de ejecutar en dispositivos pequeños.',
+ analogy:'Es el juego de <b>las 20 preguntas</b>: «¿el tráfico supera 500 paquetes/s?» → «¿hay más de 5 fallos de login?» → «¡es un ataque!». Cada pregunta divide los datos hasta llegar a una respuesta (hoja).',
+ levels:[
+  {t:'Zero · Juego de preguntas',b:'libro',d:'Para decidir si algo es normal o sospechoso, haces preguntas sencillas una tras otra; la respuesta a cada una te lleva a la siguiente, hasta que tienes un veredicto.'},
+  {t:'Básico · Raíz, decisiones y hojas',b:'libro',d:'El libro (Fig. 3.5) describe el <b>nodo raíz</b>, los <b>nodos de decisión</b> (que dividen según un valor de característica), las <b>hojas</b> (resultado) y los <b>subárboles/ramas</b>. Se construye de forma iterativa decidiendo cómo dividir el dataset.',f:'Fácil de convertir en reglas if-then, ejecutables incluso en un microcontrolador.'},
+  {t:'Intermedio · ¿Cómo elige cada pregunta?',b:'extra',d:'En cada nodo se prueban cortes (característica y umbral) y se elige el que más reduce la <b>impureza</b>. <b>Gini</b> = 2p(1−p) (en 2 clases) o <b>entropía</b>. Un árbol muy profundo memoriza el ruido: <b>sobreajuste</b>. La profundidad máxima es el primer control.',lab:'Laboratorio: sube la profundidad y mira train vs test.'},
+  {t:'Avanzado · Poda y regresión',b:'extra',d:'<b>Poda</b>: cortar ramas que no mejoran la generalización (pre-poda con profundidad/mínimo de muestras; post-poda con coste-complejidad). <b>Árboles de regresión</b>: la hoja predice el promedio de sus ejemplos. Manejan variables categóricas y valores faltantes; son inestables: un pequeño cambio en los datos cambia el árbol.',lab:'Laboratorio: añade ruido y compara.'},
+  {t:'Hero · Ensambles de árboles',b:'extra',d:'La debilidad de un árbol se arregla juntando muchos: <b>bagging</b> → Random Forest; <b>boosting</b> → Gradient Boosting (XGBoost, LightGBM, CatBoost), que añade árboles pequeños que corrigen los errores de los anteriores. Para el borde: cuantización, histogramas y árboles poco profundos.',f:'Ver pestaña «Bosque aleatorio» para el siguiente escalón.'}],
+ uses:[
+  {n:'Detección de intrusión y DDoS en el gateway fog',tag:'libro',src:'Tráfico de red de los nodos',prep:'Calcula tráfico/s, fallos de login, IP conocida',model:'Árbol decide: DDoS / intrusión / normal',act:'Descarta o limita la IP atacante',cloud:'Reporte del incidente',why:'Fog hereda amenazas de la nube (DDoS, DoS, Sybil). El libro propone árboles para detectar intrusiones, DDoS y analizar tráfico sospechoso dentro del entorno fog.'},
+  {n:'Predicción de retardo y aprovisionamiento de recursos',tag:'libro',src:'Métricas de nodos: CPU, cola, enlace',prep:'Normaliza y agrega métricas por ventana',model:'Árbol decide: ¿hace falta más recursos?',act:'Reasigna tareas o escala el nodo',cloud:'Informe de capacidad',why:'El libro cita árboles de decisión entre los supervisados usados para aprovisionamiento de recursos y predicción de retardo/latencia.'}],
+ quiz:{id:'z2',q:'Un árbol de decisión de profundidad enorme alcanza 100 % en entrenamiento pero falla con datos nuevos. ¿Qué ocurre?',o:['Subajuste','Sobreajuste','Convergencia','Poda'],a:1,w:'Memorizó el ruido del entrenamiento. Se controla con profundidad máxima, poda o ensambles.'}},
+
+{id:'bosque',name:'Random Forest (bosque aleatorio)',emoji:'🌲',grad:'linear-gradient(120deg,#2a9455,#0e9f8e)',fam:'Supervisado · Ensamble de árboles',
+ pitch:'Muchos árboles entrenados con variaciones; cada uno vota y gana la clase mayoritaria. Más robusto que un solo árbol.',
+ analogy:'En vez de fiarte de un solo experto, <b>preguntas a 100</b>, cada uno con información ligeramente distinta, y te quedas con lo que dice la mayoría. Los errores individuales se compensan.',
+ levels:[
+  {t:'Zero · La sabiduría de la multitud',b:'libro',d:'Un grupo grande y variado suele acertar más que cada miembro por separado, siempre que los miembros no cometan todos el mismo error.'},
+  {t:'Básico · Muchos árboles que votan',b:'libro',d:'Según el libro, un Random Forest está formado por <b>muchos árboles de decisión individuales</b> (de ahí «bosque»). Cada árbol se entrena y <b>vota</b> por una clase; la <b>más votada</b> es la salida.',f:'Ayuda a identificar nodos fog suplantados o dispositivos que impersonan para obtener acceso.'},
+  {t:'Intermedio · Bagging y características aleatorias',b:'extra',d:'Para que los árboles sean distintos: <b>bootstrap</b> (cada árbol ve una muestra con reemplazo) y <b>subconjunto aleatorio de características</b> en cada corte (mtry). Los datos que un árbol no vio dan el <b>error OOB</b> (out-of-bag), una validación gratis.',lab:'Laboratorio: activa/desactiva bootstrap y características aleatorias.'},
+  {t:'Avanzado · Importancia y ajuste',b:'extra',d:'<b>Importancia de variables</b> (cuánto reduce la impureza cada característica). Hiperparámetros: n_estimators, max_depth, min_samples_leaf. Regresión: promedio de árboles. <b>ExtraTrees</b>: cortes aleatorios, aún más rápido.',lab:'Laboratorio: curva «exactitud vs número de árboles».'},
+  {t:'Hero · Anomalías y borde',b:'extra',d:'<b>Isolation Forest</b>: usa árboles aleatorios para aislar anomalías sin etiquetas. Bosques con probabilidades calibradas, <b>podados/cuantizados</b> para nodos fog, y variantes incrementales (Mondrian forests) para flujos IoT.',f:'Coste: más memoria y cómputo que un árbol; decide cuántos árboles caben en tu nodo.'}],
+ uses:[
+  {n:'Detección de nodos fog suplantados (impersonación)',tag:'libro',src:'Peticiones de autenticación de nodos y dispositivos',prep:'Extrae patrones: frecuencia, origen, tiempos',model:'Random Forest: nodo legítimo / suplantado',act:'Rechaza al nodo y revoca su acceso',cloud:'Lista negra actualizada',why:'Los dispositivos IoT tienen poca memoria y energía para criptografía pesada; un atacante puede saltarse la autenticación suplantando. El libro destaca el bosque para identificar nodos fog no autorizados.'},
+  {n:'Detección de anomalías y DDoS en el tráfico de red',tag:'libro',src:'Flujos de red del segmento IoT',prep:'Resume flujos en ventanas y características',model:'Random Forest vota: ataque / normal',act:'Filtra el tráfico y alerta',cloud:'Estadísticas para reentrenar',why:'El libro lista la detección de intrusiones, anomalías y DDoS como aplicaciones del Random Forest para asegurar el sistema fog.'}],
+ quiz:{id:'z3',q:'¿Qué hace que los árboles de un Random Forest sean diferentes entre sí?',o:['Se entrenan con muestras bootstrap y características aleatorias','Usan distinta profundidad por capricho','Son clones del mismo árbol','Cada uno usa una clase distinta'],a:0,w:'Bagging + selección aleatoria de características decorrelaciona los árboles, y el voto reduce la varianza.'}},
+
+{id:'knn',name:'K-Nearest Neighbors (KNN)',emoji:'👥',grad:'linear-gradient(120deg,#d9780a,#d64545)',fam:'Supervisado · Clasificación / Regresión',
+ pitch:'No entrena nada: guarda ejemplos y clasifica por voto de los k más parecidos. Simple, intuitivo… y sensible a la escala de los datos.',
+ analogy:'«Dime con quién andas y te diré quién eres»: para saber si un dato nuevo es sospechoso, miras a los <b>k vecinos más cercanos</b> que ya conoces y haces caso a la mayoría.',
+ levels:[
+  {t:'Zero · Pregunta a tus vecinos',b:'libro',d:'Llega un dato nuevo. Buscas los ejemplos conocidos más parecidos y copias lo que son la mayoría.'},
+  {t:'Básico · Distancia euclídea y voto',b:'libro',d:'El libro: KNN analiza <b>k puntos dados</b> para clasificar nuevos usando la <b>distancia euclídea</b> d = √Σ(xᵢ−yᵢ)²; el punto toma la clase por los votos de sus vecinos más próximos.',f:'No hay fase de entrenamiento, pero guardar todos los ejemplos pesa en memoria.'},
+  {t:'Intermedio · k, escala y distancia',b:'extra',d:'<b>k pequeño</b> = frontera irregular (sensible al ruido); <b>k grande</b> = suave pero borroso. Se elige por validación cruzada (k impar en 2 clases). <b>Escalar</b> las características es obligatorio: si una variable va de 0–1000 y otra de 0–10, la primera domina la distancia. Otras métricas: Manhattan, Minkowski, coseno.',lab:'Laboratorio: activa/desactiva «escalar».'},
+  {t:'Avanzado · Voto ponderado y regresión',b:'extra',d:'<b>Voto ponderado</b> por 1/d (el más cercano pesa más). <b>KNN de regresión</b>: promedia los valores de los vecinos. Para buscar rápido: <b>KD-tree / Ball-tree</b>. Para ahorrar memoria en el borde: guardar solo <b>prototipos</b> (condensación).',lab:'Laboratorio: marca «voto ponderado».'},
+  {t:'Hero · Escala masiva y privacidad',b:'extra',d:'Con millones de vectores: búsqueda aproximada (<b>HNSW</b>, <b>LSH</b>). Aprender la métrica con <b>embeddings</b> (metric learning). Cuidado con la <b>maldición de la dimensionalidad</b> (en muchas dimensiones todo está «lejos»). En fog: KNN federado/local para no sacar datos sensibles.',f:'Procesar los vecinos en el nodo fog protege el historial del usuario.'}],
+ uses:[
+  {n:'Clasificar nodos de una red inalámbrica: normal o anormal',tag:'libro',src:'Comportamiento de nodos fog en la red inalámbrica',prep:'Mide tasa de peticiones, congestión y patrones',model:'KNN compara con nodos conocidos: normal / anormal',act:'Aísla nodos impersonados o que congestionan (DoS)',cloud:'Notifica y actualiza ejemplos',why:'El libro usa KNN en detección de intrusiones y anomalías: identifica nodos sin acceso legítimo, que intentan congestionar la red.'},
+  {n:'Predicción de enfermedades protegiendo el historial',tag:'libro',src:'Datos de wearables y registros del paciente',prep:'El fog procesa localmente; el historial no sale',model:'KNN compara con casos conocidos',act:'Avisa al paciente o al médico',cloud:'Solo resultados agregados',why:'El libro cita KNN (Malathi et al.) para predecir enfermedades con protección eficiente de la privacidad de los registros.'}],
+ quiz:{id:'z4',q:'Un dataset tiene «tráfico» (0–1000) y «fallos de login» (0–10). Sin escalar, ¿qué pasa en KNN?',o:['Todas las variables pesan igual','Domina la variable de mayor rango (tráfico)','KNN falla siempre','La distancia es cero'],a:1,w:'La distancia euclídea se calcula en las unidades crudas; por eso se escala (normaliza) antes.'}},
+
+{id:'regresion',name:'Regresión lineal',emoji:'📈',grad:'linear-gradient(120deg,#2b7fd1,#4f5bd5)',fam:'Supervisado · Regresión',
+ pitch:'Ajusta una recta (o curva) para predecir un valor continuo: tendencia de un sensor, retardo de red, valores perdidos.',
+ analogy:'Es la <b>línea de tendencia</b> que dibujas sobre una nube de puntos: si sabes la hora, estimas la temperatura. La mejor recta es la que deja los errores al cuadrado más pequeños.',
+ levels:[
+  {t:'Zero · Línea de tendencia',b:'libro',d:'Observas cómo sube o baja una magnitud con el tiempo y dibujas la recta que mejor resume esa tendencia para predecir el siguiente valor.'},
+  {t:'Básico · y = a·x + b',b:'libro',d:'Según el libro, la regresión lineal es un modelo estadístico que identifica relaciones entre variables y pronostica a partir de variables independientes: predice un valor dependiente (y) a partir de uno independiente (x) mediante una relación lineal. Los coeficientes se hallan por <b>mínimos cuadrados</b>.',f:'Muy barata: dos números por variable; cabe en cualquier nodo.'},
+  {t:'Intermedio · Varias variables y evaluación',b:'extra',d:'<b>Regresión múltiple</b>: y = w₀ + w₁x₁ + … + wₙxₙ. Se evalúa con datos de prueba separados: <b>RMSE</b> y <b>R²</b>. Cada coeficiente dice cuánto cambia y por unidad de esa variable.'},
+  {t:'Avanzado · Curvas, sobreajuste y regularización',b:'extra',d:'Con <b>características polinómicas</b> (x, x², x³…) el modelo sigue siendo lineal en los pesos pero ajusta curvas. Demasiado grado = sobreajuste. <b>Ridge (L2)</b> encoge los pesos; <b>Lasso (L1)</b> anula los inútiles.',lab:'Laboratorio ①: grado y λ.'},
+  {t:'Hero · Online, robusta y logística',b:'extra',d:'<b>Aprendizaje online</b> (SGD / mínimos cuadrados recursivos): se actualiza dato a dato, ideal para flujos IoT y para adaptarse a cambios (concept drift). <b>Regresión robusta</b> (Huber, RANSAC) ante valores atípicos. <b>Regresión logística</b>: da probabilidades para clasificar.',lab:'Laboratorio ②: flujo con deriva.'}],
+ uses:[
+  {n:'Predecir tendencias sensor–tiempo para controlar aplicaciones embebidas',tag:'libro',src:'Datos de sensores en tiempo real',prep:'Ventana de datos recientes en el fog',model:'Regresión lineal: tendencia en función del tiempo',act:'Ajusta el control de la aplicación embebida',cloud:'Histórico y análisis profundo',why:'El libro: se puede predecir la tendencia entre datos del sensor y el tiempo para monitorizar y controlar aplicaciones embebidas que generan datos en tiempo real.'},
+  {n:'Reparar valores perdidos en la agregación de datos',tag:'libro',src:'Flujo de datos con huecos',prep:'Detecta muestras que faltan',model:'Regresión lineal estima el valor perdido',act:'Rellena el hueco y sigue el flujo',cloud:'Datos completos agregados',why:'El libro indica que, durante la transmisión y agregación de flujos de datos, los valores faltantes pueden repararse con modelos de regresión lineal en tiempo real.'}],
+ quiz:{id:'z5',q:'Un modelo polinómico de grado 9 ajusta perfecto los 12 puntos de entrenamiento pero predice mal datos nuevos. ¿Qué técnica ayuda?',o:['Aumentar aún más el grado','Regularización (Ridge/Lasso) o reducir el grado','Quitar los datos de prueba','Usar K-means'],a:1,w:'La regularización penaliza pesos grandes y suaviza la curva.'}},
+
+{id:'kmeans',name:'K-means (clustering)',emoji:'🎯',grad:'linear-gradient(120deg,#8b5cf6,#ec4899)',fam:'No supervisado · Clustering',
+ pitch:'Agrupa datos sin etiquetas en k grupos de características parecidas. Sirve para descubrir patrones y cazar anomalías.',
+ analogy:'Reparte <b>k banderas</b> sobre un mapa de puntos: cada punto va a la bandera más cercana, luego cada bandera se mueve al centro de su grupo; repites hasta que nadie cambia de bando.',
+ levels:[
+  {t:'Zero · Agrupar por parecidos',b:'libro',d:'Sin que nadie te diga las categorías, juntas lo que se parece: gastos bajos, normales y altos; tráfico tranquilo, activo, sospechoso.'},
+  {t:'Básico · Algoritmo de Lloyd',b:'libro',d:'Según el libro, K-means asigna cada punto a uno de <b>k clústeres</b> según sus características: dado k y un dataset, forma k grupos. Un comportamiento fuera de lo normal genera una alerta. Pasos: <b>① asignar</b> al centroide más cercano; <b>② mover</b> el centroide a la media; repetir hasta converger.',f:'Menos eficaz que el supervisado para ataques ya conocidos, pero no necesita etiquetas.'},
+  {t:'Intermedio · Inicialización y elección de k',b:'extra',d:'El resultado depende del punto de partida (mínimos locales). <b>k-means++</b> reparte los centroides iniciales lejos unos de otros; se hacen varios reinicios. Para elegir k: <b>método del codo</b> (dónde deja de bajar la inercia) o <b>silueta</b>. Escala siempre las variables.',lab:'Laboratorio: compara inicialización y mira el codo.'},
+  {t:'Avanzado · Escala y alternativas',b:'extra',d:'<b>Mini-batch K-means</b> (usa lotes pequeños: rápido y con poca memoria). <b>K-medoids</b> (centros reales; robusto a outliers). <b>GMM/EM</b>: grupos elípticos y pertenencia «suave» (probabilidades).'},
+  {t:'Hero · Formas arbitrarias y streaming',b:'extra',d:'K-means asume grupos redondos. Para anillos o formas raras: <b>DBSCAN / HDBSCAN</b> (basados en densidad; marcan ruido). <b>Streaming/online K-means</b> para flujos IoT. Clustering sobre <b>embeddings</b> (p. ej. autoencoders) para anomalías en alta dimensión.',lab:'Laboratorio: activa «datos en anillo».'}],
+ uses:[
+  {n:'Detectar ataques Sybil y anomalías en redes de sensores',tag:'libro',src:'Vectores de canal de los nodos de la red inalámbrica',prep:'Extrae el vector de canal de cada identidad',model:'K-means agrupa: identidades que comparten canal = sospechosas',act:'Marca las identidades falsas (Sybil)',cloud:'Actualiza reglas de detección',why:'El libro: K-means puede detectar ataques Sybil en redes de sensores inalámbricas agrupando vectores de canal, además de patrones anómalos.'},
+  {n:'Fraude con tarjeta: patrones de gasto',tag:'libro',src:'Transacciones de tarjeta del comercio',prep:'Resume importe y frecuencia por usuario',model:'K-means: clústeres bajo / normal / alto gasto',act:'Alerta si la nueva transacción cae lejos de su grupo',cloud:'Revisión y casos confirmados',why:'Es el ejemplo del libro para el aprendizaje no supervisado: con k fijo se forman grupos por rangos de gasto y un gasto anormal genera alerta.'}],
+ quiz:{id:'z6',q:'¿Cuáles son los dos pasos que K-means repite hasta converger?',o:['Entrenar y probar','Asignar puntos al centroide más cercano y mover los centroides a la media','Votar y podar','Explorar y recompensar'],a:1,w:'Asignación + actualización de centroides (algoritmo de Lloyd).'}},
+
+{id:'rl',name:'Aprendizaje por refuerzo (Q-learning)',emoji:'🎮',grad:'linear-gradient(120deg,#d9780a,#c49000)',fam:'Refuerzo · Decisiones secuenciales',
+ pitch:'Un agente aprende qué acciones tomar probando y recibiendo recompensas. Ideal cuando no hay etiquetas, solo resultados.',
+ analogy:'Aprender a montar en bici: nadie te da la «respuesta correcta» para cada instante; <b>pruebas, te caes (castigo), aciertas (premio)</b> y tu cuerpo ajusta la política hasta que funciona.',
+ levels:[
+  {t:'Zero · Prueba y error con premio',b:'libro',d:'Un agente actúa, el entorno responde con un premio o un castigo, y con el tiempo el agente aprende qué acciones conviene repetir.'},
+  {t:'Básico · Agente, entorno, recompensa',b:'libro',d:'El libro: el refuerzo toma una <b>secuencia de decisiones</b> donde la salida depende del estado actual del entorno; la salida calculada vuelve como entrada. Un <b>agente</b> sin conocimiento previo aprende acciones que <b>maximizan la recompensa</b>. Usa Q-learning y deep Q-network.',f:'Útil cuando el entorno cambia (interferencias, congestión) y no hay etiquetas.'},
+  {t:'Intermedio · Explorar vs explotar',b:'extra',d:'Dilema central: ¿repito lo que sé o pruebo algo nuevo? <b>Bandido multibrazo</b>: ε-greedy (explora con probabilidad ε), <b>UCB</b> (prueba lo incierto con optimismo), Thompson sampling. Se mide con el <b>arrepentimiento</b> acumulado.',lab:'Laboratorio ①: compara estrategias.'},
+  {t:'Avanzado · Q-learning tabular',b:'mixto',d:'El libro menciona Q-learning; la regla es <b>Q(s,a) ← Q(s,a) + α·[r + γ·max Q(s′,a′) − Q(s,a)]</b>. α = tasa de aprendizaje, γ = importancia del futuro. La tabla Q guarda el valor de cada acción en cada estado; la política es elegir la mejor. Variante on-policy: SARSA.',lab:'Laboratorio ②: enruta un paquete evitando nodos congestionados.'},
+  {t:'Hero · Deep RL y fog',b:'mixto',d:'Cuando hay demasiados estados, una red neuronal aproxima Q: <b>Deep Q-Network (DQN)</b>, citada en el libro, con <b>experience replay</b> y <b>red objetivo</b>. Más allá: policy gradient, actor-critic, <b>PPO</b>; aprendizaje multiagente y <b>RL federado</b> entre nodos fog; RL offline cuando no se puede explorar en producción.',f:'Entrenar suele hacerse en la nube; el fog ejecuta la política aprendida.'}],
+ uses:[
+  {n:'Anti-jamming: elegir la sub-banda libre de interferencia',tag:'libro',src:'Señal de radio con un jammer activo',prep:'Escucha las sub-bandas (sensado del espectro)',model:'Agente RL (Q-learning): elige sub-banda',act:'Salta a la sub-banda libre; recibe +1 o −1',cloud:'Sincroniza políticas aprendidas entre nodos',why:'El libro: en WACRs (radios cognitivos de banda ancha), el sistema aprende a elegir con precisión la sub-banda para evitar señales de jamming y mejorar eficiencia y ancho de banda.'},
+  {n:'Decisiones en tiempo real y navegación robótica',tag:'extensión',src:'Sensores de un robot o dron en el borde',prep:'Resume el estado: posición y obstáculos',model:'Agente RL: política aprendida',act:'Elige el siguiente movimiento sin esperar a la nube',cloud:'Entrena en simulación y actualiza la política',why:'La Fig. 3.3 del libro lista decisiones en tiempo real y navegación robótica como aplicaciones del refuerzo; el flujo concreto de fog es una extensión ilustrativa.'}],
+ quiz:{id:'z7',q:'¿Qué es la tasa ε en ε-greedy?',o:['La probabilidad de actuar al azar para explorar','El descuento del futuro','El tamaño de la red neuronal','El número de clases'],a:0,w:'Con probabilidad ε el agente explora una acción aleatoria; con 1−ε explota la mejor conocida.'}}
+];
+const CMP={ // 1 (bajo) a 5 (alto), cualitativo e ilustrativo
+ inter:{n:'Interpretabilidad (¿se entiende por qué decide?)',good:'hi',v:{svm:2,arbol:5,bosque:2,knn:4,regresion:5,kmeans:3,rl:1}},
+ cost:{n:'Coste de inferencia en el nodo (cómputo)',good:'lo',v:{svm:2,arbol:1,bosque:3,knn:4,regresion:1,kmeans:1,rl:2}},
+ mem:{n:'Memoria necesaria en el nodo',good:'lo',v:{svm:2,arbol:1,bosque:3,knn:5,regresion:1,kmeans:1,rl:2}},
+ lab:{n:'Necesidad de datos etiquetados',good:'lo',v:{svm:5,arbol:5,bosque:5,knn:5,regresion:5,kmeans:1,rl:2}},
+ noise:{n:'Robustez al ruido / sobreajuste (en su versión estándar)',good:'hi',v:{svm:4,arbol:2,bosque:4,knn:2,regresion:3,kmeans:3,rl:3}}};
+
+/* ================= MOTOR DE ANIMACIONES SECUENCIALES ================= */
+let STID=0;const SD={mk:''};
+const dot=(x,y,c,d=0,r=7)=>`<circle class="a" style="--d:${d}s" cx="${x}" cy="${y}" r="${r}" fill="${c}" stroke="#fff" stroke-width="2"/>`;
+const ringS=(x,y,c,d=0,r=12,w=3,p=0)=>`<circle class="fd${p?' pulse':''}" style="--d:${d}s" cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${c}" stroke-width="${w}"/>`;
+const lnS=(x1,y1,x2,y2,c,d=0,w=3,dash)=>dash?`<line class="fd" style="--d:${d}s" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}" stroke-dasharray="${dash}"/>`:`<line class="dr" pathLength="1" style="--d:${d}s" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
+const plS=(pts,c,d=0,w=3)=>`<polyline class="dr" pathLength="1" style="--d:${d}s" points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+const txS=(x,y,s,d=0,o={})=>`<text class="fd" style="--d:${d}s" x="${x}" y="${y}" font-size="${o.s||14}" fill="${o.c||'#1c2433'}" text-anchor="${o.a||'middle'}" font-weight="${o.b?700:400}">`+String(s).split('\n').map((l,i)=>`<tspan x="${x}" dy="${i?(o.lh||(o.s||14)+3):0}">${l}</tspan>`).join('')+'</text>';
+const rcS=(x,y,w,h,f,s,d=0,rx=8,sw=2)=>`<rect class="fd" style="--d:${d}s" x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${f}" stroke="${s}" stroke-width="${sw}"/>`;
+const arS=(x1,y1,x2,y2,c,d=0,w=2.5)=>`<line class="fd" style="--d:${d}s" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}" marker-end="url(#${SD.mk})"/>`;
+const box=(x,y,w,h,s,f,st,d=0)=>rcS(x-w/2,y-h/2,w,h,f,st,d,10)+txS(x,y-(String(s).split('\n').length-1)*8+5,s,d+.1,{s:13,b:1});
+const numDot=(x,y,n,c,d=0,r=14)=>`<g class="a" style="--d:${d}s"><circle cx="${x}" cy="${y}" r="${r}" fill="${c}" stroke="#fff" stroke-width="2"/><text x="${x}" y="${y+4}" font-size="12" fill="#fff" text-anchor="middle" font-weight="700">${n}</text></g>`;
+const badge=(x,y,n,d=0)=>`<g class="a" style="--d:${d}s"><circle cx="${x}" cy="${y}" r="12" fill="#1c2433"/><text x="${x}" y="${y+5}" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">${n}</text></g>`;
+const qmark=(x,y,d=0,c='#fff',s='#222')=>`<g class="a pulse" style="--d:${d}s"><circle cx="${x}" cy="${y}" r="13" fill="${c}" stroke="${s}" stroke-width="3"/><text x="${x}" y="${y+5}" font-size="15" text-anchor="middle" font-weight="800" fill="${s}">?</text></g>`;
+const grp=(tr,inner)=>`<g transform="${tr}">${inner}</g>`;
+/* datos del mini-mapa */
+const SB=[[90,250],[140,275],[190,235],[120,205],[225,270],[165,175],[250,225],[85,160],[200,140],[270,175]];
+const SR=[[345,90],[400,140],[435,70],[375,55],[325,115],[425,190],[360,175],[330,70]];
+const SN=[370,105],CX=297;
+const sc=(d0=0,o={})=>`<rect x="40" y="24" width="420" height="282" rx="10" fill="#fff" stroke="#c9d1e3"/>`+txS(250,324,'fallos de login →',0,{s:12,c:'#6b778c'})+`<text transform="translate(22,165) rotate(-90)" text-anchor="middle" font-size="12" fill="#6b778c">tráfico →</text>`
+ +SB.map((p,i)=>dot(p[0],p[1],BLUE,d0+i*.07)).join('')+SR.map((p,i)=>dot(p[0],p[1],RED,d0+.7+i*.07)).join('')+(o.noise?dot(SN[0],SN[1],BLUE,d0+1.4):'');
+const legend=(x,y,d=0)=>dot(x,y,BLUE,d,7)+txS(x+14,y+5,'tráfico normal',d,{a:'start',s:13})+dot(x,y+26,RED,d,7)+txS(x+14,y+31,'ataque',d,{a:'start',s:13});
+const speech=(x,y,w,h,s,d=0,f='#fff3c4',st='#c49000')=>rcS(x,y,w,h,f,st,d,12)+txS(x+w/2,y+22,s,d+.1,{s:13,lh:17});
+
+const STORY={};
+/* ---------- RANDOM FOREST ---------- */
+STORY.bosque=[
+ {t:'1 · El problema',txt:'Cada <b>punto</b> es un dispositivo: su posición dice cuánto <b>tráfico</b> genera y cuántos <b>fallos de login</b> tiene. 🔵 normal, 🔴 ataque. Queremos que la máquina decida si un dispositivo <i>nuevo</i> es normal o ataque. Hay incluso un punto raro (ruido): un azul metido entre los rojos.',svg:()=>sc(0,{noise:1})+legend(500,70,1.8)+ringS(SN[0],SN[1],'#222',2.2,13,3,1)+txS(620,150,'un dato raro\n(ruido)',2.4,{s:13,c:'#222',a:'start'})+arS(618,146,SN[0]+16,SN[1]+4,'#222',2.4,1.5)},
+ {t:'2 · Una pregunta = un corte',txt:'La herramienta básica es una <b>pregunta de sí/no</b> sobre una característica: «¿fallos de login > '+CX+'?». Esa pregunta parte el mapa en dos zonas. A la izquierda casi todo es normal; a la derecha casi todo es ataque… salvo el punto raro, que queda mal clasificado.',svg:()=>sc(-4,{noise:1})+rcS(40,24,CX-40,282,'rgba(79,91,213,.12)','none',.3,0)+rcS(CX,24,460-CX,282,'rgba(214,69,69,.12)','none',.3,0)+lnS(CX,24,CX,306,'#222',.7,3,'7 5')+txS(CX,16,'¿fallos de login > '+CX+'?',1.2,{b:1,s:13})+txS(160,60,'NO → normal',1.5,{c:BLUE,b:1})+txS(380,285,'SÍ → ataque',1.5,{c:RED,b:1})+ringS(SN[0],SN[1],'#222',2.2,13,3,1)+txS(560,120,'este punto queda\nmal clasificado ✗',2.4,{s:13})},
+ {t:'3 · Un árbol = varias preguntas',txt:'Un <b>árbol de decisión</b> encadena preguntas. Cada respuesta te baja por una rama hasta una <b>hoja</b> con el veredicto. Aquí hay una sola pregunta, así que la hoja derecha mezcla 8 ataques con 1 normal.',svg:()=>sc(-4,{noise:1})+lnS(CX,24,CX,306,'#222',-1,3,'7 5')+box(620,50,170,44,'¿login > '+CX+'?','#fff','#222',.3)+lnS(600,72,545,125,'#98a3b8',.9,2.5)+lnS(640,72,695,125,'#98a3b8',.9,2.5)+txS(560,100,'no',1.1,{s:12})+txS(685,100,'sí',1.1,{s:12})+box(545,160,110,60,'NORMAL\n10 ✓','#e8eaff',BLUE,1.4)+box(695,160,110,60,'ATAQUE\n8 ✓  1 ✗','#fde4e4',RED,1.8)+txS(620,250,'raíz → ramas → hojas',2.4,{s:12,c:'#6b778c'})},
+ {t:'4 · El problema: memorizar el ruido',txt:'Si dejamos que el árbol siga preguntando, acabará dibujando una <b>cajita solo para ese punto raro</b>. En entrenamiento acierta el 100 %, pero ha memorizado una excepción: un ataque nuevo que caiga en la cajita se clasificará como «normal». Eso es el <b>sobreajuste</b>.',svg:()=>sc(-4,{noise:1})+lnS(CX,24,CX,306,'#222',-1,3,'7 5')+rcS(SN[0]-24,SN[1]-20,48,40,'rgba(79,91,213,.2)',BLUE,.4,6,3)+txS(560,100,'cajita solo para\nun punto raro',1,{s:13,c:BLUE,b:1})+arS(520,95,SN[0]+26,SN[1]-6,BLUE,1,1.8)+qmark(SN[0]+8,SN[1]+8,2,'#fde4e4',RED)+txS(560,200,'ataque nuevo que cae en\nla cajita → predice\nNORMAL ✗',2.4,{s:13,c:RED,b:1})},
+ {t:'5 · La idea: muchos árboles, datos distintos',txt:'En vez de un árbol, entrenamos <b>muchos</b>. A cada uno le damos una muestra <b>con reemplazo</b> (<i>bootstrap</i>): se sacan 10 datos al azar de los 10 originales, así que algunos se <b>repiten</b> (anillo naranja) y otros <b>no aparecen</b>. Cada árbol ve datos algo distintos y por eso comete errores distintos. Además, en cada corte solo mira <b>una característica elegida al azar</b>.',svg:()=>{const cl=[0,0,0,0,1,1,1,0,1,1],S=[[1,1,3,4,6,6,7,9,10,10],[2,2,2,3,5,7,8,8,9,10],[1,3,4,4,5,6,8,9,9,10]];let s=txS(40,36,'Datos originales',0,{a:'start',b:1,s:13});for(let i=0;i<10;i++)s+=numDot(175+i*44,30,i+1,cl[i]?RED:BLUE,.1*i);
+  S.forEach((r,k)=>{const y=110+k*80;s+=txS(40,y+4,'Muestra '+(k+1),1.2+k*1.2,{a:'start',b:1,s:13});const seen={};r.forEach((id,i)=>{seen[id]=(seen[id]||0)+1;s+=numDot(175+i*44,y,id,cl[id-1]?RED:BLUE,1.3+k*1.2+i*.06);if(seen[id]>1)s+=ringS(175+i*44,y,ORG,1.3+k*1.2+i*.06,18,3)});const miss=[1,2,3,4,5,6,7,8,9,10].filter(x=>!r.includes(x));s+=txS(150,y+34,'no aparecen: '+miss.join(', ')+'   ·   anillo naranja = repetido',2+k*1.2,{a:'start',s:11,c:'#6b778c'});s+=arS(610,y,650,y,'#98a3b8',2.2+k*1.2)+txS(695,y+2,'🌳',2.4+k*1.2,{s:28})+txS(695,y+24,'Árbol '+(k+1),2.4+k*1.2,{s:12,b:1})});return s}},
+ {t:'6 · Cada árbol vota',txt:'Llega un dispositivo nuevo <b>?</b>. Se lo enseñamos a cada árbol y cada uno <b>vota</b>. Como cada uno aprendió de datos distintos, no siempre coinciden: aquí el Árbol 2 se equivoca, pero la <b>mayoría</b> (2 contra 1) acierta. La clase más votada es la decisión del bosque.',svg:()=>qmark(70,165,0)+[0,1,2].map(k=>{const y=70+k*95,v=[1,0,1][k];return arS(100,165,205,y,'#98a3b8',.6+k*.9)+txS(230,y+8,'🌳',.8+k*.9,{s:30})+txS(262,y-4,'Árbol '+(k+1),.8+k*.9,{a:'start',s:12,c:'#6b778c'})+rcS(262,y+2,130,32,v?'#fde4e4':'#e8eaff',v?RED:BLUE,1.3+k*.9,14)+txS(327,y+23,v?'vota ATAQUE':'vota normal',1.4+k*.9,{b:1,s:13,c:v?RED:BLUE})}).join('')+txS(560,60,'Recuento de votos',3.6,{b:1})+rcS(440,80,200,34,'#fde4e4',RED,3.8,8)+txS(540,102,'ATAQUE · 2 votos',3.9,{b:1,c:RED})+rcS(440,126,100,34,'#e8eaff',BLUE,4.1,8)+txS(490,148,'normal · 1',4.2,{b:1,c:BLUE})+rcS(430,190,230,50,'#dcf2e5','#2a9455',4.8,12,3)+txS(545,222,'🏆 Gana ATAQUE (mayoría)',5,{b:1,s:15,c:'#2a9455'})},
+ {t:'7 · ¿Cuántos árboles ayudan?',txt:'Con <b>1 árbol</b> el bosque es tan inestable como un árbol solo. Al sumar árboles los errores se compensan y el acierto <b>sube y se estabiliza</b>. Pasado cierto punto más árboles ya no mejoran nada (solo gastan memoria y cómputo en el nodo fog). La línea naranja es lo que logra un árbol único.',svg:()=>{const acc=[62,70,72,79,77,78,74,79,78,81,79,80,79,80,79],X=i=>70+i*26,Y=v=>260-(v-55)*6;let s=lnS(60,40,60,260,'#98a3b8',0,2)+lnS(60,260,440,260,'#98a3b8',0,2)+txS(250,288,'número de árboles →',0,{s:12,c:'#6b778c'})+`<text transform="translate(18,150) rotate(-90)" text-anchor="middle" font-size="12" fill="#6b778c">% de acierto en datos de prueba</text>`;[1,5,10,15].forEach(n=>s+=txS(X(n-1),276,n,0,{s:11,c:'#6b778c'}));[60,70,80].forEach(v=>s+=txS(52,Y(v)+4,v+'%',0,{a:'end',s:11,c:'#6b778c'})+lnS(60,Y(v),440,Y(v),'#eef1f8',0,1,'2 3'));
+  s+=lnS(60,Y(73),440,Y(73),ORG,.5,3,'8 5')+txS(445,Y(73)+4,'árbol único',.8,{a:'start',s:12,c:ORG,b:1})+plS(acc.map((v,i)=>[X(i),Y(v)]),TEAL,1,3.5)+txS(445,Y(79)+4,'bosque',1.2,{a:'start',s:12,c:TEAL,b:1})+speech(520,60,210,70,'Al principio la línea\nsube y salta mucho…',2.2)+speech(520,150,210,70,'…luego se estabiliza:\nmás árboles ya no ayudan',3.4)+badge(X(0),Y(62)-20,'A',2)+badge(X(12),Y(80)-20,'B',3.4);return s}},
+ {t:'8 · Cómo leer el gráfico del laboratorio',txt:'<b>Mapa de la izquierda:</b><br>① <b>Fondo azul/rojo</b>: la clase que ganaría un dato nuevo que cayera en esa zona (la mayoría de los árboles).<br>② <b>Color intenso</b>: casi todos los árboles están de acuerdo. <b>Color pálido</b>: están divididos — suele ser la frontera, la zona de duda.<br>③ <b>Puntos</b>: los datos de entrenamiento (azul normal, rojo ataque; algunos con ruido).<br><b>Gráfico de la derecha:</b><br>④ <b>Línea verde</b>: % de aciertos del bosque en datos de prueba según el número de árboles. La <b>línea negra punteada</b> marca el número que elegiste en el deslizador.<br>⑤ <b>Línea naranja</b>: acierto de un solo árbol de la misma profundidad, para comparar.',svg:()=>{let s='';const str=[1,1,.7,.2,.7,1,1];for(let c=0;c<7;c++)for(let r=0;r<5;r++){const st=c===3?.15+r*.05:str[c],blue=c<3||(c===3&&r<2);s+=`<rect class="fd" style="--d:${.1+c*.1}s" x="${40+c*42}" y="${40+r*44}" width="42" height="44" fill="${blue?BLUE:RED}" fill-opacity="${.12+.5*st}"/>`}
+  [[70,90,0],[110,170,0],[75,200,0],[150,70,0],[270,120,0],[310,200,1],[345,90,1],[395,160,1],[280,180,0]].forEach((p,i)=>s+=dot(p[0],p[1],p[2]?RED:BLUE,1+i*.1,5));SR.slice(0,0);s+=txS(185,270,'mapa de votos',0,{s:12,c:'#6b778c'})+badge(64,60,'①',1.2)+badge(187,52,'②',1.6)+badge(110,215,'③',2);
+  const X=i=>380+i*22,Y=v=>230-(v-55)*5.2;s+=lnS(370,40,370,230,'#98a3b8',0,2)+lnS(370,230,720,230,'#98a3b8',0,2)+txS(545,255,'número de árboles →',0,{s:12,c:'#6b778c'})+lnS(370,Y(73),720,Y(73),ORG,1.8,3,'8 5')+plS([62,70,72,79,77,78,74,79,78,81,79,80,79,80,79].map((v,i)=>[X(i),Y(v)]),TEAL,1.4,3.5)+lnS(X(8),40,X(8),230,'#222',2.6,2.5,'3 3')+badge(X(5),Y(78)-24,'④',2.8)+badge(690,Y(73)+22,'⑤',3.2);return s}}
+];
+/* ---------- ÁRBOL ---------- */
+const panel=(ox,oy,s,inner)=>grp(`translate(${ox},${oy}) scale(${s})`,inner);
+STORY.arbol=[
+ {t:'1 · Los datos',txt:'Cada punto es un dispositivo (🔵 normal, 🔴 ataque) según su tráfico y sus fallos de login. Queremos reglas sencillas que los separen.',svg:()=>sc(0)+legend(500,70,1.6)},
+ {t:'2 · Probar cortes: ¿cuál deja grupos más «puros»?',txt:'El árbol prueba muchos cortes y se queda con el que deja los grupos <b>menos mezclados</b>. A eso se le llama <b>impureza</b> (índice <b>Gini</b>: 0 = grupo puro, 0.5 = mitad y mitad). El corte A (vertical) deja los dos lados puros: Gini ≈ <b>0.00</b>. El corte B (horizontal) deja ambos lados mezclados: Gini ≈ <b>0.34</b>. Gana A.',svg:()=>panel(30,40,.52,sc(-4)+lnS(CX,24,CX,306,TEAL,.3,5))+panel(400,40,.52,sc(-4)+lnS(40,165,460,165,RED,.9,5))+txS(140,215,'Corte A (vertical)',.4,{b:1})+rcS(40,230,200,18,'#eef1f8','none',.5,9)+rcS(40,230,6,18,'#2a9455','none',.6,9)+txS(140,270,'impureza ≈ 0.00 ✓ grupos puros',.8,{c:'#2a9455',b:1,s:13})+txS(510,215,'Corte B (horizontal)',1,{b:1})+rcS(420,230,200,18,'#eef1f8','none',1.1,9)+rcS(420,230,68,18,RED,'none',1.2,9)+txS(520,270,'impureza ≈ 0.34 ✗ grupos mezclados',1.6,{c:RED,b:1,s:13})},
+ {t:'3 · Elegir el mejor y repetir',txt:'Se coloca el mejor corte como <b>raíz</b> del árbol. Cada lado se vuelve a analizar: si un grupo ya es puro, termina en una <b>hoja</b>; si sigue mezclado (aquí el lado derecho tiene un azul raro), se hace <b>otra pregunta</b>. El árbol crece repitiendo lo mismo.',svg:()=>sc(-4,{noise:1})+lnS(CX,24,CX,306,'#222',-1,3,'7 5')+box(620,50,170,44,'¿login > '+CX+'?','#fff','#222',.3)+lnS(600,72,545,130,'#98a3b8',.8,2.5)+lnS(640,72,695,130,'#98a3b8',.8,2.5)+box(545,160,110,56,'NORMAL\n(grupo puro ✓)','#e8eaff',BLUE,1.2)+box(695,160,130,56,'¿mezclado?\n8 🔴 + 1 🔵','#fff3c4','#c49000',1.8)+txS(620,260,'sigue preguntando\nsolo donde hay mezcla',2.6,{s:12,c:'#6b778c'})},
+ {t:'4 · Predecir = bajar por el árbol',txt:'Para clasificar un dispositivo nuevo (<b>login = 400, tráfico = 60</b>) se baja por el árbol respondiendo cada pregunta: login 400 > '+CX+' → <b>sí</b>; tráfico fuera del rango raro → <b>no</b>; hoja: <b>ATAQUE</b>. Cada decisión es una regla legible: ideal para un nodo fog pequeño.',svg:()=>box(300,45,200,44,'¿login > '+CX+'?','#fff','#222',0)+lnS(260,67,180,125,'#98a3b8',0,2.5)+lnS(340,67,420,125,'#98a3b8',0,2.5)+txS(205,95,'no',0,{s:12})+txS(395,95,'sí',0,{s:12})+box(150,160,110,56,'NORMAL','#e8eaff',BLUE,0)+box(450,150,220,48,'¿tráfico entre 95 y 115?','#fff','#222',0)+lnS(400,174,350,230,'#98a3b8',0,2.5)+lnS(500,174,560,230,'#98a3b8',0,2.5)+txS(360,205,'sí',0,{s:12})+txS(545,205,'no',0,{s:12})+box(330,255,110,50,'NORMAL','#e8eaff',BLUE,0)+box(570,255,110,50,'ATAQUE','#fde4e4',RED,0)+rcS(250,24,100,42,'none',ORG,.8,10,4)+rcS(400,126,100,48,'none',ORG,1.8,10,4)+rcS(515,230,110,50,'none',ORG,2.8,10,4)+qmark(80,60,0)+txS(80,95,'nuevo dato\nlogin 400\ntráfico 60',0,{s:12})+txS(650,60,'🧭 recorrido',.8,{c:ORG,b:1})},
+ {t:'5 · Demasiada profundidad = memorizar',txt:'La <b>profundidad máxima</b> controla cuántas preguntas encadena. Muy poca → el árbol es simplista (<b>subajuste</b>). Demasiada → dibuja cajitas para cada punto, incluido el ruido (<b>sobreajuste</b>). Lo ideal está en el medio; en el laboratorio verás la curva «entrenamiento vs prueba».',svg:()=>panel(20,30,.38,sc(-4,{noise:1})+lnS(CX,24,CX,306,TEAL,0,6))+panel(290,30,.38,sc(-4,{noise:1})+lnS(CX,24,CX,306,TEAL,0,6)+lnS(CX,165,460,165,TEAL,.4,6)+lnS(40,200,CX,200,TEAL,.6,6))+panel(560,30,.38,sc(-4,{noise:1})+[...SB,...SR,SN].map((p,i)=>rcS(p[0]-16,p[1]-14,32,28,'rgba(120,120,120,.12)','#555',.3+i*.08,5,2)).join(''))+txS(100,170,'Profundidad 1\nsubajuste: muy simple',.4,{b:1,s:13,c:ORG})+txS(370,170,'Profundidad 3\nequilibrio ✓',1.2,{b:1,s:13,c:'#2a9455'})+txS(640,170,'Profundidad 12\nsobreajuste: memoriza',2,{b:1,s:13,c:RED})}
+];
+/* ---------- SVM ---------- */
+const bx=y=>261+(y-24)*.3014;
+STORY.svm=[
+ {t:'1 · Dos grupos',txt:'Tenemos dos clases (🔵 normal y 🔴 ataque). Queremos una <b>frontera</b> (una recta en 2D) que las separe.',svg:()=>sc(0)+legend(500,70,1.6)},
+ {t:'2 · Muchas rectas sirven',txt:'Hay infinitas rectas que separan correctamente estos dos grupos. Todas «aciertan» en los datos de entrenamiento… ¿cuál elegir?',svg:()=>sc(-4)+lnS(CX,24,CX,306,'#98a3b8',.2,3)+txS(CX,18,'A',.6,{b:1})+lnS(bx(24),24,bx(306),306,'#98a3b8',1.2,3)+txS(bx(24),18,'B',1.6,{b:1})+lnS(275,24,300,306,'#98a3b8',2.2,3)+txS(275,18,'C',2.6,{b:1})},
+ {t:'3 · Cada recta tiene una «calle»',txt:'Imagina que ensanchamos cada recta hasta que toca el primer punto. Eso forma una <b>calle</b> (el <b>margen</b>). La recta A tiene calle mediana, la C una calle estrecha (casi toca a los puntos), la B una calle ancha. Una calle ancha deja más holgura: es más seguro para datos nuevos.',svg:()=>panel(20,40,.5,sc(-4)+`<polygon fill="rgba(217,120,10,.25)" points="${CX-27},24 ${CX+27},24 ${CX+27},306 ${CX-27},306"/>`+lnS(CX,24,CX,306,ORG,0,5))+panel(255,40,.5,sc(-4)+`<polygon fill="rgba(14,159,142,.28)" points="${bx(24)-36},24 ${bx(24)+36},24 ${bx(306)+36},306 ${bx(306)-36},306"/>`+lnS(bx(24),24,bx(306),306,TEAL,0,5))+panel(490,40,.5,sc(-4)+`<polygon fill="rgba(214,69,69,.25)" points="${275-18},24 ${275+18},24 ${300+18},306 ${300-18},306"/>`+lnS(275,24,300,306,RED,0,5))+txS(125,215,'Recta A\ncalle mediana',.3,{b:1,s:13})+txS(360,215,'Recta B\ncalle ANCHA ✓',1,{b:1,s:13,c:TEAL})+txS(595,215,'Recta C\ncalle estrecha ✗',1.6,{b:1,s:13,c:RED})},
+ {t:'4 · La mejor: máximo margen',txt:'La SVM elige la recta con la <b>calle más ancha</b>. Fíjate: solo los puntos que <b>tocan el borde de la calle</b> (los círculos negros) determinan dónde va. Son los <b>vectores soporte</b>. Los demás datos podrían moverse y la recta no cambiaría; por eso el modelo es compacto en memoria.',svg:()=>sc(-4)+`<polygon class="fd" style="--d:.3s" fill="rgba(14,159,142,.22)" points="${bx(24)-36.5},24 ${bx(24)+36.5},24 ${bx(306)+36.5},306 ${bx(306)-36.5},306"/>`+lnS(bx(24)-36.5,24,bx(306)-36.5,306,TEAL,.5,2,'6 4')+lnS(bx(24)+36.5,24,bx(306)+36.5,306,TEAL,.5,2,'6 4')+lnS(bx(24),24,bx(306),306,TEAL,.8,5)+ringS(270,175,'#222',1.6,13,3)+ringS(325,115,'#222',1.8,13,3)+txS(560,100,'vectores soporte:\nlos puntos del borde\nde la calle',2,{s:13,b:1,a:'start'})+arS(555,110,342,115,'#222',2,1.5)+arS(555,125,284,172,'#222',2.2,1.5)+txS(560,200,'margen = ancho de la calle',2.6,{s:13,c:TEAL,b:1,a:'start'})},
+ {t:'5 · Datos con ruido: margen blando (C)',txt:'En la vida real hay <b>outliers</b>: aquí un 🔴 metido entre los azules. Hay dos formas de reaccionar. <b>C bajo (flexible)</b>: ignora al outlier, acepta ese error y mantiene la calle ancha. <b>C alto (estricto)</b>: retuerce la frontera para acertar todo, la calle se vuelve estrecha y se memoriza el ruido. C es el botón que equilibra ambas cosas.',svg:()=>panel(30,40,.52,sc(-4)+dot(200,200,RED,0,8)+`<polygon fill="rgba(14,159,142,.22)" points="${bx(24)-36},24 ${bx(24)+36},24 ${bx(306)+36},306 ${bx(306)-36},306"/>`+lnS(bx(24),24,bx(306),306,TEAL,0,5)+ringS(200,200,'#222',.3,14,3,1))+panel(400,40,.52,sc(-4)+dot(200,200,RED,0,8)+plS([[bx(24)+10,24],[bx(110),110],[215,165],[160,200],[215,235],[bx(260),260],[bx(306),306]],RED,.3,5)+`<polygon fill="rgba(214,69,69,.12)" points="${bx(24)-14},24 ${bx(24)+14},24 ${bx(306)+14},306 ${bx(306)-14},306"/>`)+txS(140,215,'C bajo: flexible\ncalle ancha, tolera el outlier',.3,{b:1,s:13,c:TEAL})+txS(510,215,'C alto: estricto\ncalle estrecha, frontera retorcida',1,{b:1,s:13,c:RED})},
+ {t:'6 · Si no hay recta: el truco del kernel',txt:'En una sola dimensión, 🔵 en el centro y 🔴 a los lados: <b>ningún corte recto</b> las separa. Truco: «elevar» cada punto con una nueva coordenada <b>x²</b>. Ahora los rojos suben mucho más que los azules y una simple <b>recta horizontal</b> los separa. Un <b>kernel</b> hace esto sin calcular explícitamente las dimensiones extra.',svg:()=>{const pts=[...[-50,-25,0,25,50].map(d=>[d,0]),...[-230,-190,-150,150,190,230].map(d=>[d,1])];let s=lnS(40,290,720,290,'#98a3b8',0,2)+txS(380,312,'x (1 dimensión)',0,{s:12,c:'#6b778c'});s+=lnS(380,330,380,290,'#e3e8f2',0,1);
+  pts.forEach((p,i)=>{const x=380+p[0],ly=270-Math.pow(p[0]/12,2)*.6;const dy=290-ly;s+=`<circle class="fl" style="--d:${1.6+i*.05}s;--dx:0px;--dy:${dy}px" cx="${x}" cy="${ly}" r="8" fill="${p[1]?RED:BLUE}" stroke="#fff" stroke-width="2"/>`;s+=`<circle class="fd" style="--d:0s;opacity:.35" cx="${x}" cy="290" r="8" fill="${p[1]?RED:BLUE}"/>`});
+  s+=txS(380,40,'Antes (1D): no hay corte recto que separe',0,{b:1,s:13,c:RED})+txS(380,62,'Después (x, x²): una recta horizontal basta',3,{b:1,s:13,c:'#2a9455'})+lnS(40,215,720,215,TEAL,3.4,4)+txS(650,205,'frontera',3.6,{s:12,c:TEAL,b:1});let p='';for(let x=-250;x<=250;x+=10)p+=`${380+x},${270-Math.pow(x/12,2)*.6} `;s+=`<polyline class="fd" style="--d:1.5s" fill="none" stroke="#d5dbe8" stroke-width="2" points="${p}"/>`;return s}}
+];
+/* ---------- KNN ---------- */
+const KQ=[298,140];
+STORY.knn=[
+ {t:'1 · Ejemplos conocidos',txt:'KNN no «entrena»: simplemente <b>guarda ejemplos ya etiquetados</b> (🔵 normal, 🔴 ataque).',svg:()=>sc(0)+legend(500,70,1.6)},
+ {t:'2 · Llega un dato nuevo',txt:'Aparece un dispositivo desconocido <b>?</b> justo entre los dos grupos. ¿Es normal o ataque? KNN responderá preguntando a sus <b>vecinos</b>.',svg:()=>sc(-4)+qmark(KQ[0],KQ[1],.3)+txS(560,100,'¿normal o ataque?',.8,{s:14,b:1})},
+ {t:'3 · Medir distancias',txt:'Se mide la <b>distancia</b> del dato nuevo a cada ejemplo conocido (distancia euclídea: la recta que los une). Los puntos cercanos se «parecen» más.',svg:()=>sc(-4)+[...SB.map(p=>[p,BLUE]),...SR.map(p=>[p,RED])].map((q,i)=>lnS(KQ[0],KQ[1],q[0][0],q[0][1],q[1]+'88',.2+i*.08,1.5)).join('')+qmark(KQ[0],KQ[1],0)+txS(560,100,'distancia a cada\nejemplo conocido',.5,{s:13,b:1})},
+ {t:'4 · Elegir los k más cercanos (k = 3)',txt:'Nos quedamos solo con los <b>k = 3 vecinos más cercanos</b>: 🔴 (distancia 3.7), 🔵 (4.4) y 🔴 (6.7). El resto se ignora.',svg:()=>sc(-4)+[[[325,115],RED,'3.7'],[[270,175],BLUE,'4.4'],[[345,90],RED,'6.7']].map((q,i)=>lnS(KQ[0],KQ[1],q[0][0],q[0][1],q[1],.3+i*.7,4)+ringS(q[0][0],q[0][1],'#222',.5+i*.7,13,3)+txS((KQ[0]+q[0][0])/2+(i===1?-18:14),(KQ[1]+q[0][1])/2+(i===0?18:4),q[2],.9+i*.7,{s:13,b:1})).join('')+qmark(KQ[0],KQ[1],0)},
+ {t:'5 · Votar',txt:'Cada vecino <b>vota</b> por su clase: 2 votos 🔴 contra 1 voto 🔵. Gana la mayoría: el dato nuevo se clasifica como <b>ATAQUE</b>.',svg:()=>sc(-4)+[[[325,115],RED],[[270,175],BLUE],[[345,90],RED]].map(q=>lnS(KQ[0],KQ[1],q[0][0],q[0][1],q[1],-1,3)+ringS(q[0][0],q[0][1],'#222',-1,13,3)).join('')+`<g class="a" style="--d:2.5s"><circle cx="${KQ[0]}" cy="${KQ[1]}" r="13" fill="${RED}" stroke="#222" stroke-width="3"/></g>`+txS(560,70,'Votación',.2,{b:1})+dot(520,100,RED,.5)+dot(560,100,BLUE,1.1)+dot(600,100,RED,1.7)+rcS(500,125,150,50,'#fde4e4',RED,2.2,12,3)+txS(575,157,'🏆 ATAQUE (2 a 1)',2.4,{b:1,c:RED})},
+ {t:'6 · Cuidado: k y la escala',txt:'<b>k=1</b>: decide un solo vecino; si es un punto raro (ruido), se equivoca. <b>k mayor</b>: la mayoría suaviza el ruido. Y <b>cuidado con las escalas</b>: si «tráfico» va de 0 a 1000 y «fallos» de 0 a 10, la distancia la decide casi solo el tráfico. Por eso se <b>escala</b> (normaliza) antes de calcular distancias.',svg:()=>txS(190,30,'k = 1 (frágil)',0,{b:1,c:RED})+dot(130,100,BLUE,.2,8)+dot(150,160,RED,.3,8)+dot(220,130,RED,.4,8)+dot(250,180,RED,.5,8)+qmark(135,128,.7)+lnS(135,128,130,100,BLUE,1,3)+txS(190,235,'el vecino más cercano\nes un punto raro → azul ✗',1.2,{s:12,c:RED})+txS(550,30,'k = 5 (suaviza)',0,{b:1,c:'#2a9455'})+dot(490,100,BLUE,.2,8)+dot(510,160,RED,.3,8)+dot(580,130,RED,.4,8)+dot(610,180,RED,.5,8)+dot(570,200,RED,.55,8)+dot(520,200,RED,.6,8)+qmark(495,128,.7)+txS(550,235,'la mayoría de 5 vecinos\nes roja → ataque ✓',1.4,{s:12,c:'#2a9455'})+txS(380,270,'Escala: tráfico (0–1000) ▬▬▬▬▬▬▬▬▬▬▬▬   fallos (0–10) ▬   → sin escalar domina el tráfico',2,{s:12,c:'#6b778c'})}
+];
+/* ---------- REGRESIÓN ---------- */
+const RX=[70,110,150,190,230,270,310,350,390,430],RJ=[8,-14,10,-6,16,-12,5,-16,9,-4],RY=RX.map((x,i)=>260-.55*(x-70)+RJ[i]);
+const rfit=(()=>{const n=RX.length,sx=RX.reduce((a,b)=>a+b,0),sy=RY.reduce((a,b)=>a+b,0),sxx=RX.reduce((a,x)=>a+x*x,0),sxy=RX.reduce((a,x,i)=>a+x*RY[i],0),a=(n*sxy-sx*sy)/(n*sxx-sx*sx);return{a,b:(sy-a*sx)/n}})();
+const rfr=(a,b)=>RX.reduce((s,x,i)=>s+(RY[i]-(a*x+b))**2,0);
+const rframe=()=>rcS(40,24,440,282,'#fff','#c9d1e3',-3,10)+txS(260,324,'hora del día →',0,{s:12,c:'#6b778c'})+`<text transform="translate(22,165) rotate(-90)" text-anchor="middle" font-size="12" fill="#6b778c">temperatura →</text>`;
+const rpts=(d0=-3,hide=[])=>RX.map((x,i)=>hide.includes(i)?'':dot(x,RY[i],ORG,d0+i*.07,6)).join('');
+const kfmt=v=>(v/1000).toFixed(1);
+STORY.regresion=[
+ {t:'1 · Una nube de puntos con tendencia',txt:'Cada punto es una medición (hora → temperatura). Hay una tendencia clara: sube con el tiempo, con algo de ruido.',svg:()=>rframe()+rpts(0)},
+ {t:'2 · Probar una recta y medir el error',txt:'Probamos una recta cualquiera (aquí demasiado plana). El <b>error</b> de cada punto es la <b>distancia vertical</b> entre el punto y la recta (segmentos rojos). Cuanto más largos, peor ajusta.',svg:()=>rframe()+lnS(50,200,470,200,'#98a3b8',0,4)+RX.map((x,i)=>lnS(x,RY[i],x,200,RED,.8+i*.12,3)).join('')+rpts(-3)+txS(380,60,'errores = segmentos rojos',2,{c:RED,b:1})},
+ {t:'3 · Elevar al cuadrado y sumar áreas',txt:'Para castigar más los errores grandes, cada error se eleva al cuadrado: se dibuja como un <b>cuadrado</b> cuyo lado es el error. Sumando las áreas obtenemos el «mal ajuste total»: para esta recta <b>'+kfmt(rfr(0,200))+'k</b> (miles de unidades²). Queremos la recta con el <b>área total mínima</b>.',svg:()=>rframe()+lnS(50,200,470,200,'#98a3b8',-1,4)+RX.map((x,i)=>{const e=Math.abs(RY[i]-200),y0=Math.min(RY[i],200);return rcS(x,y0,e,e,'rgba(214,69,69,.28)',RED,.3+i*.15,2,1.5)}).join('')+rpts(-3)+txS(380,50,'área total ≈ '+kfmt(rfr(0,200))+'k',2,{c:RED,b:1})},
+ {t:'4 · La mejor recta (mínimos cuadrados)',txt:'La técnica de <b>mínimos cuadrados</b> calcula la recta y = a·x + b que hace esa área total lo más pequeña posible. Mira cómo los cuadrados se encogen: área total ≈ <b>'+kfmt(rfr(rfit.a,rfit.b))+'k</b>. Esa recta es el modelo.',svg:()=>rframe()+lnS(50,rfit.a*50+rfit.b,470,rfit.a*470+rfit.b,TEAL,0,4.5)+RX.map((x,i)=>{const yh=rfit.a*x+rfit.b,e=Math.abs(RY[i]-yh),y0=Math.min(RY[i],yh);return rcS(x,y0,e,e,'rgba(14,159,142,.28)',TEAL,.6+i*.1,2,1.5)}).join('')+rpts(-3)+txS(380,50,'área total ≈ '+kfmt(rfr(rfit.a,rfit.b))+'k  ✓ mucho menor',1.8,{c:TEAL,b:1})},
+ {t:'5 · Predecir',txt:'Con la recta ya podemos <b>predecir</b>: para una hora futura (línea punteada), subimos hasta la recta y leemos el valor. Eso permite anticipar tendencias en un sensor.',svg:()=>rframe()+lnS(50,rfit.a*50+rfit.b,470,rfit.a*470+rfit.b,TEAL,-1,4.5)+rpts(-3)+lnS(455,300,455,rfit.a*455+rfit.b,'#222',.4,2,'5 4')+`<circle class="a" style="--d:1.2s" cx="455" cy="${rfit.a*455+rfit.b}" r="9" fill="${TEAL}" stroke="#222" stroke-width="3"/>`+txS(400,rfit.a*455+rfit.b-24,'predicción',1.5,{b:1,c:TEAL})},
+ {t:'6 · Reparar valores perdidos',txt:'Si el sensor falla y se <b>pierden dos lecturas</b> (× gris), la recta puede <b>rellenar el hueco</b> con su valor estimado (círculo hueco verde). Útil para flujos de datos en tiempo real.',svg:()=>rframe()+lnS(50,rfit.a*50+rfit.b,470,rfit.a*470+rfit.b,TEAL,-1,4.5)+rpts(-3,[3,6])+[3,6].map((i,k)=>txS(RX[i],RY[i]+5,'×',.2,{c:'#98a3b8',s:20,b:1})+lnS(RX[i],RY[i],RX[i],rfit.a*RX[i]+rfit.b,'#c4cddf',1+k*.5,2,'3 3')+`<circle class="a" style="--d:${1.4+k*.5}s" cx="${RX[i]}" cy="${rfit.a*RX[i]+rfit.b}" r="9" fill="none" stroke="${TEAL}" stroke-width="3.5"/>`).join('')+txS(380,60,'valor reconstruido ≈ cercano al real',2.2,{c:TEAL,b:1})},
+ {t:'7 · Cuidado: curvas que memorizan',txt:'Con características polinómicas se pueden dibujar curvas. Una curva muy flexible (grado alto) pasa por <b>todos</b> los puntos, pero oscila salvajemente entre ellos: predice mal datos nuevos (<b>sobreajuste</b>). La <b>regularización</b> (Ridge/Lasso) la «aplana» para evitarlo.',svg:()=>rframe()+lnS(50,rfit.a*50+rfit.b,470,rfit.a*470+rfit.b,TEAL,0,4)+plS([[45,100],[60,300],...RX.flatMap((x,i)=>[[x-20,RY[i]+(i%2?-45:45)],[x,RY[i]]]),[470,40]],RED,.8,3)+rpts(-3)+txS(150,60,'curva de grado alto:\npasa por todos los puntos\npero oscila ✗',1.6,{c:RED,b:1,s:13})+txS(400,290,'recta: simple y estable ✓',1.2,{c:TEAL,b:1,s:13})}
+];
+/* ---------- K-MEANS ---------- */
+const blobS=(r,n,cx,cy,sx,sy)=>Array.from({length:n},()=>[cx+gauss(r)*sx,cy+gauss(r)*sy]);
+const KR=rng(5),KP=[...blobS(KR,9,110,230,34,34),...blobS(KR,9,300,90,34,34),...blobS(KR,9,390,230,34,34)].map(p=>[clamp(p[0],55,450),clamp(p[1],40,295)]);
+const KCOL=[BLUE,TEAL,ORG];
+const KS=(()=>{let c=[[250,200],[330,150],[150,100]],st=[];for(let it=0;it<5;it++){const a=KP.map(p=>{let b=0,bd=1e9;c.forEach((q,j)=>{const d=(p[0]-q[0])**2+(p[1]-q[1])**2;if(d<bd){bd=d;b=j}});return b});st.push({c:c.map(x=>x.slice()),a});const n=c.map((q,j)=>{const m=KP.filter((_,i)=>a[i]===j);return m.length?[m.reduce((s,p)=>s+p[0],0)/m.length,m.reduce((s,p)=>s+p[1],0)/m.length]:q});if(n.every((q,j)=>Math.abs(q[0]-c[j][0])<.5&&Math.abs(q[1]-c[j][1])<.5)){st.push({c:n,a});break}c=n}return st})();
+const kframe=()=>rcS(40,24,420,282,'#fff','#c9d1e3',-3,10);
+const diam=(x,y,c,d=0,from)=>`<g class="${from?'fl':'a'}" style="--d:${d}s;${from?`--dx:${from[0]-x}px;--dy:${from[1]-y}px`:''}"><rect x="${x-10}" y="${y-10}" width="20" height="20" fill="${c}" stroke="#fff" stroke-width="3" transform="rotate(45 ${x} ${y})"/></g>`;
+STORY.kmeans=[
+ {t:'1 · Puntos sin etiquetas',txt:'Tenemos datos (p. ej. gasto y frecuencia de uso) pero <b>nadie nos dice a qué grupo pertenece cada uno</b>. Ese es el aprendizaje <b>no supervisado</b>: hay que descubrir la estructura.',svg:()=>kframe()+KP.map((p,i)=>dot(p[0],p[1],'#98a3b8',i*.05,6)).join('')+txS(560,100,'¿Hay grupos?\n¿cuántos?',1.2,{b:1,s:15})},
+ {t:'2 · Elegir k y colocar «banderas»',txt:'Decidimos cuántos grupos buscar (<b>k = 3</b>) y colocamos 3 <b>centroides</b> (◆) en posiciones iniciales al azar. Aún no significan nada.',svg:()=>kframe()+KP.map(p=>dot(p[0],p[1],'#98a3b8',-3,6)).join('')+KS[0].c.map((c,j)=>diam(c[0],c[1],KCOL[j],.3+j*.4)).join('')+txS(580,100,'k = 3\ncentroides iniciales',1.2,{b:1})},
+ {t:'3 · Asignar cada punto a la bandera más cercana',txt:'<b>Paso ①</b>: cada punto se pinta del color del centroide más cercano. Así se forman 3 grupos provisionales (casi seguro mal formados, porque las banderas empezaron mal puestas).',svg:()=>kframe()+KP.map((p,i)=>{const c=KS[0].c[KS[0].a[i]];return lnS(p[0],p[1],c[0],c[1],KCOL[KS[0].a[i]]+'66',.2+i*.04,1.3)+dot(p[0],p[1],KCOL[KS[0].a[i]],.3+i*.04,6)}).join('')+KS[0].c.map((c,j)=>diam(c[0],c[1],KCOL[j],-3)).join('')},
+ {t:'4 · Mover cada bandera al centro de su grupo',txt:'<b>Paso ②</b>: cada centroide <b>se mueve</b> a la posición media de los puntos que tiene asignados (mira cómo se deslizan desde su posición anterior).',svg:()=>kframe()+KP.map((p,i)=>dot(p[0],p[1],KCOL[KS[0].a[i]],-3,6)).join('')+KS[0].c.map((c,j)=>`<g opacity=".3">${diam(c[0],c[1],KCOL[j],-3)}</g>`).join('')+KS[1].c.map((c,j)=>diam(c[0],c[1],KCOL[j],.4,KS[0].c[j])).join('')},
+ {t:'5 · Repetir hasta que nadie cambie',txt:'Se repiten los pasos ① y ② (asignar, mover). En cada vuelta menos puntos cambian de color. Cuando <b>ningún punto cambia de grupo</b>, el algoritmo ha <b>convergido</b> (aquí tras '+(KS.length)+' vueltas): quedan 3 grupos bien definidos.',svg:()=>kframe()+KP.map((p,i)=>dot(p[0],p[1],KCOL[KS[KS.length-1].a[i]],i*.04,6)).join('')+KS[KS.length-1].c.map((c,j)=>diam(c[0],c[1],KCOL[j],.9)).join('')+rcS(500,110,200,50,'#dcf2e5','#2a9455',1.6,12,3)+txS(600,141,'✓ convergió',1.8,{b:1,c:'#2a9455',s:15})},
+ {t:'6 · Usarlo: cazar anomalías',txt:'Con los grupos formados podemos vigilar: un dato nuevo que cae <b>muy lejos de todos los centroides</b> (fuera del círculo de normalidad) es sospechoso → <b>alerta</b>. Es la idea del detector de fraude del libro: un gasto fuera de los patrones habituales.',svg:()=>{const L=KS[KS.length-1],q=[110,70];let s=kframe()+KP.map((p,i)=>dot(p[0],p[1],KCOL[L.a[i]],-3,6)).join('')+L.c.map((c,j)=>diam(c[0],c[1],KCOL[j],-3)+`<circle class="fd" style="--d:.2s" cx="${c[0]}" cy="${c[1]}" r="62" fill="none" stroke="${KCOL[j]}" stroke-width="2" stroke-dasharray="6 5"/>`).join('');return s+qmark(q[0],q[1],1,'#fde4e4',RED)+ringS(q[0],q[1],RED,1.4,22,3,1)+txS(q[0]+70,q[1]-14,'⚠ ALERTA: lejos de\ntodos los grupos',1.6,{b:1,c:RED,s:13,a:'start'})+txS(580,100,'círculo punteado =\nzona de normalidad',.4,{s:12,c:'#6b778c'})}}
+];
+/* ---------- REFUERZO ---------- */
+const gx=(c,r,s=70,ox=40,oy=60)=>[ox+c*s+s/2,oy+r*s+s/2];
+const grid=(cols=5,rows=3,s=70,ox=40,oy=60,tr=[[2,0]],goal=[4,2])=>{let o='';for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const isT=tr.some(t=>t[0]===c&&t[1]===r),isG=goal[0]===c&&goal[1]===r;o+=`<rect x="${ox+c*s}" y="${oy+r*s}" width="${s}" height="${s}" fill="${isT?'#fde4e4':isG?'#dcf2e5':'#fff'}" stroke="#c9d1e3"/>`;if(isT)o+=`<text x="${ox+c*s+s/2}" y="${oy+r*s+s/2+8}" font-size="26" text-anchor="middle">🔥</text>`;if(isG)o+=`<text x="${ox+c*s+s/2}" y="${oy+r*s+s/2+8}" font-size="26" text-anchor="middle">🎯</text>`}o+=`<text x="${ox+14}" y="${oy+22}" font-size="18">📦</text>`;return o};
+const pth=(p,s=70,ox=40,oy=60)=>p.map(q=>[ox+q[0]*s+s/2,oy+q[1]*s+s/2]);
+STORY.rl=[
+ {t:'1 · El bucle agente ↔ entorno',txt:'El <b>agente</b> (quien decide) elige una <b>acción</b>. El <b>entorno</b> responde con un <b>nuevo estado</b> y una <b>recompensa</b> (+1 si fue bien, −1 si mal). El agente no recibe «la respuesta correcta»: solo premios y castigos, y debe aprender qué acciones le convienen.',svg:()=>box(160,150,170,80,'🤖 AGENTE\n(nodo de radio)','#fff3c4','#c49000',0)+box(600,150,170,80,'🌍 ENTORNO\n(espectro con jammer)','#e8eaff',BLUE,.2)+arS(245,125,515,125,'#222',.6,3)+txS(380,112,'ACCIÓN: elegir una sub-banda',.8,{b:1,s:13})+arS(515,185,245,185,'#2a9455',1.8,3)+txS(380,215,'nuevo estado + RECOMPENSA (+1 libre / −1 interferida)',2,{b:1,s:13,c:'#2a9455'})+speech(230,250,300,50,'Objetivo: maximizar la recompensa acumulada',3.2)},
+ {t:'2 · Aprender probando',txt:'Veamos un paquete 📦 que debe llegar a 🎯 evitando el nodo congestionado 🔥. Cada salto cuesta −1, la 🔥 castiga −20 y llegar da +20. Al principio el agente <b>prueba al azar</b>: intento 1 cae en la 🔥; intento 2 da vueltas; intento 3 por fin llega. Cada experiencia deja una huella.',svg:()=>grid()+plS(pth([[0,0],[1,0],[2,0]]),RED,.3,5)+plS(pth([[0,1],[1,1],[1,0],[0,0]].map((p,i)=>i===0?p:p)),ORG,2,5)+plS(pth([[0,0],[0,1],[0,2],[1,2],[2,2],[3,2],[4,2]]),'#2a9455',4,5)+txS(520,90,'Intento 1: cae en 🔥\nrecompensa −20',.8,{a:'start',c:RED,b:1,s:13})+txS(520,150,'Intento 2: da vueltas\n−1 por cada salto',2.5,{a:'start',c:ORG,b:1,s:13})+txS(520,210,'Intento 3: llega a 🎯\n+20 ✓',4.5,{a:'start',c:'#2a9455',b:1,s:13})},
+ {t:'3 · La tabla Q: cómo se actualiza una celda',txt:'El agente apunta en una <b>tabla Q</b> «qué tan buena es cada acción en cada estado». Cada vez que actúa, corrige el valor con <b>Q ← Q + α·[ recompensa + γ·(mejor Q del siguiente estado) − Q ]</b>. α = cuánto se fía de lo nuevo; γ = cuánto le importa el futuro. Ejemplo con números →',svg:()=>box(120,110,150,70,'Estado s\nQ(→) = 0','#fff','#222',0)+arS(200,110,320,110,'#222',.5,3)+txS(260,98,'acción → · r = −1',.6,{s:12,b:1})+box(400,110,150,70,'Estado s′\nmejor Q = 10','#dcf2e5','#2a9455',.8)+txS(380,200,'Q(→) ← 0 + 0.5 · [ −1 + 0.9 · 10 − 0 ]',1.6,{b:1,s:15})+txS(380,232,'= 0 + 0.5 · 8 = 4',2.6,{b:1,s:15,c:'#2a9455'})+rcS(470,245,230,40,'#dcf2e5','#2a9455',3.4,10,3)+txS(585,271,'Q(→) pasa de 0 a 4 ✓',3.6,{b:1,c:'#2a9455'})+txS(600,70,'α = 0.5 · γ = 0.9',.2,{s:12,c:'#6b778c'})},
+ {t:'4 · Con el tiempo aparecen las flechas',txt:'Tras muchos intentos, la mejor acción de cada casilla forma una <b>política</b>: las flechas. El valor se <b>propaga hacia atrás</b> desde la meta: primero aprenden las casillas junto a 🎯, luego las siguientes… hasta el inicio. Mira cómo aparecen en cascada.',svg:()=>{const arr={'0,0':'↓','1,0':'↓','3,0':'↓','4,0':'↓','0,1':'↓','1,1':'↓','2,1':'↓','3,1':'↓','4,1':'↓','0,2':'→','1,2':'→','2,2':'→','3,2':'→'};let s=grid();for(const k in arr){const [c,r]=k.split(',').map(Number),d=Math.abs(4-c)+Math.abs(2-r),p=gx(c,r);s+=`<rect class="fd" style="--d:${.4+(8-d)*.45}s" x="${40+c*70}" y="${60+r*70}" width="70" height="70" fill="rgba(42,148,85,${.08+(8-d)*.04})"/>`+txS(p[0],p[1]+10,arr[k],.5+(8-d)*.45,{s:26,b:1,c:'#1c2433'})}return s+txS(560,110,'verde más intenso =\nvalor Q más alto',.5,{s:12,c:'#6b778c',a:'start'})+txS(560,170,'las flechas = política\naprendida',3,{s:13,b:1,a:'start'})}},
+ {t:'5 · Explorar vs explotar (ε)',txt:'Dilema central: <b>explotar</b> (repetir lo que ya sé que funciona) o <b>explorar</b> (probar algo nuevo por si hay algo mejor). ε-greedy: con probabilidad ε el agente prueba una acción al azar. Sin exploración se queda con el primer camino que encontró; con demasiada, nunca aprovecha lo aprendido.',svg:()=>txS(190,40,'Solo explotar (ε = 0)',0,{b:1,c:RED})+panel(30,60,.6,grid()+plS(pth([[0,0],[0,1],[0,2],[1,2],[2,2],[3,2],[4,2]]),RED,.3,6))+txS(190,235,'repite el primer camino que\nfunciona, aunque haya otro mejor',.8,{s:12,c:RED})+txS(570,40,'Explorar a veces (ε = 20 %)',0,{b:1,c:'#2a9455'})+panel(410,60,.6,grid()+plS(pth([[0,0],[0,1],[1,1],[2,1],[3,1],[4,1],[4,2]]),'#2a9455',.6,6)+`<text x="${40+0*70+70+35}" y="${60+1*70+30}" font-size="22">🎲</text>`)+txS(570,235,'un paso al azar descubre un\ncamino más corto ✓',1.2,{s:12,c:'#2a9455'})}
+];
+/* ---------- MOTOR ---------- */
+function Story(el,steps){
+  const id=++STID,mk='stm'+id;el.classList.add('story');
+  el.innerHTML=`<div class="sdots">${steps.map((s,i)=>`<button data-i="${i}" title="${s.t}">${i+1}</button>`).join('')}</div><div class="stitle"></div><svg viewBox="0 0 760 335" class="gsvg"></svg><div class="stext"></div><div class="gctl"><button class="btn ghost" data-a="prev">◀</button><button class="btn fog" data-a="next">Siguiente ▶</button><button class="btn ghost" data-a="auto">▶ Auto</button><button class="btn ghost" data-a="re">↻ Repetir animación</button><span class="cnt"></span></div>`;
+  const svg=$('svg',el);let i=0,timer=null;
+  function go(k){i=clamp(k,0,steps.length-1);SD.mk=mk;svg.innerHTML=`<defs><marker id="${mk}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#444"/></marker></defs>`+steps[i].svg();
+    $('.stitle',el).textContent=steps[i].t;$('.stext',el).innerHTML=steps[i].txt;$('.cnt',el).textContent=`Paso ${i+1} de ${steps.length}`;$$('.sdots button',el).forEach((b,j)=>{b.classList.toggle('on',j===i);b.classList.toggle('past',j<i)})}
+  const stop=()=>{clearInterval(timer);timer=null;$('[data-a=auto]',el).textContent='▶ Auto'};
+  $('.sdots',el).onclick=e=>{const b=e.target.closest('button');if(b){stop();go(+b.dataset.i)}};
+  $('[data-a=next]',el).onclick=()=>{stop();go(i>=steps.length-1?0:i+1)};$('[data-a=prev]',el).onclick=()=>{stop();go(i-1)};$('[data-a=re]',el).onclick=()=>go(i);
+  $('[data-a=auto]',el).onclick=function(){if(timer){stop();return}this.textContent='⏸ Pausa';timer=setInterval(()=>{if(i>=steps.length-1){stop();return}go(i+1)},7500)};
+  go(0);
+}
+
+/* ================= CONSTRUCCIÓN DE SECCIONES ================= */
+const wrapTxt=(s,n=21)=>{const w=s.split(' ');const L=[];let c='';w.forEach(x=>{if((c+' '+x).trim().length>n&&c){L.push(c);c=x}else c=(c+' '+x).trim()});if(c)L.push(c);return L.join('\n')};
+function ucGraph(el,u,idx){
+  el.innerHTML=`<h4 style="margin:12px 0 4px">Caso ${idx+1} · ${u.n} <span class="tag ${u.tag==='libro'?'chk':'pred'}">${u.tag==='libro'?'📖 Del libro':'➕ Extensión ilustrativa'}</span></h4><div class="ucg"></div><div class="note">💡 <b>Por qué en el fog:</b> ${u.why}</div>`;
+  const nodes=[
+   {id:'src',x:95,y:130,w:150,h:84,label:wrapTxt('📡 '+u.src,19),k:'thing',info:'Origen de los datos.'},
+   {id:'prep',x:270,y:130,w:150,h:84,label:wrapTxt('🌫 Fog: '+u.prep,19),k:'fog',info:'Preprocesamiento en el nodo fog.'},
+   {id:'model',x:455,y:130,w:170,h:84,label:wrapTxt('🧠 '+u.model,21),k:'ml',info:'El algoritmo corre cerca del dato.'},
+   {id:'act',x:655,y:62,w:180,h:84,label:wrapTxt('⚡ '+u.act,22),k:'good',info:'Decisión inmediata, sin esperar a la nube.'},
+   {id:'cloud',x:655,y:198,w:180,h:84,label:wrapTxt('☁ '+u.cloud,22),k:'cloud',info:'Solo viaja lo relevante a la nube.'}];
+  const edges=[['src','prep'],['prep','model'],['model','act'],['model','cloud',{dash:1}]];
+  Graph($('.ucg',el),{w:760,h:260,nodes,edges,label:u.n,hint:'Pulsa «Siguiente ▶» para seguir el dato.',steps:[
+   {on:['src'],edges:[],t:'Se capturan los datos: '+u.src+'.'},
+   {on:['src','prep'],edges:['src>prep'],t:'El fog '+u.prep.charAt(0).toLowerCase()+u.prep.slice(1)+'.'},
+   {on:['prep','model'],edges:['prep>model'],t:u.model+'.'},
+   {on:['model','act'],edges:['model>act'],t:'Decisión local: '+u.act.charAt(0).toLowerCase()+u.act.slice(1)+'.'},
+   {on:['model','cloud'],edges:['model>cloud'],t:'A la nube: '+u.cloud.charAt(0).toLowerCase()+u.cloud.slice(1)+'.'}]});
+}
+const mainEl=$('main'),footEl=$('footer');
+ALG.forEach(a=>{
+  const sec=document.createElement('section');sec.className='tab';sec.id='t-'+a.id;
+  sec.innerHTML=`<div class="chhead" style="background:${a.grad}"><h2 class="ch">${a.emoji} ${a.name}</h2><p><span class="tag" style="background:rgba(255,255,255,.25);color:#fff">${a.fam}</span><br>${a.pitch}</p></div>
+  <div class="ana"><b class="t">Analogía</b><p>${a.analogy}</p></div>
+  <div class="lesson"><h3>🎬 Paso a paso desde cero (animado)</h3><div class="tags"><span class="tag vis">Animación secuencial</span><span class="tag sim">Usa «Siguiente» o ▶ Auto</span></div><div id="story-${a.id}"></div></div>
+  <div class="lesson"><h3>🪜 De cero a héroe</h3><div class="tags"><span class="tag vis">Haz clic en cada peldaño</span></div>
+   <div class="ladder" data-a="${a.id}">${LV.map((l,i)=>`<button data-i="${i}">${l}</button>`).join('')}</div><div class="lvlbar"><i></i></div><div class="lvlcard"></div></div>
+  <div class="lesson"><h3>🧪 Laboratorio</h3><div id="demo-${a.id}"></div></div>
+  <div class="lesson"><h3>🧭 Dos casos de uso en fog</h3><div class="uc"></div><div class="uc"></div></div>
+  <div class="lesson"><h3>✓ Comprueba</h3><div id="qz-${a.id}"></div></div>`;
+  mainEl.insertBefore(sec,footEl);
+  const lad=$('.ladder',sec),card=$('.lvlcard',sec),bar=$('.lvlbar i',sec);
+  function lv(i){$$('button',lad).forEach((b,j)=>{b.classList.toggle('on',j===i);b.classList.toggle('past',j<i)});bar.style.width=(i+1)/5*100+'%';const L=a.levels[i];
+    card.innerHTML=`<div class="lvh"><b>${LV[i]} — ${L.t}</b><span class="bdg ${L.b}">${BADGE[L.b]}</span></div><p>${L.d}</p>${L.f?`<div class="key" style="margin:6px 0"><b class="t">Ángulo fog</b><p>${L.f}</p></div>`:''}${L.lab?`<div class="note">🧪 ${L.lab}</div>`:''}<div class="gctl"><button class="btn ghost" data-n="-1">◀ Nivel anterior</button><button class="btn fog" data-n="1">Subir de nivel ▶</button></div>`;
+    $$('[data-n]',card).forEach(b=>b.onclick=()=>lv(clamp(i+ +b.dataset.n,0,4)))}
+  lad.onclick=e=>{const b=e.target.closest('button');if(b)lv(+b.dataset.i)};lv(0);
+  $$('.uc',sec).forEach((el,i)=>ucGraph(el,a.uses[i],i));
+  renderQuiz($('#qz-'+a.id),[a.quiz]);
+  if(STORY[a.id])Story($('#story-'+a.id),STORY[a.id]);
+});
+
+/* ================= MAPA ================= */
+(function(){
+  $('#mapCards').innerHTML=ALG.map(a=>`<div class="jc" style="background:${a.grad}" data-go="${a.id}"><h4>${a.emoji} ${a.name.replace(/ \(.*\)/,'')}</h4><p>${a.fam}</p><p style="margin-top:6px;font-size:13px">${a.pitch.split('.')[0]}.</p></div>`).join('');
+  $$('#mapCards [data-go]').forEach(b=>b.onclick=()=>{location.hash=b.dataset.go});
+  const sg=$('#cmpSeg');sg.innerHTML=Object.keys(CMP).map(k=>`<button data-k="${k}">${CMP[k].n.split(' (')[0]}</button>`).join('');
+  function show(k){$$('button',sg).forEach(b=>b.classList.toggle('on',b.dataset.k===k));const c=CMP[k];
+    $('#cmpBox').innerHTML=`<p><b>${c.n}</b></p>`+ALG.map(a=>{const v=c.v[a.id],good=c.good==='hi'?v>=4:v<=2,bad=c.good==='hi'?v<=2:v>=4;return `<div class="meter"><span>${a.emoji} ${a.name.replace(/ \(.*\)/,'')}</span><div class="bar"><i style="width:${v*20}%;background:${good?'#2a9455':bad?'#d64545':'#d9780a'}"></i></div><b>${v}/5</b></div>`}).join('')+`<div class="note">Valores <b>cualitativos e ilustrativos</b> (no son del libro) para comparar tendencias entre las versiones estándar. Verde = favorable para un nodo fog; rojo = desfavorable.</div>`}
+  sg.onclick=e=>{const b=e.target.closest('button');if(b)show(b.dataset.k)};show('inter');
+})();
+
+/* ================= HELPERS DE DATOS ================= */
+const blob=(r,n,cx,cy,sx,sy,lo=.3,hi=9.7)=>Array.from({length:n},()=>[clamp(cx+gauss(r)*sx,lo,hi),clamp(cy+gauss(r)*sy,lo,hi)]);
+function lin(P,A,B,C,t,col,w,dash){const pts=[],add=(x,y)=>{if(x>=-1e-6&&x<=10+1e-6&&y>=-1e-6&&y<=10+1e-6)pts.push([x,y])};
+  if(Math.abs(B)>1e-9){add(0,(t-C)/B);add(10,(t-C-A*10)/B)}if(Math.abs(A)>1e-9){add((t-C)/A,0);add((t-C-B*10)/A,10)}
+  if(pts.length<2)return;let p=pts[0],q=pts[1],d=0;pts.forEach(x=>{const k=Math.hypot(x[0]-p[0],x[1]-p[1]);if(k>d){d=k;q=x}});P.line(p[0],p[1],q[0],q[1],col,w,dash)}
+const ringBy=(P,x,y,col='#222')=>{P.ctx.beginPath();P.ctx.arc(P.X(x),P.Y(y),10,0,7);P.ctx.strokeStyle=col;P.ctx.lineWidth=2;P.ctx.stroke()};
+
+/* ================= LAB KNN ================= */
+(function(){
+  const root=$('#demo-knn');
+  root.innerHTML=`<p>Dos características con <b>escalas muy distintas</b>: fallos de login (0–10) y tráfico (0–1000 paquetes/s). Las clases se distinguen solo por los <b>fallos</b>; el tráfico es ruido. <b>Predice:</b> ¿qué pasa con las regiones de decisión al activar «escalar»?</p>
+  <canvas class="cv" id="kCv"></canvas>
+  <div class="ctrls"><label>k: <b id="kkV">5</b><input type="range" id="kk" min="1" max="15" value="5"></label>
+   <label>Distancia <select id="kMet"><option value="2">Euclídea</option><option value="1">Manhattan</option></select></label>
+   <label class="inl"><input type="checkbox" id="kS"> Escalar características</label><label class="inl"><input type="checkbox" id="kW"> Voto ponderado (1/d)</label></div>
+  <div class="legend"><span><i style="background:#4f5bd5"></i>Normal</span><span><i style="background:#d64545"></i>Ataque</span></div><div class="out" id="kOut"></div>`;
+  const r=rng(31),pts=[];
+  for(let i=0;i<26;i++){pts.push({p:[clamp(2.6+gauss(r)*1.0,.2,9.8),clamp(500+gauss(r)*230,20,980)],c:0});pts.push({p:[clamp(7.4+gauss(r)*1.0,.2,9.8),clamp(500+gauss(r)*230,20,980)],c:1})}
+  const cv=$('#kCv'),P=Plot(cv,{xmin:0,xmax:10,ymin:0,ymax:1000,xl:'Fallos de login',yl:'Tráfico (paquetes/s)',sx:2,sy:200});let q=[5,500];
+  const knn=(x,y,k)=>{const sc=$('#kS').checked,pw=+$('#kMet').value,wt=$('#kW').checked;
+    const d=pts.map(o=>{let dx=o.p[0]-x,dy=o.p[1]-y;if(sc){dx/=10;dy/=1000}return{o,d:pw===2?Math.hypot(dx,dy):Math.abs(dx)+Math.abs(dy)}}).sort((a,b)=>a.d-b.d).slice(0,k);
+    const v=[0,0];d.forEach(n=>v[n.o.c]+=wt?1/(n.d+1e-6):1);return{nb:d,v,cls:v[1]>v[0]?1:0}};
+  function draw(){if(!P.fit())return;const k=+$('#kk').value;$('#kkV').textContent=k;P.clear();
+    const N=34;for(let i=0;i<N;i++)for(let j=0;j<N;j++){const c=knn((i+.5)/N*10,(j+.5)/N*1000,k).cls;P.ctx.fillStyle=c?'rgba(214,69,69,.11)':'rgba(79,91,213,.11)';const x0=P.X(i/N*10),x1=P.X((i+1)/N*10),y0=P.Y((j+1)/N*1000),y1=P.Y(j/N*1000);P.ctx.fillRect(x0,y0,x1-x0+1,y1-y0+1)}
+    P.axes();const res=knn(q[0],q[1],k);res.nb.forEach(n=>P.line(q[0],q[1],n.o.p[0],n.o.p[1],n.o.c?RED:BLUE,1.4));
+    pts.forEach(o=>P.dot(o.p[0],o.p[1],o.c?RED:BLUE,5));res.nb.forEach(n=>ringBy(P,n.o.p[0],n.o.p[1]));P.dot(q[0],q[1],'#222',8);
+    $('#kOut').innerHTML=`Votos${$('#kW').checked?' (ponderados)':''}: normal <b>${res.v[0].toFixed(res.v[0]%1?2:0)}</b> · ataque <b>${res.v[1].toFixed(res.v[1]%1?2:0)}</b> → <b style="color:${res.cls?RED:BLUE}">${res.cls?'ATAQUE':'NORMAL'}</b>. ${$('#kS').checked?'Con escalado las regiones son <b>verticales</b>: KNN usa el dato que importa (fallos).':'Sin escalar las regiones son <b>franjas horizontales</b>: el tráfico (rango 0–1000) domina la distancia y KNN se equivoca.'} <i>Arrastra el punto negro.</i>`}
+  P.drag(p=>{q=[clamp(p[0],.1,9.9),clamp(p[1],5,995)];draw()});['kk','kMet','kS','kW'].forEach(i=>$('#'+i).oninput=draw);$('#kMet').onchange=draw;$('#kS').onchange=draw;$('#kW').onchange=draw;
+  window.addEventListener('resize',draw);draw();
+})();
+
+/* ================= LAB SVM ================= */
+(function(){
+  const root=$('#demo-svm');
+  root.innerHTML=`<h4>① Margen blando: mueve C</h4><p>Hay solapamiento y dos <b>outliers</b>. Con <b>C bajo</b> la SVM tolera errores y ensancha la calle; con <b>C alto</b> intenta clasificarlo todo y estrecha el margen.</p>
+  <canvas class="cv" id="svCv"></canvas><div class="ctrls"><label>C = <b id="svCV">1</b> (flexible ← → estricto)<input type="range" id="svC" min="-2" max="2" step="0.1" value="0"></label></div><div class="out" id="svOut"></div>
+  <h4 style="margin-top:20px">② El truco del kernel</h4><p>En 1D, la clase azul está en el centro y la roja a los lados: <b>ningún corte recto</b> las separa. Elévalos a 2D con (x, x²).</p>
+  <canvas class="cv short" id="kvCv" style="height:260px"></canvas><div class="ctrls"><label class="inl"><input type="checkbox" id="kvL"> Elevar a 2D: (x, x²)</label><label>Corte: <b id="kvTV">0</b><input type="range" id="kvT" min="-4" max="4" step="0.1" value="0"></label><button class="btn fog" id="kvAuto">✨ Mejor corte</button></div><div class="out" id="kvOut"></div>`;
+  const r=rng(5),A=blob(r,20,3.4,5,1.2,1.5),B=blob(r,20,6.6,5,1.2,1.5);A.push([6.9,5.8]);B.push([3.1,4.4]);
+  const D=[...A.map(p=>({u:[(p[0]-5)/5,(p[1]-5)/5],p,y:-1})),...B.map(p=>({u:[(p[0]-5)/5,(p[1]-5)/5],p,y:1}))];
+  const P=Plot($('#svCv'),{xmin:0,xmax:10,ymin:0,ymax:10,xl:'Característica 1',yl:'Característica 2',sx:2,sy:2});
+  function train(C){const n=D.length,lam=1/(C*n);let w=[0,0],b=0;for(let it=0;it<3000;it++){const g=[lam*w[0],lam*w[1]];let gb=0;D.forEach(p=>{if(p.y*(w[0]*p.u[0]+w[1]*p.u[1]+b)<1){g[0]-=p.y*p.u[0]/n;g[1]-=p.y*p.u[1]/n;gb-=p.y/n}});w[0]-=.25*g[0];w[1]-=.25*g[1];b-=.25*gb}return{w,b}}
+  function draw(){if(!P.fit())return;const C=Math.pow(10,+$('#svC').value);$('#svCV').textContent=C<1?C.toFixed(2):C.toFixed(1);const m=train(C),w=m.w,b=m.b;
+    P.clear();P.axes();const Ac=w[0]/5,Bc=w[1]/5,Cc=b-w[0]-w[1];
+    lin(P,Ac,Bc,Cc,1,'rgba(14,159,142,.9)',1.5,[6,4]);lin(P,Ac,Bc,Cc,-1,'rgba(14,159,142,.9)',1.5,[6,4]);lin(P,Ac,Bc,Cc,0,TEAL,3);
+    let err=0,inm=0;D.forEach(p=>{const f=w[0]*p.u[0]+w[1]*p.u[1]+b;if(p.y*f<0)err++;if(p.y*f<1){inm++}P.dot(p.p[0],p.p[1],p.y<0?BLUE:RED,5.5);if(p.y*f<1)ringBy(P,p.p[0],p.p[1])});
+    const nw=Math.hypot(w[0],w[1]);const mw=nw>1e-9?2/nw*5:99;
+    $('#svOut').innerHTML=`Ancho del margen ≈ <b>${mw>40?'∞':mw.toFixed(1)}</b> · errores de clasificación: <b>${err}</b> de ${D.length} · puntos dentro/sobre el margen (círculos): <b>${inm}</b>. ${C<.3?'Margen muy ancho: tolera casi todo.':C>30?'Margen estrecho: se esfuerza por cada punto (riesgo de sobreajuste).':'Compromiso razonable.'}`}
+  $('#svC').oninput=draw;window.addEventListener('resize',draw);draw();
+  // kernel
+  const r2=rng(8),a1=Array.from({length:11},(_,i)=>-1.2+i*.24),b1=Array.from({length:14},(_,i)=>(i%2?1:-1)*(2.1+i*.13));
+  const K=[...a1.map(x=>({x,y:-1})),...b1.map(x=>({x,y:1}))];
+  const P2=Plot($('#kvCv'),{xmin:-4.5,xmax:4.5,ymin:-2,ymax:17,xl:'x',yl:'x² (solo en 2D)',sx:1,sy:4,pad:34});
+  function draw2(){if(!P2.fit())return;const L=$('#kvL').checked,t=+$('#kvT').value;P2.clear();
+    const inp=$('#kvT');if(L){inp.min=0;inp.max=16;inp.step=.1}else{inp.min=-4;inp.max=4;inp.step=.1}
+    P2.axes();const ctx=P2.ctx;
+    if(L){ctx.beginPath();for(let x=-4.2;x<=4.2;x+=.1){const X=P2.X(x),Y=P2.Y(x*x);x<-4.19?ctx.moveTo(X,Y):ctx.lineTo(X,Y)}ctx.strokeStyle='#d5dbe8';ctx.lineWidth=1.5;ctx.stroke();P2.line(-4.5,t,4.5,t,TEAL,3)}else P2.line(t,-2,t,17,TEAL,3);
+    K.forEach(p=>P2.dot(p.x,L?p.x*p.x:0,p.y<0?BLUE:RED,6));
+    let ok;if(L){ok=K.filter(p=>(p.x*p.x>t?1:-1)===p.y).length}else{const s=K.filter(p=>(p.x>t?1:-1)===p.y).length;ok=Math.max(s,K.length-s)}
+    $('#kvTV').textContent=(+t).toFixed(1);const acc=ok/K.length*100;
+    $('#kvOut').innerHTML=L?`En 2D basta una <b>recta horizontal</b> (x² = ${(+t).toFixed(1)}). Exactitud: <b>${acc.toFixed(0)} %</b>. ${acc===100?'✅ ¡Separación perfecta! Eso hace un kernel: separar en un espacio de más dimensiones sin calcularlo explícitamente.':'Sube o baja la recta.'}`:`En 1D un corte recto logra como máximo <b>${acc.toFixed(0)} %</b>. ❌ No hay corte que separe estas clases: hace falta un kernel.`}
+  ['kvL','kvT'].forEach(i=>$('#'+i).oninput=draw2);$('#kvL').onchange=()=>{const L=$('#kvL').checked;$('#kvT').value=L?5:0;draw2()};
+  $('#kvAuto').onclick=()=>{if($('#kvL').checked){const ma=Math.max(...a1.map(x=>x*x)),mb=Math.min(...b1.map(x=>x*x));$('#kvT').value=((ma+mb)/2).toFixed(1)}else $('#kvT').value=0;draw2()};
+  window.addEventListener('resize',draw2);draw2();
+})();
+
+/* ================= ÁRBOLES (compartido) ================= */
+const gi=p=>2*p*(1-p);
+function build(X,Y,idx,d,maxD,mtry,r){
+  const n=idx.length,pos=idx.reduce((a,i)=>a+Y[i],0),leaf={leaf:1,c:pos*2>=n?1:0};
+  if(d>=maxD||pos===0||pos===n||n<2)return leaf;
+  let fs=mtry===1?(r()<.5?[0,1]:[1,0]):[0,1],best=null;
+  for(const f of(mtry===1?[fs[0]]:fs)){
+    const s=idx.slice().sort((a,b)=>X[a][f]-X[b][f]);let lp=0;
+    for(let k=0;k<n-1;k++){lp+=Y[s[k]];if(X[s[k]][f]===X[s[k+1]][f])continue;const ln=k+1,rn=n-ln,g=(ln*gi(lp/ln)+rn*gi((pos-lp)/rn))/n;if(!best||g<best.g)best={g,f,t:(X[s[k]][f]+X[s[k+1]][f])/2}}
+    if(best)break}
+  if(!best&&mtry===1){const f=fs[1],s=idx.slice().sort((a,b)=>X[a][f]-X[b][f]);let lp=0;for(let k=0;k<n-1;k++){lp+=Y[s[k]];if(X[s[k]][f]===X[s[k+1]][f])continue;const ln=k+1,rn=n-ln,g=(ln*gi(lp/ln)+rn*gi((pos-lp)/rn))/n;if(!best||g<best.g)best={g,f,t:(X[s[k]][f]+X[s[k+1]][f])/2}}}
+  if(!best)return leaf;
+  const L=idx.filter(i=>X[i][best.f]<=best.t),R=idx.filter(i=>X[i][best.f]>best.t);if(!L.length||!R.length)return leaf;
+  return{f:best.f,t:best.t,l:build(X,Y,L,d+1,maxD,mtry,r),r:build(X,Y,R,d+1,maxD,mtry,r)}}
+const predT=(t,x)=>{while(!t.leaf)t=x[t.f]<=t.t?t.l:t.r;return t.c};
+const leaves=t=>t.leaf?1:leaves(t.l)+leaves(t.r);
+function circData(seed,n,flip){const r=rng(seed),X=[],Y=[];for(let i=0;i<n;i++){const x=r()*10,y=r()*10;let c=((x-5)**2+(y-5)**2<10.5)?1:0;if(flip&&r()<flip)c=1-c;X.push([x,y]);Y.push(c)}return{X,Y}}
+const acc=(f,X,Y)=>X.reduce((a,x,i)=>a+(f(x)===Y[i]?1:0),0)/X.length;
+const TEST=circData(99,160,0);
+
+/* ================= LAB ÁRBOL ================= */
+(function(){
+  const root=$('#demo-arbol');
+  root.innerHTML=`<p>Dentro del círculo = clase 1 (rojo), fuera = clase 0 (azul). Un árbol solo puede cortar en horizontal o vertical. <b>Predice:</b> ¿la mejor profundidad será la máxima? Compara <b>exactitud en entrenamiento</b> y <b>en prueba</b>.</p>
+  <div class="twocol"><div><canvas class="cv" id="dtCv" style="height:340px"></canvas></div><div><canvas class="cv" id="dtCurve" style="height:340px"></canvas></div></div>
+  <div class="legend"><span><i style="background:#4f5bd5"></i>Clase 0</span><span><i style="background:#d64545"></i>Clase 1</span><span>● entrenamiento (con ruido) · ○ prueba</span></div>
+  <div class="ctrls"><label>Profundidad máxima: <b id="dtDV">3</b><input type="range" id="dtD" min="1" max="12" value="3"></label><label>Ruido en etiquetas de entrenamiento: <b id="dtNV">10</b>%<input type="range" id="dtN" min="0" max="25" value="10"></label></div><div class="out" id="dtOut"></div>`;
+  const P=Plot($('#dtCv'),{xmin:0,xmax:10,ymin:0,ymax:10,sx:2,sy:2,xl:'x₁',yl:'x₂'});const cc=$('#dtCurve'),cx=cc.getContext('2d');
+  let tr,trees,curve;
+  function fit(){const nz=+$('#dtN').value/100;tr=circData(7,140,nz);const idx=tr.X.map((_,i)=>i);trees=[];curve=[];for(let d=1;d<=12;d++){const t=build(tr.X,tr.Y,idx,0,d,2,Math.random);trees.push(t);curve.push([acc(x=>predT(t,x),tr.X,tr.Y),acc(x=>predT(t,x),TEST.X,TEST.Y)])}}
+  function draw(){if(!P.fit())return;if(!tr)fit();const d=+$('#dtD').value;$('#dtDV').textContent=d;$('#dtNV').textContent=$('#dtN').value;const t=trees[d-1];P.clear();
+    const N=40;for(let i=0;i<N;i++)for(let j=0;j<N;j++){const c=predT(t,[(i+.5)/N*10,(j+.5)/N*10]);P.ctx.fillStyle=c?'rgba(214,69,69,.13)':'rgba(79,91,213,.13)';const x0=P.X(i/N*10),x1=P.X((i+1)/N*10),y0=P.Y((j+1)/N*10),y1=P.Y(j/N*10);P.ctx.fillRect(x0,y0,x1-x0+1,y1-y0+1)}
+    P.axes();tr.X.forEach((p,i)=>P.dot(p[0],p[1],tr.Y[i]?RED:BLUE,4));TEST.X.forEach((p,i)=>P.dot(p[0],p[1],TEST.Y[i]?RED:BLUE,3.5,true));
+    const [a,b]=curve[d-1];$('#dtOut').innerHTML=`Profundidad <b>${d}</b> · hojas: <b>${leaves(t)}</b> · entrenamiento: <b>${(a*100).toFixed(0)} %</b> · prueba: <b>${(b*100).toFixed(0)} %</b>. ${a-b>.1?'⚠ <b>Sobreajuste</b>: memoriza el ruido y generaliza peor.':b<.8?'Subajuste: el árbol es demasiado simple.':'Buen equilibrio.'}`;
+    const r=cc.getBoundingClientRect(),dpr=window.devicePixelRatio||1;cc.width=r.width*dpr;cc.height=r.height*dpr;cx.setTransform(dpr,0,0,dpr,0,0);const W=r.width,H=r.height,pad=38;cx.clearRect(0,0,W,H);
+    const X=k=>pad+(k-1)/11*(W-pad-14),Y=v=>H-pad-(v-.4)/.6*(H-pad-12);cx.strokeStyle='#e3e8f2';cx.fillStyle='#6b778c';cx.font='11px system-ui';[.4,.6,.8,1].forEach(v=>{cx.beginPath();cx.moveTo(pad,Y(v));cx.lineTo(W-8,Y(v));cx.stroke();cx.textAlign='right';cx.fillText(Math.round(v*100)+'%',pad-4,Y(v)+4)});cx.textAlign='center';for(let k=1;k<=12;k++)cx.fillText(k,X(k),H-pad+14);cx.fillStyle='#3a475f';cx.fillText('profundidad del árbol →',pad+(W-pad)/2,H-6);
+    [[0,ORG,'entrenamiento'],[1,TEAL,'prueba']].forEach(([j,col,l],q)=>{cx.beginPath();curve.forEach((v,k)=>{k?cx.lineTo(X(k+1),Y(v[j])):cx.moveTo(X(k+1),Y(v[j]))});cx.strokeStyle=col;cx.lineWidth=2.5;cx.stroke();cx.fillStyle=col;cx.textAlign='left';cx.fillText('— '+l,pad+8+q*110,16)});
+    cx.strokeStyle='#222';cx.setLineDash([4,4]);cx.beginPath();cx.moveTo(X(d),12);cx.lineTo(X(d),H-pad);cx.stroke();cx.setLineDash([])}
+  $('#dtD').oninput=draw;$('#dtN').oninput=()=>{fit();draw()};window.addEventListener('resize',draw);draw();
+})();
+
+/* ================= LAB BOSQUE ================= */
+(function(){
+  const root=$('#demo-bosque');
+  root.innerHTML=`<p>Mismo problema del círculo con <b>mucho ruido</b>. Un árbol profundo se sobreajusta; el bosque promedia los errores. <b>Predice:</b> ¿cuántos árboles hacen falta para estabilizar la exactitud?</p>
+  <div class="twocol"><div><canvas class="cv" id="rfCv" style="height:340px"></canvas></div><div><canvas class="cv" id="rfCurve" style="height:340px"></canvas></div></div>
+  <div class="ctrls"><label>Número de árboles: <b id="rfTV">15</b><input type="range" id="rfT" min="1" max="40" value="15"></label><label>Profundidad: <b id="rfDV">8</b><input type="range" id="rfD" min="1" max="12" value="8"></label><label>Ruido: <b id="rfNV">20</b>%<input type="range" id="rfN" min="0" max="30" value="20"></label>
+   <label class="inl"><input type="checkbox" id="rfB" checked> Bootstrap</label><label class="inl"><input type="checkbox" id="rfM" checked> Característica aleatoria por corte</label><button class="btn ghost" id="rfNew">🎲 Nuevo bosque</button></div><div class="out" id="rfOut2"></div>
+  <div class="key"><b class="t">🔎 Cómo leer este laboratorio</b><p><b>Mapa (izquierda):</b> fondo azul/rojo = clase que ganaría un dato nuevo en esa zona (voto de la mayoría); color <b>intenso</b> = árboles de acuerdo, <b>pálido</b> = árboles divididos (zona de duda); puntos = datos de entrenamiento. <b>Gráfico (derecha):</b> línea verde = acierto del bosque en datos de prueba según nº de árboles (la línea negra punteada es el que elegiste); línea naranja = un solo árbol. ¿No te cuadra algo? Vuelve a la animación «Paso a paso desde cero», pasos 5–8.</p></div>`;
+  const P=Plot($('#rfCv'),{xmin:0,xmax:10,ymin:0,ymax:10,sx:2,sy:2,xl:'Fallos de login (relativo)',yl:'Tráfico (relativo)'}),cc=$('#rfCurve'),cx=cc.getContext('2d'),G=36,MAXT=40;let F=null;
+  function mk(){const nz=+$('#rfN').value/100,md=+$('#rfD').value,bo=$('#rfB').checked,mt=$('#rfM').checked?1:2;const tr=circData(13,140,nz),r=rng(Math.floor(Math.random()*1e6)),n=tr.X.length;const trees=[];
+    for(let t=0;t<MAXT;t++){const idx=bo?Array.from({length:n},()=>Math.floor(r()*n)):Array.from({length:n},(_,i)=>i);trees.push(build(tr.X,tr.Y,idx,0,md,mt,r))}
+    const grid=trees.map(t=>{const a=new Uint8Array(G*G);for(let i=0;i<G;i++)for(let j=0;j<G;j++)a[i*G+j]=predT(t,[(i+.5)/G*10,(j+.5)/G*10]);return a}),tp=trees.map(t=>TEST.X.map(x=>predT(t,x)));
+    const single=build(tr.X,tr.Y,tr.X.map((_,i)=>i),0,md,2,Math.random);
+    const cum=[],votes=new Array(TEST.X.length).fill(0);for(let k=1;k<=MAXT;k++){tp[k-1].forEach((v,i)=>votes[i]+=v);cum.push(votes.reduce((a,v,i)=>a+((v*2>k?1:0)===TEST.Y[i]?1:0),0)/votes.length)}
+    F={tr,grid,cum,sAcc:acc(x=>predT(single,x),TEST.X,TEST.Y),sTr:acc(x=>predT(single,x),tr.X,tr.Y)}}
+  function draw(){if(!P.fit())return;if(!F)mk();const k=+$('#rfT').value;$('#rfTV').textContent=k;$('#rfDV').textContent=$('#rfD').value;$('#rfNV').textContent=$('#rfN').value;P.clear();
+    for(let i=0;i<G;i++)for(let j=0;j<G;j++){let v=0;for(let t=0;t<k;t++)v+=F.grid[t][i*G+j];const p=v/k,al=.08+.3*Math.abs(2*p-1);P.ctx.fillStyle=p>.5?`rgba(214,69,69,${al})`:`rgba(79,91,213,${al})`;const x0=P.X(i/G*10),x1=P.X((i+1)/G*10),y0=P.Y((j+1)/G*10),y1=P.Y(j/G*10);P.ctx.fillRect(x0,y0,x1-x0+1,y1-y0+1)}
+    P.axes();F.tr.X.forEach((p,i)=>P.dot(p[0],p[1],F.tr.Y[i]?RED:BLUE,3.8));
+    $('#rfOut2').innerHTML=`Bosque de <b>${k}</b> árbol${k>1?'es':''}: prueba <b style="color:${TEAL}">${(F.cum[k-1]*100).toFixed(0)} %</b> · árbol único de la misma profundidad: <b style="color:${ORG}">${(F.sAcc*100).toFixed(0)} %</b> (entrenamiento ${(F.sTr*100).toFixed(0)} %). ${F.cum[k-1]>F.sAcc+.02?'✅ El voto mejora al árbol único.':k<3?'Con 1–2 árboles aún no se nota el efecto de la votación.':'Parecido: prueba otra semilla o más ruido.'} <i>La intensidad del color indica el % de votos.</i>`;
+    const r=cc.getBoundingClientRect(),dpr=window.devicePixelRatio||1;cc.width=r.width*dpr;cc.height=r.height*dpr;cx.setTransform(dpr,0,0,dpr,0,0);const W=r.width,H=r.height,pad=38;cx.clearRect(0,0,W,H);
+    const X=t=>pad+(t-1)/(MAXT-1)*(W-pad-14),Y=v=>H-pad-(v-.5)/.5*(H-pad-12);cx.strokeStyle='#e3e8f2';cx.fillStyle='#6b778c';cx.font='11px system-ui';[.5,.6,.7,.8,.9,1].forEach(v=>{cx.beginPath();cx.moveTo(pad,Y(v));cx.lineTo(W-8,Y(v));cx.stroke();cx.textAlign='right';cx.fillText(Math.round(v*100)+'%',pad-4,Y(v)+4)});cx.textAlign='center';[1,10,20,30,40].forEach(t=>cx.fillText(t,X(t),H-pad+14));cx.fillStyle='#3a475f';cx.fillText('número de árboles →',pad+(W-pad)/2,H-6);
+    cx.beginPath();F.cum.forEach((v,i)=>{i?cx.lineTo(X(i+1),Y(v)):cx.moveTo(X(i+1),Y(v))});cx.strokeStyle=TEAL;cx.lineWidth=2.5;cx.stroke();cx.setLineDash([5,4]);cx.strokeStyle=ORG;cx.beginPath();cx.moveTo(pad,Y(F.sAcc));cx.lineTo(W-8,Y(F.sAcc));cx.stroke();cx.setLineDash([]);cx.textAlign='left';cx.fillStyle=TEAL;cx.fillText('— bosque (prueba)',pad+8,16);cx.fillStyle=ORG;cx.fillText('- - árbol único',pad+130,16);
+    cx.strokeStyle='#222';cx.setLineDash([3,3]);cx.beginPath();cx.moveTo(X(k),12);cx.lineTo(X(k),H-pad);cx.stroke();cx.setLineDash([])}
+  $('#rfT').oninput=draw;['rfD','rfN','rfB','rfM'].forEach(i=>{$('#'+i).oninput=()=>{mk();draw()}});$('#rfB').onchange=$('#rfM').onchange=()=>{mk();draw()};$('#rfNew').onclick=()=>{mk();draw()};
+  window.addEventListener('resize',draw);draw();
+})();
+
+/* ================= LAB REGRESIÓN ================= */
+(function(){
+  const root=$('#demo-regresion');
+  root.innerHTML=`<h4>① Grado y regularización</h4><p>La curva gris discontinua es la <b>realidad</b>; los puntos naranja, 12 mediciones ruidosas. <b>Predice:</b> ¿el grado 9 ajustará mejor «la realidad» que el grado 3?</p>
+  <canvas class="cv" id="lrCv"></canvas>
+  <div class="ctrls"><label>Grado del polinomio: <b id="lrDV">1</b><input type="range" id="lrD" min="1" max="9" value="1"></label><label>Regularización Ridge λ = <b id="lrLV">0</b><input type="range" id="lrL" min="-6" max="1" step="0.25" value="-6"></label><label class="inl"><input type="checkbox" id="lrO"> Añadir un outlier</label><button class="btn ghost" id="lrNew">🎲 Nuevos datos</button></div><div class="out" id="lrOut"></div>
+  <h4 style="margin-top:20px">② Hero: aprendizaje online con deriva</h4><p>Llegan datos de un sensor uno a uno. El modelo <b>online (SGD)</b> se actualiza con cada dato (verde). La regresión «por lotes» con todo el historial (gris) tarda en enterarse cuando el mundo cambia. Pulsa <b>Cambiar el mundo</b>.</p>
+  <canvas class="cv short" id="olCv" style="height:260px"></canvas><div class="btns"><button class="btn fog" id="olA">+1 dato</button><button class="btn" id="olB">+20 datos</button><button class="btn" id="olD">🌪 Cambiar el mundo</button><button class="btn ghost" id="olR">↺</button></div><div class="out" id="olOut"></div>`;
+  const f=x=>Math.sin(2.4*x)+.35*x;let seed=3,tx=[],ty=[];
+  function gen(){const r=rng(seed);tx=Array.from({length:12},(_,i)=>-1+2*(i+r()*.6)/12);ty=tx.map(x=>f(x)+gauss(r)*.22)}gen();
+  function solve(A,b){const n=b.length;for(let i=0;i<n;i++){let m=i;for(let k=i+1;k<n;k++)if(Math.abs(A[k][i])>Math.abs(A[m][i]))m=k;[A[i],A[m]]=[A[m],A[i]];[b[i],b[m]]=[b[m],b[i]];for(let k=i+1;k<n;k++){const q=A[k][i]/A[i][i];for(let j=i;j<n;j++)A[k][j]-=q*A[i][j];b[k]-=q*b[i]}}const x=new Array(n).fill(0);for(let i=n-1;i>=0;i--){let s=b[i];for(let j=i+1;j<n;j++)s-=A[i][j]*x[j];x[i]=s/A[i][i]}return x}
+  const P=Plot($('#lrCv'),{xmin:-1.1,xmax:1.1,ymin:-2.2,ymax:3.2,sx:.5,sy:1,xl:'x (p. ej. hora normalizada)',yl:'y (medición)'});
+  function draw(){if(!P.fit())return;const d=+$('#lrD').value,lam=Math.pow(10,+$('#lrL').value),out=$('#lrO').checked;$('#lrDV').textContent=d;$('#lrLV').textContent=+$('#lrL').value<=-6?'0':lam<.01?lam.toExponential(0):lam.toFixed(2);
+    const X=out?[...tx,.6]:tx,Y=out?[...ty,2.8]:ty,n=d+1,A=Array.from({length:n},()=>new Array(n).fill(0)),bv=new Array(n).fill(0);
+    X.forEach((x,k)=>{const ph=Array.from({length:n},(_,j)=>x**j);for(let i=0;i<n;i++){bv[i]+=ph[i]*Y[k];for(let j=0;j<n;j++)A[i][j]+=ph[i]*ph[j]}});for(let i=1;i<n;i++)A[i][i]+=lam;A[0][0]+=1e-9;
+    const w=solve(A,bv),g=x=>w.reduce((s,c,j)=>s+c*x**j,0);P.clear();P.axes();const ctx=P.ctx;
+    ctx.beginPath();for(let x=-1;x<=1.001;x+=.01){const px=P.X(x),py=P.Y(f(x));x<-.99?ctx.moveTo(px,py):ctx.lineTo(px,py)}ctx.setLineDash([6,4]);ctx.strokeStyle='#98a3b8';ctx.lineWidth=2;ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();for(let x=-1;x<=1.001;x+=.01){const px=P.X(x),py=P.Y(clamp(g(x),-2.2,3.2));x<-.99?ctx.moveTo(px,py):ctx.lineTo(px,py)}ctx.strokeStyle=TEAL;ctx.lineWidth=3;ctx.stroke();
+    X.forEach((x,k)=>P.dot(x,Y[k],k>=tx.length?RED:ORG,5));
+    let e1=0,e2=0;X.forEach((x,k)=>e1+=(g(x)-Y[k])**2);for(let x=-1;x<=1;x+=.02)e2+=(g(x)-f(x))**2;const rt=Math.sqrt(e1/X.length),rg=Math.sqrt(e2/101);
+    $('#lrOut').innerHTML=`Error en tus puntos (RMSE): <b>${rt.toFixed(2)}</b> · error respecto a la realidad: <b style="color:${rg>.4?RED:'#2a9455'}">${rg.toFixed(2)}</b>. ${d===1?'Grado 1 = recta: subajuste (no captura la curva).':d>=8&&lam<.001?'⚠ Grado alto sin regularización: pasa por todos los puntos y oscila (sobreajuste). Sube λ.':d>=4&&d<=5?'Buen equilibrio.':'Prueba subir λ o cambiar el grado.'}`}
+  ['lrD','lrL','lrO'].forEach(i=>$('#'+i).oninput=draw);$('#lrO').onchange=draw;$('#lrNew').onclick=()=>{seed++;gen();draw()};window.addEventListener('resize',draw);draw();
+  // online
+  const P2=Plot($('#olCv'),{xmin:-1.1,xmax:1.1,ymin:-3,ymax:3,sx:.5,sy:1,xl:'x',yl:'y',pad:34});let hx=[],hy=[],ws=0,bs=0,slope=1.5,ro=rng(77);
+  function add(){const x=ro()*2-1;hx.push(x);hy.push(slope*x+.3+gauss(ro)*.25);const e=ws*x+bs-hy[hy.length-1];ws-=.15*e*x;bs-=.15*e}
+  function draw3(){if(!P2.fit())return;P2.clear();P2.axes();const n=hx.length;hx.slice(-80).forEach((x,i)=>P2.dot(x,hy[hy.length-Math.min(80,n)+i],ORG,3.5));
+    if(n>1){let sx=0,sy=0,sxx=0,sxy=0;hx.forEach((x,i)=>{sx+=x;sy+=hy[i];sxx+=x*x;sxy+=x*hy[i]});const a=(n*sxy-sx*sy)/(n*sxx-sx*sx||1),b=(sy-a*sx)/n;P2.line(-1.1,a*-1.1+b,1.1,a*1.1+b,'#98a3b8',2.5,[6,4]);P2.line(-1.1,ws*-1.1+bs,1.1,ws*1.1+bs,TEAL,3);
+      $('#olOut').innerHTML=`Datos: <b>${n}</b> · pendiente real ahora: <b>${slope}</b> · <span style="color:${TEAL}"><b>online:</b> ${ws.toFixed(2)}</span> · <span style="color:#6b778c"><b>por lotes (todo el historial):</b> ${a.toFixed(2)}</span>`}else $('#olOut').textContent='Pulsa «+20 datos».'}
+  $('#olA').onclick=()=>{add();draw3()};$('#olB').onclick=()=>{for(let i=0;i<20;i++)add();draw3()};$('#olD').onclick=()=>{slope=slope>0?-1.5:1.5;draw3()};$('#olR').onclick=()=>{hx=[];hy=[];ws=bs=0;slope=1.5;draw3()};window.addEventListener('resize',draw3);draw3();
+})();
+
+/* ================= LAB K-MEANS ================= */
+(function(){
+  const root=$('#demo-kmeans');
+  root.innerHTML=`<p><b>Predice:</b> con k real = 4, ¿el resultado depende de la inicialización? Compara <b>aleatoria</b> vs <b>k-means++</b> con «Nueva semilla» varias veces, mira el <b>codo</b> y luego activa los <b>anillos</b>.</p>
+  <div class="twocol"><div><canvas class="cv" id="kmC" style="height:360px"></canvas></div><div><canvas class="cv" id="elC" style="height:360px"></canvas></div></div>
+  <div class="ctrls"><label>k: <b id="kmV">4</b><input type="range" id="kmKk" min="1" max="8" value="4"></label><label>Inicialización <select id="kmI"><option value="r">Aleatoria</option><option value="p">k-means++</option></select></label><label class="inl"><input type="checkbox" id="kmR"> Datos en forma de anillo</label><button class="btn fog" id="kmN">🎲 Nueva semilla</button></div><div class="out" id="kmO"></div>`;
+  const r0=rng(41),blobs=[...blob(r0,28,2,2.2,.7,.7),...blob(r0,28,7.5,2,.7,.7),...blob(r0,16,3,7.5,.6,.6),...blob(r0,30,7.6,7.4,.8,.8)];
+  const ring=[...blob(r0,30,5,5,.5,.5)];for(let i=0;i<70;i++){const a=i/70*6.283,rr=3.6+gauss(r0)*.2;ring.push([clamp(5+rr*Math.cos(a),.2,9.8),clamp(5+rr*Math.sin(a),.2,9.8)])}
+  const COL=['#4f5bd5','#0e9f8e','#d9780a','#8b5cf6','#ec4899','#92400e','#2a9455','#c49000'];
+  const data=()=>$('#kmR').checked?ring:blobs;
+  function km(pts,k,init,seed){const r=rng(seed);let c=[];const d2=(p,q)=>(p[0]-q[0])**2+(p[1]-q[1])**2;
+    if(init==='r'){const s=new Set();while(s.size<k)s.add(Math.floor(r()*pts.length));s.forEach(i=>c.push(pts[i].slice()))}
+    else{c.push(pts[Math.floor(r()*pts.length)].slice());while(c.length<k){const D=pts.map(p=>Math.min(...c.map(q=>d2(p,q)))),S=D.reduce((a,b)=>a+b,0);let t=r()*S,i=0;while(i<D.length-1&&t>D[i]){t-=D[i];i++}c.push(pts[i].slice())}}
+    let asg=new Array(pts.length).fill(-1),it=0;for(;it<60;it++){let ch=false;pts.forEach((p,i)=>{let b=0,bd=1e9;c.forEach((q,j)=>{const d=d2(p,q);if(d<bd){bd=d;b=j}});if(asg[i]!==b){asg[i]=b;ch=true}});if(!ch)break;c=c.map((q,j)=>{const m=pts.filter((_,i)=>asg[i]===j);return m.length?[m.reduce((a,p)=>a+p[0],0)/m.length,m.reduce((a,p)=>a+p[1],0)/m.length]:q})}
+    return{c,asg,it,inertia:pts.reduce((a,p,i)=>a+d2(p,c[asg[i]]),0)}}
+  const P=Plot($('#kmC'),{xmin:0,xmax:10,ymin:0,ymax:10,sx:2,sy:2,xl:'Característica 1',yl:'Característica 2'}),ec=$('#elC'),ex=ec.getContext('2d');let seed=1;
+  function draw(){if(!P.fit())return;const pts=data(),k=+$('#kmKk').value,init=$('#kmI').value;$('#kmV').textContent=k;const res=km(pts,k,init,seed);P.clear();P.axes();
+    pts.forEach((p,i)=>P.dot(p[0],p[1],COL[res.asg[i]],4.5));res.c.forEach((c,i)=>{P.ctx.save();P.ctx.translate(P.X(c[0]),P.Y(c[1]));P.ctx.rotate(Math.PI/4);P.ctx.fillStyle=COL[i];P.ctx.strokeStyle='#fff';P.ctx.lineWidth=2.5;P.ctx.fillRect(-9,-9,18,18);P.ctx.strokeRect(-9,-9,18,18);P.ctx.restore()});
+    $('#kmO').innerHTML=`Iteraciones hasta converger: <b>${res.it}</b> · inercia (dispersión interna): <b>${res.inertia.toFixed(1)}</b>. ${$('#kmR').checked?'⚠ K-means asume grupos redondos: <b>corta el anillo en trozos</b>. Para formas arbitrarias se usa DBSCAN (densidad).':init==='r'?'Con inicialización aleatoria el resultado cambia entre semillas (puede quedar un grupo partido y dos juntos).':'k-means++ reparte los centroides iniciales lejos unos de otros: resultados más estables.'}`;
+    const E=[];for(let kk=1;kk<=8;kk++){let b=1e9;for(let s=0;s<4;s++)b=Math.min(b,km(pts,kk,init,100+s).inertia);E.push(b)}
+    const r=ec.getBoundingClientRect(),dpr=window.devicePixelRatio||1;ec.width=r.width*dpr;ec.height=r.height*dpr;ex.setTransform(dpr,0,0,dpr,0,0);const W=r.width,H=r.height,pad=40,mx=Math.max(...E);ex.clearRect(0,0,W,H);
+    const X=v=>pad+(v-1)/7*(W-pad-16),Y=v=>H-pad-v/mx*(H-pad-20);ex.fillStyle='#6b778c';ex.font='11px system-ui';ex.textAlign='center';for(let v=1;v<=8;v++)ex.fillText(v,X(v),H-pad+14);ex.fillStyle='#3a475f';ex.fillText('k (número de grupos) →',pad+(W-pad)/2,H-6);ex.save();ex.translate(12,H/2);ex.rotate(-Math.PI/2);ex.fillText('inercia',0,0);ex.restore();
+    ex.strokeStyle='#e3e8f2';ex.beginPath();ex.moveTo(pad,H-pad);ex.lineTo(W-8,H-pad);ex.stroke();ex.beginPath();E.forEach((v,i)=>{i?ex.lineTo(X(i+1),Y(v)):ex.moveTo(X(i+1),Y(v))});ex.strokeStyle=TEAL;ex.lineWidth=2.5;ex.stroke();E.forEach((v,i)=>{ex.beginPath();ex.arc(X(i+1),Y(v),i+1===k?7:4,0,7);ex.fillStyle=i+1===k?ORG:TEAL;ex.fill()});ex.fillStyle='#222';ex.textAlign='left';ex.fillText('Método del codo: busca donde deja de bajar',pad+6,14)}
+  ['kmKk','kmI','kmR'].forEach(i=>$('#'+i).oninput=draw);$('#kmI').onchange=draw;$('#kmR').onchange=draw;$('#kmN').onclick=()=>{seed++;draw()};window.addEventListener('resize',draw);draw();
+})();
+
+/* ================= LAB REFUERZO ================= */
+(function(){
+  const root=$('#demo-rl');
+  root.innerHTML=`<h4>① Explorar vs explotar (bandido multibrazo)</h4><p>5 canales con probabilidad de éxito oculta. Tres estrategias juegan 800 rondas sobre los mismos canales. Menos <b>arrepentimiento</b> acumulado = mejor. <b>Predice:</b> ¿le va bien a «solo explotar» (greedy)?</p>
+  <canvas class="cv short" id="bnCv" style="height:280px"></canvas><div class="btns"><button class="btn fog" id="bnN">🎲 Nuevos canales y jugar</button></div><div class="out" id="bnO"></div>
+  <h4 style="margin-top:20px">② Q-learning: enrutar un paquete evitando nodos congestionados</h4><p>El paquete (📦) sale de arriba-izquierda hacia 🎯. Los nodos 🔥 congestionados castigan (−20); cada salto cuesta −1; llegar da +20. <b>Predice:</b> ¿cuántos episodios hacen falta para encontrar la ruta en zigzag?</p>
+  <canvas class="cv short" id="qCv" style="height:300px"></canvas><div class="ctrls"><label>ε (exploración): <b id="qEV">0.25</b><input type="range" id="qE" min="0" max="1" step="0.05" value="0.25"></label><button class="btn fog" id="q1">1 episodio</button><button class="btn" id="q50">×50</button><button class="btn" id="q500">×500</button><button class="btn ghost" id="qR">↺ Olvidar</button></div><div class="out" id="qO"></div>`;
+  // bandido
+  const bc=$('#bnCv'),bx=bc.getContext('2d');let probs=[.25,.4,.55,.8,.6],runs=null;
+  function play(){probs=Array.from({length:5},()=>.15+Math.random()*.7);const T=800,best=Math.max(...probs);const strat={greedy:(n,s,t)=>{const m=s.map((x,i)=>n[i]?x/n[i]:0);return n.findIndex(v=>!v)>=0?n.findIndex(v=>!v):m.indexOf(Math.max(...m))},eps:(n,s,t)=>{if(Math.random()<.1)return Math.floor(Math.random()*5);const m=s.map((x,i)=>n[i]?x/n[i]:1);return m.indexOf(Math.max(...m))},ucb:(n,s,t)=>{const u=s.map((x,i)=>n[i]?x/n[i]+Math.sqrt(2*Math.log(t+1)/n[i]):1e9);return u.indexOf(Math.max(...u))}};
+    runs={};for(const k in strat){const n=Array(5).fill(0),s=Array(5).fill(0);let reg=0;const L=[];for(let t=0;t<T;t++){const a=strat[k](n,s,t);const rw=Math.random()<probs[a]?1:0;n[a]++;s[a]+=rw;reg+=best-probs[a];L.push(reg)}runs[k]=L}draw()}
+  function draw(){if(!runs)return;const r=bc.getBoundingClientRect();if(!r.width)return;const d=window.devicePixelRatio||1;bc.width=r.width*d;bc.height=r.height*d;bx.setTransform(d,0,0,d,0,0);const W=r.width,H=r.height,pad=44,T=800,mx=Math.max(...Object.values(runs).map(l=>l[T-1]),5);bx.clearRect(0,0,W,H);
+    const X=t=>pad+t/T*(W-pad-10),Y=v=>H-26-v/mx*(H-26-14);bx.strokeStyle='#e3e8f2';bx.fillStyle='#6b778c';bx.font='11px system-ui';bx.textAlign='right';[0,.5,1].forEach(f=>{const v=mx*f;bx.beginPath();bx.moveTo(pad,Y(v));bx.lineTo(W-8,Y(v));bx.stroke();bx.fillText(v.toFixed(0),pad-4,Y(v)+4)});bx.textAlign='center';bx.fillText('rondas →',pad+(W-pad)/2,H-6);
+    const C={greedy:[RED,'Solo explotar (greedy)'],eps:[ORG,'ε-greedy (ε=0.1)'],ucb:[TEAL,'UCB1']};let i=0;for(const k in runs){bx.beginPath();runs[k].forEach((v,t)=>{t?bx.lineTo(X(t),Y(v)):bx.moveTo(X(t),Y(v))});bx.strokeStyle=C[k][0];bx.lineWidth=2.5;bx.stroke();bx.fillStyle=C[k][0];bx.textAlign='left';bx.fillText('— '+C[k][1],pad+8+i*170,12);i++}
+    $('#bnO').innerHTML=`Probabilidades ocultas: ${probs.map((p,i)=>`c${i+1}=${p.toFixed(2)}`).join(' · ')}. Arrepentimiento final → greedy <b style="color:${RED}">${runs.greedy[T-1].toFixed(0)}</b> · ε-greedy <b style="color:${ORG}">${runs.eps[T-1].toFixed(0)}</b> · UCB <b style="color:${TEAL}">${runs.ucb[T-1].toFixed(0)}</b>. Greedy puede quedarse pegado a un canal mediocre porque nunca explora; el resultado varía por ronda, así que repite varias veces.`}
+  $('#bnN').onclick=play;window.addEventListener('resize',draw);
+  // gridworld
+  const W=7,H=5,traps=new Set(['2,0','2,1','2,2','4,2','4,3','4,4']),start=[0,0],goal=[6,4],ACT=[[0,-1],[1,0],[0,1],[-1,0]],ARR=['↑','→','↓','←'];
+  let Q,eps=0,fixedStart=0;const reset=()=>{Q={};eps=0};reset();
+  const qs=(x,y)=>Q[x+','+y]||(Q[x+','+y]=[0,0,0,0]);
+  function episode(){let x=0,y=0;const e=+$('#qE').value;for(let s=0;s<80;s++){const q=qs(x,y);let a;if(Math.random()<e)a=Math.floor(Math.random()*4);else{const m=Math.max(...q);const c=q.map((v,i)=>v===m?i:-1).filter(i=>i>=0);a=c[Math.floor(Math.random()*c.length)]}
+      let nx=clamp(x+ACT[a][0],0,W-1),ny=clamp(y+ACT[a][1],0,H-1),rw=-1,done=false;const key=nx+','+ny;if(traps.has(key)){rw=-20;done=true}else if(nx===goal[0]&&ny===goal[1]){rw=20;done=true}
+      const nq=done?0:Math.max(...qs(nx,ny));q[a]+=.5*(rw+.95*nq-q[a]);x=nx;y=ny;if(done)break}eps++}
+  function path(){let x=0,y=0;const p=[[0,0]];for(let s=0;s<40;s++){const q=qs(x,y);const a=q.indexOf(Math.max(...q));if(Math.max(...q)===0&&q.every(v=>v===0))return{p,ok:false};x=clamp(x+ACT[a][0],0,W-1);y=clamp(y+ACT[a][1],0,H-1);p.push([x,y]);if(traps.has(x+','+y))return{p,ok:false};if(x===goal[0]&&y===goal[1])return{p,ok:true}}return{p,ok:false}}
+  const qc=$('#qCv'),qx=qc.getContext('2d');
+  function drawQ(){const r=qc.getBoundingClientRect();if(!r.width)return;const d=window.devicePixelRatio||1;qc.width=r.width*d;qc.height=r.height*d;qx.setTransform(d,0,0,d,0,0);const cw=r.width/W,ch=r.height/H;qx.clearRect(0,0,r.width,r.height);
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){const key=x+','+y,q=Q[key],v=q?Math.max(...q):0;let fill='#fff';if(traps.has(key))fill='#fde4e4';else if(x===goal[0]&&y===goal[1])fill='#dcf2e5';else if(v>0)fill=`rgba(42,148,85,${Math.min(.6,v/25)})`;else if(v<0)fill=`rgba(214,69,69,${Math.min(.5,-v/25)})`;qx.fillStyle=fill;qx.fillRect(x*cw,y*ch,cw,ch);qx.strokeStyle='#dbe1ec';qx.strokeRect(x*cw,y*ch,cw,ch);qx.textAlign='center';qx.textBaseline='middle';
+      if(traps.has(key)){qx.font='22px system-ui';qx.fillText('🔥',x*cw+cw/2,y*ch+ch/2)}else if(x===goal[0]&&y===goal[1]){qx.font='22px system-ui';qx.fillText('🎯',x*cw+cw/2,y*ch+ch/2)}else if(q&&!q.every(t=>t===0)){qx.fillStyle='#1c2433';qx.font='bold 20px system-ui';qx.fillText(ARR[q.indexOf(Math.max(...q))],x*cw+cw/2,y*ch+ch/2)}
+      if(x===0&&y===0){qx.font='18px system-ui';qx.fillText('📦',x*cw+14,y*ch+16)}}
+    const pt=path();if(pt.p.length>1){qx.beginPath();pt.p.forEach((c,i)=>{const px=c[0]*cw+cw/2,py=c[1]*ch+ch/2;i?qx.lineTo(px,py):qx.moveTo(px,py)});qx.strokeStyle=pt.ok?'#4f5bd5':'#d9780a';qx.lineWidth=4;qx.setLineDash([8,5]);qx.stroke();qx.setLineDash([])}
+    $('#qEV').textContent=(+$('#qE').value).toFixed(2);$('#qO').innerHTML=`Episodios: <b>${eps}</b> · ruta voraz actual (línea punteada): ${pt.ok?`<b style="color:#4f5bd5">llega al destino en ${pt.p.length-1} saltos ✅</b> (la óptima son 14)`:'<b style="color:#d9780a">todavía no llega</b> — entrena más'}. Las flechas muestran la mejor acción aprendida en cada nodo; el verde indica valor Q alto.`}
+  const run=n=>{for(let i=0;i<n;i++)episode();drawQ()};$('#q1').onclick=()=>run(1);$('#q50').onclick=()=>run(50);$('#q500').onclick=()=>run(500);$('#qR').onclick=()=>{reset();drawQ()};$('#qE').oninput=drawQ;
+  window.addEventListener('resize',drawQ);drawQ();play();
+})();
+
+/* ================= ARRANQUE ================= */
+updProg();
+showTab(location.hash.slice(1)||'mapa');
+
+</script></body></html>

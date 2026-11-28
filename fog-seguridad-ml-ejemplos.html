@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seguridad en el fog: 15 ejemplos con ML (visual y sonoro)</title>
+<style>
+:root{--cloud:#4f5bd5;--cloudbg:#e8eaff;--fog:#0e9f8e;--fogbg:#d9f4ef;--thing:#d9780a;--thingbg:#fdebd0;--bad:#d64545;--badbg:#fde4e4;--good:#2a9455;--goodbg:#dcf2e5;--ink:#1c2433;--muted:#5b6678;--bg:#f3f5fa;--card:#fff;--line:#dbe1ec;--r:14px;color-scheme:light}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 18px}
+header.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding-top:8px;padding-bottom:8px}
+.brand{font-weight:800;font-size:17px}.brand small{font-weight:500;color:var(--muted);margin-left:6px}
+#tabs{display:flex;gap:4px;flex-wrap:wrap}
+#tabs button{border:0;background:transparent;padding:7px 13px;border-radius:999px;font:600 14px system-ui;color:var(--muted);cursor:pointer}
+#tabs button:hover{background:#eef1f8}
+#tabs button.on{background:var(--ink);color:#fff}
+.prog{margin-left:auto;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.pbar{width:110px;height:8px;border-radius:9px;background:#e4e8f1;overflow:hidden}.pbar i{display:block;height:100%;width:0;background:var(--good);transition:width .4s}
+main{padding:22px 0 80px}
+.tab{display:none}.tab.on{display:block}
+h1{font-size:clamp(26px,4.5vw,40px);line-height:1.15;margin:.2em 0 .3em}
+h2.ch{font-size:clamp(22px,3.4vw,30px);margin:.2em 0}
+.chhead{border-radius:var(--r);padding:22px 24px;color:#fff;margin-bottom:18px}
+.chhead p{margin:.3em 0 0;opacity:.95;max-width:760px}
+.c1{background:linear-gradient(120deg,#0e9f8e,#2b7fd1)}.c2{background:linear-gradient(120deg,#4f5bd5,#8b5cf6)}.c3{background:linear-gradient(120deg,#d9780a,#d64545)}
+.goals{background:#fff;border:1px dashed #b9c3d8;border-radius:var(--r);padding:12px 18px;margin-bottom:18px}
+.goals b{display:block;margin-bottom:2px}.goals ul{margin:4px 0 0;padding-left:20px}
+.lesson{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin:0 0 22px;box-shadow:0 1px 2px rgba(20,30,60,.04)}
+.lesson>h3{margin:0 0 6px;font-size:21px;display:flex;align-items:center;gap:10px}
+.lesson>h3 .num{background:var(--ink);color:#fff;font-size:12.5px;border-radius:8px;padding:2px 8px;font-weight:700}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 10px}
+.tag{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 10px;background:#eef1f8;color:#43506a}
+.tag.sim{background:var(--fogbg);color:#08695d}.tag.pred{background:var(--thingbg);color:#8a4a05}.tag.chk{background:var(--cloudbg);color:#323da5}.tag.vis{background:#f3e8ff;color:#6b2fb3}
+.key{border-left:5px solid var(--fog);background:var(--fogbg);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.key b.t,.misc b.t,.ana b.t{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.misc{border-left:5px solid var(--bad);background:var(--badbg);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.ana{border-left:5px solid var(--thing);background:var(--thingbg);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.key p,.misc p,.ana p{margin:0}
+.viz{margin:12px 0;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fbfcfe}
+.gsvg{width:100%;height:auto;display:block;max-width:100%}
+.ctrls{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;margin:8px 0}
+.ctrls label{font-size:14px;display:flex;flex-direction:column;gap:2px;min-width:200px}
+.ctrls label.inl{flex-direction:row;align-items:center;gap:6px;min-width:0}
+input[type=range]{width:100%;accent-color:var(--fog)}
+.btn{border:0;background:var(--ink);color:#fff;border-radius:10px;padding:8px 15px;font:600 14px system-ui;cursor:pointer}
+.btn:hover{filter:brightness(1.2)}.btn.ghost{background:#e6eaf3;color:var(--ink)}.btn.fog{background:var(--fog)}.btn[disabled]{opacity:.45;cursor:default}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.predict{background:var(--thingbg);border-radius:10px;padding:8px 12px;margin:8px 0;font-size:14.5px}
+.predict label{margin-left:12px;cursor:pointer}
+.out{margin-top:8px;font-size:14.5px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+.stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}.stat b{display:block;font-size:22px;line-height:1.1}.stat span{font-size:12px;color:var(--muted)}
+.note{font-size:14px;background:#eef1f8;border-radius:10px;padding:8px 12px;margin-top:6px}
+.ginfo{font-size:14.5px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--fog);border-radius:8px;padding:8px 12px;margin-top:8px;min-height:44px}
+.gctl{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}.gctl .cnt{font-size:13px;color:var(--muted)}
+/* svg graph */
+.n rect{fill:#fff;stroke:#a9b4ca;stroke-width:1.5;transition:all .25s}
+.n.cloud rect{fill:var(--cloudbg);stroke:var(--cloud)}.n.fog rect{fill:var(--fogbg);stroke:var(--fog)}.n.thing rect{fill:var(--thingbg);stroke:var(--thing)}
+.n.user rect{fill:#f3e8ff;stroke:#8b5cf6}.n.bad rect{fill:var(--badbg);stroke:var(--bad)}.n.good rect{fill:var(--goodbg);stroke:var(--good)}.n.ml rect{fill:#fff3c4;stroke:#c49000}
+.n.group rect{fill:rgba(255,255,255,.55);stroke-dasharray:6 4;stroke:#98a3b8}
+.n text{font-size:12.5px;fill:var(--ink);text-anchor:middle;pointer-events:none}.n text.gl{text-anchor:start;font-weight:700;fill:#5b6678;font-size:12px}
+.n.clk{cursor:pointer}.n.clk:hover rect{stroke-width:2.6}
+.n.on rect{stroke-width:3.4;filter:drop-shadow(0 2px 5px rgba(0,0,0,.28))}.n.dim{opacity:.32}
+.e{fill:none;stroke:#98a3b8;stroke-width:1.7}.e.dash{stroke-dasharray:6 4}.e.on{stroke:var(--fog);stroke-width:3.2}.e.dim{opacity:.25}
+.elab{font-size:11.5px;fill:#5b6678;text-anchor:middle;paint-order:stroke;stroke:#fbfcfe;stroke-width:4px}
+/* tiers */
+.band{stroke-width:1.5;stroke-dasharray:7 5;fill:none}.bandc{stroke:var(--cloud);fill:rgba(79,91,213,.05)}.bandf{stroke:var(--fog);fill:rgba(14,159,142,.06)}.bandt{stroke:var(--thing);fill:rgba(217,120,10,.06)}
+.svgt{font-size:13px;fill:var(--ink)}.svgs{font-size:11.5px;fill:#5b6678}
+.lnk{stroke:#98a3b8;stroke-width:2}.lnk.cut{stroke:var(--bad);stroke-dasharray:5 5}
+/* layers */
+.stack{display:flex;flex-direction:column;gap:6px}
+.layer{display:grid;grid-template-columns:34px 190px 1fr;gap:10px;align-items:center;border:2px solid var(--line);background:#fff;border-radius:10px;padding:6px 10px;transition:all .3s;font-size:14px}
+.layer .no{font-weight:800;color:var(--muted)}
+.layer.on{border-color:var(--fog);background:var(--fogbg);transform:translateX(6px)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;min-height:36px;align-items:center}
+.chip{background:#fff;border:1px solid var(--line);border-radius:8px;padding:3px 9px;font:600 13px ui-monospace,Menlo,Consolas,monospace}.chip.w{background:var(--badbg);border-color:var(--bad)}.chip.s{background:#f1f3f8;color:#4a5670}.chip.g{background:var(--goodbg);border-color:var(--good)}
+/* canvases */
+canvas.cv{width:100%;height:380px;display:block;border:1px solid var(--line);border-radius:10px;background:#fff;touch-action:none}
+canvas.cv.short{height:200px}
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.twocol{grid-template-columns:1fr}.layer{grid-template-columns:28px 1fr}.layer .fx{grid-column:1/-1}}
+/* quiz */
+.qz{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;background:#fff}
+.qz p.q{margin:0 0 8px;font-weight:700}
+.qz .o{display:block;width:100%;text-align:left;background:#f6f8fc;border:1.5px solid var(--line);border-radius:9px;padding:8px 12px;margin:5px 0;font:inherit;cursor:pointer}
+.qz .o:hover{border-color:#8a96b0}.qz .o.ok{background:var(--goodbg);border-color:var(--good)}.qz .o.no{background:var(--badbg);border-color:var(--bad)}
+.qz .why{display:none;font-size:14px;margin-top:6px;color:#344058}.qz.done .why{display:block}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:10px 0}
+.flip{perspective:900px;min-height:150px;cursor:pointer}
+.flip .in{position:relative;width:100%;height:100%;min-height:150px;transition:transform .5s;transform-style:preserve-3d}
+.flip.f .in{transform:rotateY(180deg)}
+.flip .fa,.flip .fb{position:absolute;inset:0;border-radius:12px;padding:12px 14px;backface-visibility:hidden;border:1px solid var(--line);overflow:auto;font-size:14px}
+.flip .fa{background:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;font-weight:700;font-size:16px}
+.flip .fa small{font-weight:500;color:var(--muted);margin-top:6px}
+.flip .fb{background:var(--fogbg);transform:rotateY(180deg)}
+/* game */
+.task{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:6px 0;background:#fff}
+.task .tx{flex:1 1 280px;font-size:14.5px}.task .ch{display:flex;gap:6px}
+.task button{border:1.5px solid var(--line);background:#f6f8fc;border-radius:8px;padding:5px 11px;font:600 13px system-ui;cursor:pointer}
+.task button.ok{background:var(--goodbg);border-color:var(--good)}.task button.no{background:var(--badbg);border-color:var(--bad)}
+.task .fb{flex-basis:100%;font-size:13.5px;color:#344058;display:none}.task.done .fb{display:block}
+/* meters */
+.meter{display:grid;grid-template-columns:200px 1fr 42px;gap:8px;align-items:center;margin:5px 0;font-size:14px}
+.meter .bar{height:14px;background:#e9edf5;border-radius:9px;overflow:hidden}.meter .bar i{display:block;height:100%;border-radius:9px;transition:width .5s}
+@media(max-width:600px){.meter{grid-template-columns:1fr 1fr 38px}}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.seg button{border:0;background:transparent;padding:8px 14px;font:600 14px system-ui;cursor:pointer}.seg button.on{background:var(--ink);color:#fff}
+/* timeline */
+.tl{display:flex;overflow-x:auto;gap:0;padding:10px 4px 6px;scroll-snap-type:x proximity}
+.tl .ev{flex:0 0 auto;min-width:92px;text-align:center;cursor:pointer;scroll-snap-align:center;position:relative;padding-top:20px}
+.tl .ev:before{content:"";position:absolute;top:9px;left:0;right:0;height:3px;background:#cfd6e5}
+.tl .ev i{position:absolute;top:2px;left:50%;margin-left:-8px;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid #8a96b0}
+.tl .ev.on i{background:var(--fog);border-color:var(--fog);transform:scale(1.25)}
+.tl .ev b{display:block;font-size:14px}.tl .ev span{font-size:11.5px;color:var(--muted)}
+.tdetail{background:#fff;border:1px solid var(--line);border-left:5px solid var(--fog);border-radius:10px;padding:10px 14px;min-height:70px}
+/* ml tables */
+table.q{border-collapse:collapse;font:12.5px ui-monospace,Menlo,monospace}table.q td,table.q th{border:1px solid #fff;padding:4px 6px;text-align:center;min-width:42px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin:6px 0}.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.tpl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+.tree5{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:8px 0}
+.tcard{border:2px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;background:#fff;transition:all .25s}.tcard b{display:block}.tcard.bad{border-color:var(--bad);background:var(--badbg)}.tcard.good{border-color:var(--good);background:var(--goodbg)}.tcard.off{opacity:.35}
+.tcard button{margin-top:4px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
+.lanes{display:flex;gap:6px;margin:8px 0}.lanes .b{flex:1;text-align:center;border:2px solid var(--line);border-radius:10px;padding:10px 0;font-size:13px;background:#fff;position:relative}
+.lanes .b.jam{background:var(--badbg);border-color:var(--bad)}.lanes .b.pick{outline:3px solid var(--cloud)}.lanes .b.okp{background:var(--goodbg);border-color:var(--good)}
+.sel{display:flex;flex-direction:column;gap:6px;margin:8px 0}.sel button{text-align:left;background:#f6f8fc;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;cursor:pointer}.sel button:hover{border-color:var(--fog)}
+.crumbs{font-size:13px;color:var(--muted);margin:4px 0}
+.fcard{min-height:170px}
+.fcard .fa{font-size:18px}
+footer{color:var(--muted);font-size:13px;text-align:center;padding:30px 0}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:20px;align-items:center}
+@media(max-width:800px){.hero{grid-template-columns:1fr}}
+.journey{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:14px 0}
+.jc{border-radius:14px;padding:16px;color:#fff;cursor:pointer;transition:transform .2s}.jc:hover{transform:translateY(-3px)}.jc h4{margin:0 0 4px;font-size:18px}.jc p{margin:0;font-size:14px;opacity:.95}
+
+.snd{display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap}.snd label{display:flex;align-items:center;gap:4px;cursor:pointer}
+.exs{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px;margin:10px 0}
+.exc{border:2px solid var(--line);border-radius:12px;padding:8px 12px;background:#fff;cursor:pointer;text-align:left;font:inherit;transition:all .2s}.exc:hover{border-color:var(--fog)}.exc.on{border-color:var(--ink);background:#f3f6fb;box-shadow:0 2px 8px rgba(20,30,60,.1)}.exc b{display:block;font-size:14px}.exc span{font-size:12px;color:var(--muted)}
+.verdict{border-radius:12px;padding:10px 14px;margin:8px 0;font-weight:700;border:2px solid var(--line);background:#fff;min-height:48px}.verdict.pos{background:var(--badbg);border-color:var(--bad);color:#a02020}.verdict.neg{background:var(--goodbg);border-color:var(--good);color:#1d6d3e}
+.fbar{display:grid;grid-template-columns:150px 1fr 90px;gap:8px;align-items:center;font-size:13px;margin:4px 0}.fbar .b{height:12px;background:#e9edf5;border-radius:8px;overflow:hidden}.fbar .b i{display:block;height:100%;background:var(--cloud);transition:width .4s}
+.nd rect{fill:#fff;stroke:#a9b4ca;stroke-width:2;transition:all .25s}.nd.cloud rect{fill:var(--cloudbg);stroke:var(--cloud)}.nd.fog rect{fill:var(--fogbg);stroke:var(--fog)}.nd.ml rect{fill:#fff3c4;stroke:#c49000}.nd.good rect{fill:var(--goodbg);stroke:var(--good)}.nd.thing circle{fill:var(--thingbg);stroke:var(--thing);stroke-width:2}.nd text{font-size:12.5px;fill:var(--ink);text-anchor:middle;pointer-events:none}
+.nd.on rect,.nd.on circle{stroke-width:5;filter:drop-shadow(0 3px 6px rgba(0,0,0,.35))}.nd.bad rect{fill:var(--badbg);stroke:var(--bad)}
+.lk{fill:none;stroke:#b3bdd0;stroke-width:2.2}.lk.d{stroke-dasharray:6 5}.lay{font-size:12.5px;font-weight:700;fill:#5b6678}
+.tour{background:#fff;border:1px solid var(--line);border-left:5px solid var(--thing);border-radius:10px;padding:10px 14px;margin-top:8px;font-size:15px;min-height:56px}
+.quote{border-left:5px solid #8b5cf6;background:#f3e8ff;padding:8px 14px;border-radius:0 10px 10px 0;margin:8px 0;font-size:14.5px}
+.gl td{vertical-align:top}
+</style></head><body>
+<header class="top"><div class="wrap"><div class="brand">🛡️ Seguridad en el fog<small>15 ejemplos · visual y sonoro</small></div><nav id="tabs"></nav>
+<div class="snd"><label><input type="checkbox" id="sOn" checked> 🔊 Sonido</label><label><input type="checkbox" id="sVoz"> 🗣 Voz narradora</label><button class="btn ghost" id="sTest">Probar sonido</button></div></div></header>
+<main class="wrap">
+<div class="chhead" style="background:linear-gradient(120deg,#8b5cf6,#d64545)"><h2 class="ch" id="ttl"></h2><p id="sub"></p></div>
+<div id="glos"></div><div class="exs" id="exs"></div><section class="lesson" id="panel"></section>
+<div class="note">🔊 <b>Sonidos:</b> sensor = «tic» agudo · preprocesamiento = tono medio · el modelo «piensa» = arpegio ascendente · normal = campanilla · amenaza = sirena · nube = tono grave · almacenamiento = golpecito. Si no oyes nada, activa «Sonido» o usa «Probar sonido» (algunos navegadores bloquean el audio hasta el primer clic).</div>
+<div class="note">📖 <b>Qué es del material y qué es ilustración:</b> cada ejemplo parte de un concepto de las diapositivas (se cita arriba de cada uno). Los dispositivos, componentes y datos de cada arquitectura son <b>ilustraciones didácticas</b>. Los modelos son versiones pequeñas que <b>se entrenan o calculan de verdad aquí</b>, pero <b>no reproducen los datos ni las cifras de los estudios</b>; las cifras de los estudios (99,6 % / 97,2 %) se muestran solo como cita.</div>
+<footer>Simulaciones didácticas. Audio con Web Audio; la voz depende del navegador.</footer>
+</main>
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(r){let u=0;while(!u)u=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*r())}
+const BLUE='#4f5bd5',RED='#d64545',TEAL='#0e9f8e',ORG='#d9780a',PUR='#8b5cf6';
+const med=a=>{const s=[...a].sort((x,y)=>x-y);return s[Math.floor(s.length/2)]};
+/* ===== SONIDO ===== */
+let AC=null;function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}return AC}
+function tone(f,d=.15,type='sine',v=.08,t0=0){if(!$('#sOn').checked)return;const c=ac();if(!c)return;try{if(c.state==='suspended')c.resume();const o=c.createOscillator(),g=c.createGain(),t=c.currentTime+t0;o.type=type;o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+d+.05)}catch(e){}}
+const sfx={sensor:()=>tone(980,.06,'square',.035),pre:()=>tone(620,.1,'triangle',.08),think:()=>{tone(440,.09,'sine',.06);tone(554,.09,'sine',.06,.1);tone(659,.12,'sine',.06,.2)},good:()=>{tone(784,.14,'sine',.1);tone(988,.24,'sine',.1,.13)},alarm:()=>{for(let i=0;i<4;i++)tone(i%2?640:900,.15,'sawtooth',.07,i*.17)},cloud:()=>tone(196,.34,'sine',.12),store:()=>tone(330,.07,'triangle',.06)};
+function say(t){if(!$('#sVoz').checked||!('speechSynthesis' in window))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/<[^>]+>/g,''));u.lang='es-ES';speechSynthesis.speak(u)}catch(e){}}
+$('#sTest').onclick=()=>{sfx.sensor();setTimeout(sfx.pre,150);setTimeout(sfx.think,320);setTimeout(sfx.good,700);setTimeout(sfx.alarm,1200);setTimeout(sfx.cloud,2100)};
+/* ===== UTILIDADES ML ===== */
+function trainNet(sizes,X,Y,ep,lr,seed){const r=rng(seed),W=[],B=[];for(let l=0;l<sizes.length-1;l++){W.push(Array.from({length:sizes[l+1]},()=>Array.from({length:sizes[l]},()=>(r()-.5)*1.2)));B.push(new Array(sizes[l+1]).fill(0))}
+  const fwd=x=>{const A=[x];for(let l=0;l<W.length;l++){const z=W[l].map((w,j)=>w.reduce((s,v,i)=>s+v*A[l][i],B[l][j]));if(l===W.length-1){const m=Math.max(...z),e=z.map(v=>Math.exp(v-m)),s=e.reduce((a,b)=>a+b,0);A.push(e.map(v=>v/s))}else A.push(z.map(Math.tanh))}return A};
+  for(let e=0;e<ep;e++)for(let n=0;n<X.length;n++){const i=Math.floor(r()*X.length),A=fwd(X[i]);let d=A[A.length-1].map((p,k)=>p-Y[i][k]);for(let l=W.length-1;l>=0;l--){const prev=A[l],nd=l>0?prev.map((a,k)=>(1-a*a)*W[l].reduce((s,w,j)=>s+w[k]*d[j],0)):null;for(let j=0;j<W[l].length;j++){for(let k=0;k<prev.length;k++)W[l][j][k]-=lr*d[j]*prev[k];B[l][j]-=lr*d[j]}d=nd}}
+  return{W,B,fwd}}
+function trainCNN(N,K,F,X,Y,ep,lr,seed){const r=rng(seed),k=Array.from({length:F},()=>Array.from({length:K},()=>(r()-.3)*.8)),b=new Array(F).fill(0),w=Array.from({length:F},()=>r()-.3);let b0=0;
+  const fwd=x=>{const C=[],P=[],ix=[];for(let f=0;f<F;f++){const c=[];for(let t=0;t<=N-K;t++){let s=b[f];for(let j=0;j<K;j++)s+=k[f][j]*x[t+j];c.push(Math.max(0,s))}let m=-1,mi=0;c.forEach((v,t)=>{if(v>m){m=v;mi=t}});C.push(c);P.push(m);ix.push(mi)}return{C,P,ix,p:1/(1+Math.exp(-(P.reduce((s,p,f)=>s+w[f]*p,b0)))) }};
+  for(let e=0;e<ep;e++)for(let n=0;n<X.length;n++){const i=Math.floor(r()*X.length),x=X[i],o=fwd(x),g=o.p-Y[i];for(let f=0;f<F;f++){const dp=g*w[f];w[f]-=lr*g*o.P[f];if(o.P[f]>0){const t=o.ix[f];for(let j=0;j<K;j++)k[f][j]-=lr*dp*x[t+j];b[f]-=lr*dp}}b0-=lr*g}
+  return{fwd,k,w}}
+const R=rng(2024);
+const gv=(m,s,r=Math.random)=>m.map((v,i)=>clamp(v+gauss(r)*s[i],.02,.98));
+/* ===== MODELOS ENTRENADOS (al cargar) ===== */
+const ACC={};
+// 1. CNN ransomware
+const NR=16,sigRansom=(kind,r=Math.random)=>{const x=Array.from({length:NR},()=>clamp(Math.abs(.12+.07*gauss(r)),0,.5));
+  if(kind==='ben'){const n=Math.floor(r()*3);for(let i=0;i<n;i++)x[Math.floor(r()*NR)]=.6+r()*.3}
+  else{const put=(a,p)=>a.forEach((v,i)=>x[p+i]=clamp(v+gauss(r)*.04,0,1)),pos=(L)=>Math.floor(r()*(NR-L+1));
+   if(kind==='locky'){const L=5+Math.floor(r()*2);put(Array.from({length:L},()=>.8+r()*.15),pos(L))}
+   else if(kind==='cerber')put([.9,.25,.9,.25,.9,.25],pos(6));
+   else if(kind==='tesla')put([.3,.45,.6,.75,.9,.95],pos(6));
+   else if(kind==='new'){const p=pos(9);put([.85,.92,.88],p);put([.9,.86,.93],p+6)}
+   else{const L=4+Math.floor(r()*3);put(Array.from({length:L},()=>.65+r()*.3),pos(L))}}return x};
+function mkSet(gen,kinds,n,r){const X=[],Y=[];for(let i=0;i<n;i++){const k=kinds[i%kinds.length];X.push(gen(k,r));Y.push(k==='ben'||k==='ok'?0:1)}return[X,Y]}
+let cnnR,cnnD,cnnF;
+{const r=rng(5);let [X,Y]=mkSet(sigRansom,['ben','ran'],300,r);cnnR=trainCNN(NR,3,2,X,Y,150,.06,3);const [Xt,Yt]=mkSet(sigRansom,['ben','ran'],200,rng(9));ACC.cnnR=Xt.filter((x,i)=>(cnnR.fwd(x).p>.5?1:0)===Yt[i]).length/200;
+  const [X2,Y2]=mkSet(sigRansom,['ben','locky','cerber','tesla'],400,rng(6));cnnD=trainCNN(NR,3,3,X2,Y2,160,.05,4);
+  ACC.drthis={};['ben','locky','cerber','tesla','new'].forEach(k=>{const rr=rng(100+k.length);let ok=0;for(let i=0;i<150;i++){const p=cnnD.fwd(sigRansom(k,rr)).p;if((p>.5?1:0)===(k==='ben'?0:1))ok++}ACC.drthis[k]=ok/150})}
+// 2. CNN fraude
+const NF=12,sigFraud=(kind,r=Math.random)=>{const x=Array.from({length:NF},()=>.15+r()*.5);if(kind==='fraud'){const p=Math.floor(r()*(NF-3));for(let i=0;i<3;i++)x[p+i]=.02+r()*.05;x[p+3]=.85+r()*.13}return x};
+{const X=[],Y=[],r=rng(8);for(let i=0;i<400;i++){const f=i%2;X.push(sigFraud(f?'fraud':'ok',r));Y.push(f)}cnnF=trainCNN(NF,4,2,X,Y,150,.06,7);const rr=rng(33);let ok=0;for(let i=0;i<200;i++){const f=i%2;if((cnnF.fwd(sigFraud(f?'fraud':'ok',rr)).p>.5?1:0)===f)ok++}ACC.cnnF=ok/200}
+// 3. FNN phishing y 4. MLP IDS
+const PH={n:[[.15,.2,.25,.15],[.16,.16,.16,.15]],a:[[.65,.65,.7,.75],[.2,.2,.2,.18]]};
+const IDSC=[['Normal',[.2,.2,.1,.1]],['DoS',[.9,.05,.1,.8]],['DDoS',[.9,.9,.1,.8]],['Suplantación',[.3,.2,.8,.1]]];
+let fnn,mlp;
+{const r=rng(12),X=[],Y=[];for(let i=0;i<400;i++){const a=i%2;X.push(gv(a?PH.a[0]:PH.n[0],a?PH.a[1]:PH.n[1],r));Y.push(a?[0,1]:[1,0])}fnn=trainNet([4,5,2],X,Y,60,.08,3);const rr=rng(77);let ok=0;for(let i=0;i<300;i++){const a=i%2,o=fnn.fwd(gv(a?PH.a[0]:PH.n[0],a?PH.a[1]:PH.n[1],rr)).pop();if((o[1]>.5?1:0)===a)ok++}ACC.fnn=ok/300;
+  const X2=[],Y2=[],r2=rng(13);for(let i=0;i<600;i++){const c=i%4;X2.push(gv(IDSC[c][1],[.17,.17,.17,.17],r2));Y2.push([0,1,2,3].map(k=>k===c?1:0))}mlp=trainNet([4,8,6,4],X2,Y2,60,.05,5);const r3=rng(78);ok=0;for(let i=0;i<400;i++){const c=i%4,o=mlp.fwd(gv(IDSC[c][1],[.17,.17,.17,.17],r3)).pop();if(o.indexOf(Math.max(...o))===c)ok++}ACC.mlp=ok/400}
+/* CAPTCHA: dígitos 5x7 */
+const FONT=['01110 10001 10011 10101 11001 10001 01110','00100 01100 00100 00100 00100 00100 01110','01110 10001 00001 00010 00100 01000 11111','11110 00001 00001 01110 00001 00001 11110','00010 00110 01010 10010 11111 00010 00010','11111 10000 11110 00001 00001 10001 01110','00110 01000 10000 11110 10001 10001 01110','11111 00001 00010 00100 01000 01000 01000','01110 10001 10001 01110 10001 10001 01110','01110 10001 10001 01111 00001 00010 01100'].map(s=>s.split(' ').join('').split('').map(Number));
+const noisy=(d,n,r=Math.random)=>FONT[d].map(v=>r()<n?1-v:v);
+let capNet;{const r=rng(21),X=[],Y=[];for(let i=0;i<900;i++){const d=i%10;X.push(noisy(d,r()*.3,r));Y.push(Array.from({length:10},(_,k)=>k===d?1:0))}capNet=trainNet([35,14,10],X,Y,25,.05,2)}
+const capAcc=n=>{const r=rng(55+Math.round(n*100));let ok=0;for(let i=0;i<200;i++){const d=i%10,o=capNet.fwd(noisy(d,n,r)).pop();if(o.indexOf(Math.max(...o))===d)ok++}return ok/200};
+/* ===== ARQUITECTURA ===== */
+const PX={d0:[150,440],d1:[380,440],d2:[610,440],pre:[110,250],model:[285,250],act:[460,250],mem:[635,250],c0:[230,78],c1:[560,78]};
+function archSvg(a){let s=`<rect x="10" y="8" width="740" height="140" rx="16" fill="rgba(79,91,213,.05)" stroke="${BLUE}" stroke-dasharray="7 5"/><text class="lay" x="26" y="30">☁ NUBE</text><rect x="10" y="165" width="740" height="180" rx="16" fill="rgba(14,159,142,.06)" stroke="${TEAL}" stroke-dasharray="7 5"/><text class="lay" x="26" y="188">🌫 NODO FOG (gateway)</text><rect x="10" y="365" width="740" height="150" rx="16" fill="rgba(217,120,10,.06)" stroke="${ORG}" stroke-dasharray="7 5"/><text class="lay" x="26" y="388">📡 COSAS / DISPOSITIVOS</text>`;
+  const crv=(p,q,arc=0)=>`M${p[0]} ${p[1]} Q${(p[0]+q[0])/2} ${(p[1]+q[1])/2-arc} ${q[0]} ${q[1]}`;
+  ['d0','d1','d2'].forEach(d=>s+=`<path class="lk d" d="${crv(PX[d],PX.pre)}"/>`);
+  s+=`<path class="lk" d="${crv(PX.pre,PX.model)}"/><path class="lk" d="${crv(PX.model,PX.act)}"/><path class="lk d" d="${crv(PX.model,PX.mem,95)}"/><path class="lk" d="${crv(PX.model,PX.c0)}"/><path class="lk d" d="${crv(PX.mem,PX.c1)}"/><text class="lay" x="215" y="358" font-size="11" fill="#8a4a05" style="font-weight:600">${a.link}</text>`;
+  const box=(id,k,t,w=150,h=76)=>{const p=PX[id],ls=t.split('\n'),y0=p[1]-(ls.length-1)*8;return `<g class="nd ${k}" id="n_${id}"><rect x="${p[0]-w/2}" y="${p[1]-h/2}" width="${w}" height="${h}" rx="12"/>${ls.map((l,i)=>`<text x="${p[0]}" y="${y0+i*16+4}">${l}</text>`).join('')}</g>`};
+  s+=box('pre','fog','⚙ '+a.pre)+box('model','ml','🧠 '+a.model)+box('act','good','⚡ '+a.act)+box('mem','fog','💾 '+a.mem)+box('c0','cloud','☁ '+a.c0,230,56)+box('c1','cloud','☁ '+a.c1,230,56);
+  a.dev.forEach((d,i)=>{const p=PX['d'+i];s+=`<g class="nd thing" id="n_d${i}"><circle cx="${p[0]}" cy="${p[1]}" r="30"/><text x="${p[0]}" y="${p[1]+8}" font-size="26">${d[0]}</text><text x="${p[0]}" y="${p[1]+52}">${d[1]}</text></g>`});return s+'<g id="pkts"></g>'}
+/* ===== DIBUJO COMÚN ===== */
+function setup(cv){const r=cv.getBoundingClientRect();if(!r.width)return null;const d=window.devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;const c=cv.getContext('2d');c.setTransform(d,0,0,d,0,0);c.clearRect(0,0,r.width,r.height);return[c,r.width,r.height]}
+function drawNet(c,W,H,net,A,sizes,il,ol){const Lc=sizes.length,px=l=>78+l*(W-210)/(Lc-1),py=(l,i)=>10+(H-20)*(i+.5)/sizes[l];
+  for(let l=0;l<Lc-1;l++)for(let j=0;j<sizes[l+1];j++)for(let i=0;i<sizes[l];i++){const w=net.W[l][j][i];c.beginPath();c.moveTo(px(l),py(l,i));c.lineTo(px(l+1),py(l+1,j));c.strokeStyle=w>0?`rgba(14,159,142,${Math.min(.5,Math.abs(w)*.25)})`:`rgba(214,69,69,${Math.min(.5,Math.abs(w)*.25)})`;c.lineWidth=1;c.stroke()}
+  for(let l=0;l<Lc;l++)for(let i=0;i<sizes[l];i++){const a=A[l][i],v=l===0||l===Lc-1?a:(a+1)/2;c.beginPath();c.arc(px(l),py(l,i),9,0,7);c.fillStyle=`rgba(79,91,213,${.12+.88*clamp(v,0,1)})`;c.fill();c.strokeStyle='#4f5bd5';c.lineWidth=1.5;c.stroke()}
+  c.font='11px system-ui';c.fillStyle='#3a475f';c.textAlign='right';il.forEach((t,i)=>c.fillText(t,px(0)-14,py(0,i)+4));c.textAlign='left';ol.forEach((t,i)=>c.fillText(t+' '+(A[Lc-1][i]*100).toFixed(0)+'%',px(Lc-1)+14,py(Lc-1,i)+4));
+  c.textAlign='center';c.fillStyle='#6b778c';c.fillText('entrada',px(0),H-1);c.fillText('capas ocultas',(px(0)+px(Lc-1))/2,H-1);c.fillText('salida',px(Lc-1),H-1)}
+function drawSig(c,W,H,x,o,K,net,title){const N=x.length,bw=(W-20)/N,h1=H*.42;c.font='11px system-ui';c.fillStyle='#3a475f';c.textAlign='left';c.fillText(title||'Señal de entrada (tiempo →)',6,12);
+  let bf=0,bv=-9;o.P.forEach((p,f)=>{const s=net.w[f]*p;if(s>bv){bv=s;bf=f}});const ix=o.ix[bf];
+  x.forEach((v,i)=>{c.fillStyle=(i>=ix&&i<ix+K)?ORG:'#98a3b8';c.fillRect(10+i*bw+2,20+h1-v*h1,bw-4,v*h1)});c.strokeStyle=ORG;c.lineWidth=2;c.strokeRect(10+ix*bw,18,K*bw,h1+4);
+  c.fillStyle='#3a475f';c.fillText('Mapa de características del filtro más activo (el recuadro naranja es su ventana ganadora)',6,H*.42+42);const cm=o.C[bf],mx=Math.max(...cm,.001),h2=H*.28;
+  cm.forEach((v,t)=>{c.fillStyle=t===ix?TEAL:'#c4ccdc';c.fillRect(10+t*bw+2+bw*(K-1)/2,H*.42+50+h2-v/mx*h2,bw-4,v/mx*h2)});
+  c.fillStyle='#1c2433';c.font='bold 13px system-ui';c.fillText('Probabilidad de amenaza: '+(o.p*100).toFixed(0)+' %',6,H-6)}
+const L=(m,s)=>({m,s});
+/* ===== modelos vectoriales (svm / knn) ===== */
+const KB={};function protos(S){if(KB[S.id])return KB[S.id];const r=rng(S.id.length*77+S.id.charCodeAt(S.id.length-1)),a=[];for(let i=0;i<10;i++)a.push([...gv(S.reg.n[0],S.reg.n[1],r),0]);for(let i=0;i<8;i++)a.push([...gv(S.reg.a[0],S.reg.a[1],r),1]);return KB[S.id]=a}
+const fmtF=(S,i,v)=>{const f=S.feats[i],x=f[2]+v*(f[3]-f[2]);return (Math.abs(x)>=100?x.toFixed(0):x.toFixed(1))+(f[1]?' '+f[1]:'')};
+const fbars=(S,x)=>S.feats.map((f,i)=>`<div class="fbar"><span>${f[0]}</span><div class="b"><i style="width:${x[i]*100}%"></i></div><b>${fmtF(S,i,x[i])}</b></div>`).join('');
+function vecRun(S,anom){const x=gv(anom?S.reg.a[0]:S.reg.n[0],anom?S.reg.a[1]:S.reg.n[1]),m=S.model;let pos,why;
+  if(m.t==='svm'){const f=m.w[0]*x[0]+m.w[1]*x[1]+m.b,nw=Math.hypot(...m.w);pos=f>0;why=`f(x) = w·x + b = <b>${f.toFixed(2)}</b> → lado ${pos?'«anómalo»':'«normal»'}. Distancia a la frontera: <b>${(Math.abs(f)/nw).toFixed(2)}</b>.`}
+  else{const P=protos(S),d=P.map(p=>({p,d:Math.hypot(p[0]-x[0],p[1]-x[1])})).sort((a,b)=>a.d-b.d).slice(0,3),r=d.filter(n=>n.p[2]).length;pos=r>=2;why=`Los 3 vecinos más cercanos (entre los casos <b>guardados localmente</b>): ${d.map(n=>`<b style="color:${n.p[2]?RED:BLUE}">${n.p[2]?'riesgo':'normal'}</b> (${n.d.toFixed(2)})`).join(', ')} → voto ${r} a ${3-r}.`;S._nb=d}
+  return{pos,ok:pos===!!anom,lab:pos?S.lab.pos:S.lab.neg,why,feat:fbars(S,x),draw:(c,W,H)=>{const pad=34,X=v=>pad+v*(W-pad-10),Y=v=>H-pad-v*(H-pad-10),dot=(a,b,col,r=5)=>{c.beginPath();c.arc(X(a),Y(b),r,0,7);c.fillStyle=col;c.fill();c.strokeStyle='#fff';c.stroke()};c.font='11px system-ui';c.fillStyle='#3a475f';c.textAlign='center';c.fillText(S.feats[0][0]+' →',W/2,H-6);c.save();c.translate(11,H/2);c.rotate(-Math.PI/2);c.fillText(S.feats[1][0]+' →',0,0);c.restore();
+    if(m.t==='svm'){const N=24;for(let i=0;i<N;i++)for(let j=0;j<N;j++){const a=(i+.5)/N,b=(j+.5)/N;c.fillStyle=m.w[0]*a+m.w[1]*b+m.b>0?'rgba(214,69,69,.1)':'rgba(79,91,213,.1)';c.fillRect(X(i/N),Y((j+1)/N),X(1/N)-X(0)+1,Y(0)-Y(1/N)+1)}const pr=rng(5);for(let i=0;i<20;i++){const a=gv(S.reg.n[0],S.reg.n[1],pr),b=gv(S.reg.a[0],S.reg.a[1],pr);dot(a[0],a[1],'rgba(79,91,213,.5)',3.5);dot(b[0],b[1],'rgba(214,69,69,.5)',3.5)}
+      const P=[];[0,1].forEach(a=>{const b=(-m.b-m.w[0]*a)/m.w[1];if(b>=0&&b<=1)P.push([a,b])});[0,1].forEach(b=>{const a=(-m.b-m.w[1]*b)/m.w[0];if(a>=0&&a<=1)P.push([a,b])});if(P.length>=2){c.beginPath();c.moveTo(X(P[0][0]),Y(P[0][1]));c.lineTo(X(P[1][0]),Y(P[1][1]));c.strokeStyle=TEAL;c.lineWidth=3.5;c.stroke()}}
+    else{protos(S).forEach(p=>dot(p[0],p[1],p[2]?RED:BLUE,5.5));(S._nb||[]).forEach(n=>{c.beginPath();c.moveTo(X(x[0]),Y(x[1]));c.lineTo(X(n.p[0]),Y(n.p[1]));c.strokeStyle=n.p[2]?RED:BLUE;c.lineWidth=2;c.stroke()})}
+    dot(x[0],x[1],pos?RED:'#222',9);c.fillStyle='#fff';c.font='bold 11px system-ui';c.fillText('?',X(x[0]),Y(x[1])+4)}}}
+const mkVec=o=>Object.assign(o,{btns:[['✅ Evento normal',0,'btn fog'],['🚨 Evento anómalo',1,'btn" style="background:#a02020']],run(k){return vecRun(this,k)}});
+/* ===== ESCENARIOS ===== */
+const SC=[];
+// ---- GRUPO 1
+SC.push({g:1,id:'cnnR',tech:'Red convolucional (CNN)',title:'Ransomware en la capa fog: una CNN que mira la actividad de archivos',slide:'Ransomware y fraude → Red convolucional (CNN)',
+ problem:'Un servidor de archivos de una pyme empieza a <b>cifrar documentos en ráfaga</b> (ransomware). El fog vigila la actividad de escritura en ventanas de 16 pasos y una <b>CNN 1D</b> busca el «patrón de ráfaga sostenida», que distingue de picos aislados legítimos (copias de seguridad, un archivo grande).',
+ why:'La CNN detecta un <b>patrón local</b> en una señal sin que nadie programe la regla. En el fog se detecta en segundos y se puede <b>aislar el equipo antes de que cifre más</b>; esperar a la nube sería tarde.',data:'ritmo de escrituras a archivos (16 pasos)',
+ arch:{dev:[['💻','PC oficina'],['🗄️','Servidor NAS'],['📱','Portátil']],link:'Ethernet / Wi-Fi',pre:'Ventana de 16 pasos\nde actividad de archivos',model:'CNN 1D\n(filtros 3 · max-pool)',act:'Aísla el equipo\ny corta su acceso',mem:'Registro de\nventanas',c0:'Alerta al equipo de seguridad',c1:'Reentrenamiento con nuevas muestras'},
+ btns:[['✅ Actividad normal',0,'btn fog'],['🚨 Ransomware cifrando',1,'btn" style="background:#a02020']],
+ run(k){const x=sigRansom(k?'ran':'ben'),o=cnnR.fwd(x),pos=o.p>.5;return{pos,ok:pos===!!k,lab:pos?'🚨 RANSOMWARE':'✅ actividad normal',why:`La CNN desliza sus filtros (ancho 3) sobre la señal, aplica ReLU y se queda con el <b>máximo</b> de cada filtro. Probabilidad de ransomware: <b>${(o.p*100).toFixed(0)} %</b>. ${pos?'Hay una <b>ráfaga sostenida</b> de escrituras: aislar el equipo.':'Solo picos aislados o actividad baja.'} <i>(Entrenada ahora en tu navegador con datos sintéticos fáciles; precisión en prueba ${(ACC.cnnR*100).toFixed(0)} %.)</i>`,feat:`<div class="note">Señal de 16 pasos de actividad (ver gráfico).</div>`,draw:(c,W,H)=>drawSig(c,W,H,x,o,3,cnnR)}}});
+SC.push({g:1,id:'cnnF',tech:'Red convolucional (CNN)',title:'Fraude: una CNN que reconoce la secuencia «prueba de tarjeta»',slide:'Ransomware y fraude → Red convolucional (CNN)',
+ problem:'Un estafador prueba una tarjeta robada con <b>tres cobros diminutos seguidos</b> y, si funcionan, hace <b>un cobro grande</b>. El fog del comercio mira las últimas 12 operaciones de cada tarjeta con una <b>CNN 1D</b> (filtro de 4) que aprendió ese patrón de «subida».',
+ why:'Un patrón de <b>secuencia</b> es difícil de describir con una regla fija, pero una CNN lo aprende de ejemplos. Decidir en el fog permite retener la operación grande <b>antes de aprobarla</b>.',data:'importes de las últimas 12 operaciones',
+ arch:{dev:[['💳','TPV 1'],['💳','TPV 2'],['📱','Pago móvil']],link:'4G / Ethernet',pre:'Últimas 12 operaciones\npor tarjeta',model:'CNN 1D\n(filtros de 4 pasos)',act:'Retiene el cobro\ny pide verificación',mem:'Historial\nlocal',c0:'Casos de fraude confirmados',c1:'Reentrenamiento global'},
+ btns:[['✅ Compras habituales',0,'btn fog'],['🚨 Prueba de tarjeta + cobro grande',1,'btn" style="background:#a02020']],
+ run(k){const x=sigFraud(k?'fraud':'ok'),o=cnnF.fwd(x),pos=o.p>.5;return{pos,ok:pos===!!k,lab:pos?'🚨 POSIBLE FRAUDE':'✅ compras habituales',why:`Filtros de ancho 4 buscan la secuencia <b>pequeño-pequeño-pequeño-grande</b>. Probabilidad de fraude: <b>${(o.p*100).toFixed(0)} %</b> → ${pos?'<b>retener la operación</b>':'aprobar'}. <i>(Entrenada en tu navegador; precisión en prueba ${(ACC.cnnF*100).toFixed(0)} %.)</i>`,feat:`<div class="note">Importes normalizados de las últimas 12 operaciones.</div>`,draw:(c,W,H)=>drawSig(c,W,H,x,o,4,cnnF,'Importes de las últimas operaciones (tiempo →)')}}});
+SC.push(mkVec({g:1,id:'svmA',tech:'SVM',title:'Comportamiento anómalo de un dispositivo de un edificio inteligente',slide:'Comportamiento anómalo → SVM',
+ problem:'Cada dispositivo (termostato, cámara, cerradura) tiene un <b>ritmo habitual</b> de reportes y variación de sus valores. Cuando un equipo es manipulado se «sale de su carril». Una <b>SVM</b> separa lo normal de lo anómalo con una frontera.',
+ why:'La SVM solo guarda los vectores soporte: <b>poca memoria</b> en el fog. Marcar el dispositivo en el edificio evita que el atacante siga mandando órdenes mientras el dato viaja a la nube.',data:'frecuencia de reportes y variación del valor',
+ arch:{dev:[['🌡️','Termostato'],['📷','Cámara'],['🔐','Cerradura']],link:'Zigbee / Wi-Fi',pre:'Perfil por dispositivo\n(ritmo y variación)',model:'SVM lineal\n(vectores soporte)',act:'Pone el dispositivo\nen cuarentena',mem:'Perfiles\nhabituales',c0:'Panel de seguridad del edificio',c1:'Reentrenamiento'},
+ feats:[['Reportes','/min',0,60],['Variación del valor','%',0,100]],reg:{n:[[.25,.2],[.08,.08]],a:[[.75,.75],[.1,.12]]},model:{t:'svm',w:[1,1.1],b:-.95},
+ lab:{pos:'🚨 COMPORTAMIENTO ANÓMALO',neg:'✅ comportamiento habitual'}}));
+SC.push({g:1,id:'fnn',tech:'Red neuronal feedforward',title:'Phishing: una red de una capa oculta analiza cada correo en el fog',slide:'Phishing → Red neuronal feedforward',
+ problem:'Una empresa recibe correos con enlaces. El gateway del correo extrae 4 señales (enlaces sospechosos, palabras de urgencia, dominio recién creado, remitente que no coincide con el enlace) y una <b>red feedforward</b> (4 → 5 → 2) decide si es phishing.',
+ why:'Analizar en el fog <b>antes de entregar</b> el correo evita que el usuario haga clic. Además los textos de los correos no salen de la empresa.',data:'señales extraídas de cada correo',
+ arch:{dev:[['📧','Buzón ventas'],['📧','Buzón soporte'],['💻','Empleado']],link:'IMAP / HTTPS',pre:'Extrae 4 señales\nde cada correo',model:'Red feedforward\n4 → 5 → 2',act:'Envía a cuarentena\ny avisa al usuario',mem:'Correos\nanalizados',c0:'Lista global de dominios maliciosos',c1:'Reentrenamiento'},
+ btns:[['✅ Correo legítimo',0,'btn fog'],['🚨 Correo de phishing',1,'btn" style="background:#a02020']],
+ feats:[['Enlaces sospechosos','',0,10],['Palabras de urgencia','',0,10],['Dominio recién creado','%',0,100],['Remitente ≠ enlace','%',0,100]],
+ run(k){const x=gv(k?PH.a[0]:PH.n[0],k?PH.a[1]:PH.n[1]),A=fnn.fwd(x),o=A[A.length-1],pos=o[1]>.5;return{pos,ok:pos===!!k,lab:pos?'🚨 PHISHING':'✅ correo legítimo',why:`Las 4 señales entran, cada una de las 5 neuronas ocultas las combina y la salida da <b>P(phishing) = ${(o[1]*100).toFixed(0)} %</b>. Una sola capa oculta: «feedforward» = la información solo avanza, sin bucles. <i>(Entrenada en tu navegador; precisión ${(ACC.fnn*100).toFixed(0)} %.)</i>`,feat:fbars(this,x),draw:(c,W,H)=>drawNet(c,W,H,fnn,A,[4,5,2],['enlaces','urgencia','dominio','remitente'],['legítimo','phishing'])}}});
+SC.push({g:1,id:'mlp',tech:'Perceptrón multicapa (MLP)',title:'Intrusiones: un MLP de dos capas ocultas clasifica el tipo de ataque',slide:'Intrusiones → Perceptrón multicapa',
+ problem:'El gateway de una red IoT mide 4 señales por ventana (paquetes/s, IPs de origen distintas, fallos de autenticación, ratio SYN sin ACK). Un <b>perceptrón multicapa</b> (4 → 8 → 6 → 4) clasifica: <b>normal, DoS</b> (una fuente inunda), <b>DDoS</b> (muchas fuentes) o <b>suplantación</b>.',
+ why:'Varias capas ocultas permiten separar clases que se parecen (DoS vs DDoS). Clasificar en el fog permite <b>elegir la contramedida</b> adecuada al instante: bloquear una IP, filtrar por origen o revocar credenciales.',data:'4 señales de tráfico por ventana',
+ arch:{dev:[['🌡️','Sensores'],['📷','Cámaras'],['🔌','Actuadores']],link:'Wi-Fi / Ethernet',pre:'Resume tráfico por\nventana de 5 s',model:'MLP 4→8→6→4\n(softmax)',act:'Aplica la contramedida\nsegún la clase',mem:'Registro de\nincidentes',c0:'Reporte y forense',c1:'Reentrenamiento del MLP'},
+ btns:[['✅ Tráfico normal',-1,'btn fog'],['⚡ DoS (1 fuente)',1,'btn" style="background:#a02020'],['🌐 DDoS (muchas)',2,'btn" style="background:#a02020'],['🎭 Suplantación',3,'btn" style="background:#a02020']],
+ feats:[['Paquetes/s','pps',0,1000],['IPs de origen distintas','',0,500],['Fallos de autenticación','',0,50],['SYN sin ACK','%',0,100]],
+ run(k){const c=k<0?0:k,x=gv(IDSC[c][1],[.17,.17,.17,.17]),A=mlp.fwd(x),o=A[A.length-1],m=o.indexOf(Math.max(...o)),pos=m!==0,cn=['Normal','DoS','DDoS','Suplantación'];
+  const act=['','bloquea la IP única','filtra por origen y limita la tasa','revoca credenciales y exige reautenticación'];
+  return{pos,ok:m===c,lab:pos?'🚨 '+cn[m].toUpperCase():'✅ tráfico normal',why:`Salidas (softmax): ${cn.map((n,i)=>`${n} <b>${(o[i]*100).toFixed(0)}%</b>`).join(' · ')}. ${pos?`Contramedida: <b>${act[m]}</b>.`:''} <i>(Entrenado en tu navegador; precisión ${(ACC.mlp*100).toFixed(0)} %.)</i>`,feat:fbars(this,x),draw:(cc,W,H)=>drawNet(cc,W,H,mlp,A,[4,8,6,4],['paq/s','IPs','fallos','SYN'],cn)}}});
+SC.push({g:1,id:'linP',tech:'Regresión lineal',title:'Privacidad de datos heterogéneos: solo sale un parámetro, no las lecturas',slide:'Privacidad de datos heterogéneos → Regresión lineal',
+ problem:'Ocho medidores de <b>tipos y niveles muy distintos</b> (heterogéneos) reportan consumo y temperatura. La nube solo necesita saber <b>cuánto sube el consumo por grado</b>. El fog ajusta una regresión lineal sobre los datos centrados de cada fuente y <b>publica únicamente la pendiente</b>, con un poco de ruido.',
+ why:'Las lecturas individuales (sensibles) <b>nunca salen</b> del fog. El libro menciona la regresión lineal para agregar datos protegiendo la privacidad.',data:'lecturas de consumo y temperatura de 8 fuentes',
+ arch:{dev:[['🏠','Hogares'],['🏭','Fábrica'],['🏢','Oficinas']],link:'LoRa / Ethernet',pre:'Centra cada fuente\n(quita su nivel base)',model:'Regresión lineal\npendiente común',act:'Publica solo la\npendiente + ruido',mem:'Lecturas crudas\n(no salen)',c0:'Modelo de demanda regional',c1:'Planificación de la red'},
+ ctl:`<label>Ruido de privacidad: <b id="pnV">0.04</b><input type="range" id="pn" min="0" max="0.2" step="0.01" value="0.04"></label>`,
+ btns:[['📊 Lote de lecturas',0,'btn fog'],['🕵 Intento de reconstruir lecturas',1,'btn" style="background:#a02020']],
+ run(k){const ns=+($('#pn')||{value:.04}).value,S=8,T=6,B=Array.from({length:S},()=>.15+Math.random()*.75),temps=[],cons=[];for(let i=0;i<S;i++){const t=Array.from({length:T},()=>Math.random()),cc=t.map(v=>B[i]+.5*(v-.5)+gauss(Math.random)*.04);temps.push(t);cons.push(cc)}
+  let sxy=0,sxx=0;for(let i=0;i<S;i++){const mt=temps[i].reduce((a,b)=>a+b)/T,mc=cons[i].reduce((a,b)=>a+b)/T;for(let j=0;j<T;j++){sxy+=(temps[i][j]-mt)*(cons[i][j]-mc);sxx+=(temps[i][j]-mt)**2}}const a=sxy/sxx,lap=ns*(Math.random()<.5?-1:1)*-Math.log(1-Math.random()),ap=a+lap;
+  const guess=ap*.5+.5,err=cons.flat().reduce((s,v)=>s+Math.abs(v-guess),0)/(S*T);
+  return{pos:!!k,ok:true,lab:k?'🛡 INTENTO FRUSTRADO: solo se ve 1 número':'✅ solo sale la pendiente publicada',why:`Pendiente real: <b>${a.toFixed(3)}</b> · publicada: <b>${ap.toFixed(3)}</b> (ruido ${ns.toFixed(2)}). ${k?`Un atacante que intercepta ese número intenta adivinar las lecturas individuales: error medio <b>${err.toFixed(2)}</b> (fracción del rango) frente a <b>0.00</b> si se hubieran enviado crudas.`:`La nube recibe <b>1 número</b> en lugar de <b>${S*T*2} valores</b>.`} Más ruido = más privacidad pero menos exactitud.`,feat:`<div class="note">${S} fuentes · ${T} lecturas cada una · quedan en el fog 🔒</div>`,draw:(c,W,H)=>{const pad=20;c.font='11px system-ui';c.fillStyle='#3a475f';c.textAlign='left';c.fillText('🔒 Lecturas crudas (se quedan en el fog)',6,12);for(let i=0;i<S;i++){c.strokeStyle=['#4f5bd5','#0e9f8e','#d9780a','#8b5cf6','#ec4899','#92400e','#2a9455','#c49000'][i];c.beginPath();cons[i].forEach((v,j)=>{const x=10+j*(W-20)/(T-1),y=H*.5-v*H*.4;j?c.lineTo(x,y):c.moveTo(x,y)});c.lineWidth=2;c.stroke()}
+   c.fillStyle='#1c2433';c.font='bold 13px system-ui';c.fillText('☁ Lo que ve la nube / el atacante:',6,H*.62);c.font='bold 22px system-ui';c.fillStyle=TEAL;c.fillText('pendiente ≈ '+ap.toFixed(3),10,H*.78);c.font='12px system-ui';c.fillStyle='#6b778c';c.fillText('1 número con ruido en lugar de '+S*T*2+' valores',10,H*.9)}}}});
+SC.push(mkVec({g:1,id:'knnM',tech:'KNN',title:'Privacidad del historial médico: el paciente se compara con casos guardados en casa',slide:'Privacidad del historial médico → KNN',
+ problem:'Un paciente crónico tiene wearables. Para saber si su estado es de riesgo, el fog <b>compara sus constantes con casos conocidos guardados localmente</b> (KNN, k = 3). El historial <b>no sale</b> del hogar/clínica; solo sale el aviso.',
+ why:'El libro cita KNN para predecir enfermedades con protección eficiente de la privacidad de los registros. No hay entrenamiento remoto: el «modelo» son los ejemplos locales.',data:'frecuencia cardiaca y presión sistólica',
+ arch:{dev:[['⌚','Reloj'],['🩺','Tensiómetro'],['📱','Móvil']],link:'Bluetooth',pre:'Procesa localmente;\nel historial no sale',model:'KNN (k = 3)\ncasos guardados',act:'Avisa al paciente\ny al médico',mem:'Casos conocidos\n(solo locales)',c0:'Solo avisos y estadísticas',c1:'Estadísticas anónimas'},
+ feats:[['Frecuencia cardiaca','lpm',40,180],['Presión sistólica','mmHg',90,200]],reg:{n:[[.3,.3],[.1,.09]],a:[[.72,.75],[.1,.1]]},model:{t:'knn'},
+ lab:{pos:'🚨 RIESGO DETECTADO',neg:'✅ constantes normales'}}));
+// ---- GRUPO 2 estudios
+function trafficRun(mess){const Z=6,t0=16,rep=25;let ef=0,ec=0,show=null;
+  for(let q=0;q<rep;q++){const tr=[],ob=[];for(let z=0;z<Z;z++){const b=100+Math.random()*200,ph=Math.random()*6,s=[],o=[];for(let t=0;t<=t0+1;t++){const v=b*(1+.5*Math.sin(2*Math.PI*(t-6+ph)/24));s.push(v);let w=v*(1+gauss(Math.random)*(.03+.3*mess));if(Math.random()<.15*mess)w*=Math.random()<.5?2.2:.25;o.push(w)}tr.push(s);ob.push(o)}
+    const fog=[],cloud=[];let sl=0,cnt=0;for(let z=0;z<Z;z++)for(let t=t0-8;t<t0-3;t++){sl+=(ob[z][t+1]-ob[z][t])/ob[z][t];cnt++}sl/=cnt;
+    for(let z=0;z<Z;z++){const fl=[];for(let t=t0-5;t<=t0;t++)fl.push(med([ob[z][t-1],ob[z][t],ob[z][t+1>t0?t:t+1]]));const n=fl.length,xs=fl.map((_,i)=>i),mx=2.5,my=fl.reduce((a,b)=>a+b)/n;let sxy=0,sxx=0;fl.forEach((v,i)=>{sxy+=(i-mx)*(v-my);sxx+=(i-mx)**2});const a=sxy/sxx;fog.push(fl[n-1]+a);cloud.push(ob[z][t0-3]*(1+sl*4))}
+    for(let z=0;z<Z;z++){ef+=Math.abs(fog[z]-tr[z][t0+1])/tr[z][t0+1];ec+=Math.abs(cloud[z]-tr[z][t0+1])/tr[z][t0+1]}
+    if(q===0)show={tr:tr[0],ob:ob[0],f:fog[0],c:cloud[0],t0}}
+  return{ef:ef/(Z*rep)*100,ec:ec/(Z*rep)*100,show}}
+SC.push({g:2,id:'bcn',tech:'Deep learning distribuido (fog) vs centralizado (nube)',title:'Estudio: pronóstico de tráfico en Barcelona, fog frente a nube',slide:'Tráfico en Barcelona — pronóstico con deep learning: el fog rindió mejor que la nube, sobre todo con datos desordenados',
+ problem:'El estudio pronosticó el tráfico con <b>una semana de datos de miles de vehículos</b>. Esta simulación didáctica <b>no usa esos datos</b>: modela 6 zonas de una ciudad. El <b>fog</b> de cada zona pronostica con sus datos más frescos (filtrando valores raros); la <b>nube</b> usa un modelo global con datos que llegan con retraso y sin limpiar.',
+ why:'Con datos desordenados (sensores caídos, valores atípicos) un modelo centralizado y atrasado sufre más; el modelo local, cerca del dato, lo corrige antes. Es la intuición del hallazgo del estudio, no su reproducción.',data:'conteos de vehículos por zona (con ruido y valores atípicos)',
+ arch:{dev:[['🚗','Vehículos zona A'],['🚦','Semáforos'],['📹','Cámaras zona B']],link:'5G / DSRC',pre:'Filtra valores raros\npor zona',model:'Pronóstico local\n(tendencia por zona)',act:'Ajusta semáforos\nsegún pronóstico',mem:'Serie local\nde cada zona',c0:'Modelo global (más retraso)',c1:'Reentrenamiento centralizado'},
+ ctl:`<label>Desorden de los datos (botón 2): <b id="bmV">60</b> %<input type="range" id="bm" min="10" max="100" value="60"></label>`,
+ btns:[['🟢 Datos ordenados (5 % de ruido)',0,'btn fog'],['🌪 Datos desordenados',1,'btn" style="background:#a02020']],
+ run(k){const m=k?+$('#bm').value/100:.05,r=trafficRun(m),fw=r.ef<r.ec;return{pos:!fw,ok:fw,lab:fw?`🌫 FOG gana: error ${r.ef.toFixed(1)} % vs nube ${r.ec.toFixed(1)} %`:`☁ La nube gana: ${r.ec.toFixed(1)} % vs fog ${r.ef.toFixed(1)} %`,why:`Error medio de pronóstico (promedio de 25 repeticiones × 6 zonas) con <b>${(m*100).toFixed(0)} %</b> de desorden: fog <b style="color:${TEAL}">${r.ef.toFixed(1)} %</b> · nube <b style="color:${BLUE}">${r.ec.toFixed(1)} %</b>. El modelo de la nube usa datos con <b>3 pasos de retraso</b> y sin filtrar los valores atípicos.`,feat:`<div class="fbar"><span>Error fog</span><div class="b"><i style="width:${clamp(r.ef*2,0,100)}%;background:${TEAL}"></i></div><b>${r.ef.toFixed(1)} %</b></div><div class="fbar"><span>Error nube</span><div class="b"><i style="width:${clamp(r.ec*2,0,100)}%;background:${BLUE}"></i></div><b>${r.ec.toFixed(1)} %</b></div>`,
+  draw:(c,W,H)=>{const s=r.show,pad=36,mx=Math.max(...s.tr,...s.ob)*1.05,X=i=>pad+i/(s.t0+2)*(W-pad-10),Y=v=>H-pad-v/mx*(H-pad-10);c.font='11px system-ui';c.fillStyle='#3a475f';c.textAlign='center';c.fillText('hora →',W/2,H-6);c.beginPath();s.tr.forEach((v,i)=>{i?c.lineTo(X(i),Y(v)):c.moveTo(X(i),Y(v))});c.strokeStyle='#98a3b8';c.lineWidth=2.5;c.stroke();s.ob.forEach((v,i)=>{c.beginPath();c.arc(X(i),Y(v),3,0,7);c.fillStyle=ORG;c.fill()});
+   [[s.f,TEAL,'fog'],[s.c,BLUE,'nube']].forEach(([v,col,n])=>{c.beginPath();c.arc(X(s.t0+1),Y(v),8,0,7);c.fillStyle=col;c.fill();c.fillStyle=col;c.textAlign='right';c.fillText(n,X(s.t0+1)-10,Y(v)-6)});c.beginPath();c.arc(X(s.t0+1),Y(s.tr[s.t0+1]),6,0,7);c.strokeStyle='#222';c.lineWidth=2;c.stroke();c.textAlign='left';c.fillStyle='#6b778c';c.fillText('gris = real · naranja = lo observado · ○ = valor real del próximo paso',pad,12)}}}});
+SC.push({g:2,id:'drt',tech:'CNN (+ LSTM en el estudio)',title:'Estudio DRTHIS: ransomware en la capa fog, también familias nuevas',slide:'Sistema DRTHIS — combina LSTM y CNN; entrenó con Locky, Cerber y TeslaCrypt y reconoció también familias no vistas (F-measure 99,6 %, verdaderos positivos 97,2 %)',
+ problem:'DRTHIS vigila la capa fog y combina <b>LSTM + CNN</b>. Esta simulación didáctica usa solo la <b>parte convolucional</b> y <b>no usa archivos reales</b>: tres «familias» con formas de actividad distintas (ráfaga larga, picos alternados, rampa creciente). La red se entrena con esas 3 y se prueba con una <b>familia nueva</b> (dos ráfagas cortas separadas) que nunca vio pero que comparte el rasgo local «actividad alta sostenida».',
+ why:'Los rasgos aprendidos («actividad alta sostenida») se parecen entre familias, así que el modelo <b>generaliza</b> a variantes nuevas. Detectar en el fog permite aislar el equipo sin esperar a la nube.',data:'actividad de archivos de cada familia',
+ arch:{dev:[['💻','Estación 1'],['🗄️','Servidor'],['💻','Estación 2']],link:'Ethernet',pre:'Extrae la secuencia\nde actividad (16 pasos)',model:'CNN 1D (3 filtros)\nentrenada con 3 familias',act:'Aísla el equipo\ninfectado',mem:'Firmas y\nventanas',c0:'Alerta + inteligencia de amenazas',c1:'Reentrenamiento con familias nuevas'},
+ btns:[['✅ Benigno',0,'btn fog'],['🔐 Locky',1,'btn" style="background:#a02020'],['🔐 Cerber',2,'btn" style="background:#a02020'],['🔐 TeslaCrypt',3,'btn" style="background:#a02020'],['❓ Familia NUEVA',4,'btn" style="background:#6b2fb3']],
+ run(k){const kk=['ben','locky','cerber','tesla','new'][k],x=sigRansom(kk),o=cnnD.fwd(x),pos=o.p>.5;const nm=['benigna','Locky (vista)','Cerber (vista)','TeslaCrypt (vista)','familia NUEVA (no vista)'][k];
+  return{pos,ok:pos===(k>0),lab:pos?'🚨 RANSOMWARE detectado':'✅ actividad benigna',why:`Muestra: <b>${nm}</b>. Probabilidad de ransomware: <b>${(o.p*100).toFixed(0)} %</b>. En esta simulación, aciertos sobre 150 muestras de cada tipo: benigno ${(ACC.drthis.ben*100).toFixed(0)} % · Locky ${(ACC.drthis.locky*100).toFixed(0)} % · Cerber ${(ACC.drthis.cerber*100).toFixed(0)} % · TeslaCrypt ${(ACC.drthis.tesla*100).toFixed(0)} % · <b>nueva ${(ACC.drthis.new*100).toFixed(0)} %</b>.<br><i>Cifras del estudio citadas en la diapositiva (no de esta simulación): F-measure 99,6 %, verdaderos positivos 97,2 %.</i>`,feat:`<div class="note">${nm}</div>`,draw:(c,W,H)=>drawSig(c,W,H,x,o,3,cnnD,'Actividad de archivos — '+nm)}}});
+// ---- GRUPO 3 riesgos
+let capLast=null;
+SC.push({g:3,id:'cap',tech:'ML como arma (CNN)',title:'El ML como arma: una red neuronal resuelve el CAPTCHA',slide:'El ML como arma → Redes CNN entrenadas para resolver CAPTCHA',
+ problem:'Un portal del fog protege el login con un <b>CAPTCHA</b> de dígitos. Un atacante entrena una red neuronal con dígitos distorsionados. Aquí la red del atacante (un MLP pequeño que hace de «CNN») <b>se entrenó en tu navegador</b>. El fog no puede confiar solo en el CAPTCHA: mira también la <b>velocidad de respuesta</b>.',
+ why:'El libro advierte que las redes convolucionales pueden saltarse CAPTCHAs. La defensa en el fog es <b>combinar señales</b> (tiempo de respuesta, ritmo de intentos), no una sola barrera.',data:'intentos de login con CAPTCHA',
+ arch:{dev:[['🧑','Usuario legítimo'],['🤖','Bot del atacante'],['🧑','Otro usuario']],link:'HTTPS',pre:'Presenta el CAPTCHA\ny mide el tiempo',model:'Detector de bots\n(tiempo de respuesta)',act:'Bloquea al bot\ny sube la dificultad',mem:'Historial de\nintentos',c0:'Reputación de IPs',c1:'Reentrenamiento'},
+ ctl:`<label>Distorsión del CAPTCHA: <b id="cdV">20</b> %<input type="range" id="cd" min="0" max="45" value="20"></label>`,
+ btns:[['🧑 Persona resuelve',0,'btn fog'],['🤖 Bot con IA resuelve',1,'btn" style="background:#a02020']],
+ run(k){const n=+$('#cd').value/100,d=Math.floor(Math.random()*10),g=noisy(d,n),o=capNet.fwd(g).pop(),guess=o.indexOf(Math.max(...o)),tm=k?(.02+Math.random()*.2):(1.5+Math.random()*3.5),ia=capAcc(n),pos=tm<.5;
+  return{pos,ok:pos===!!k,lab:pos?'🚨 BOT: resolvió el CAPTCHA, pero en '+(tm*1000).toFixed(0)+' ms':'✅ persona: '+tm.toFixed(1)+' s',why:`CAPTCHA mostrado: <b>${d}</b>. ${k?`La IA leyó <b>${guess}</b> → ${guess===d?'<b>acertó</b> (el CAPTCHA no la detuvo)':'falló esta vez'}. `:''}Con ${(n*100).toFixed(0)} % de distorsión, la IA acierta en promedio <b>${(ia*100).toFixed(0)} %</b> de los dígitos. El fog bloquea por <b>tiempo de respuesta ${tm<.5?'inhumano':'humano'}</b> (umbral 0.5 s).`,feat:`<div class="fbar"><span>Tiempo de respuesta</span><div class="b"><i style="width:${clamp(tm/5*100,2,100)}%"></i></div><b>${tm<1?(tm*1000).toFixed(0)+' ms':tm.toFixed(1)+' s'}</b></div>`,draw:(c,W,H)=>{const cs=Math.min((W-20)/12,(H-60)/9);c.font='11px system-ui';c.fillStyle='#3a475f';c.textAlign='left';c.fillText('CAPTCHA con '+(n*100).toFixed(0)+' % de ruido',6,12);for(let y=0;y<7;y++)for(let x=0;x<5;x++){c.fillStyle=g[y*5+x]?'#1c2433':'#eef1f8';c.fillRect(10+x*cs,22+y*cs,cs-2,cs-2)}
+   c.fillStyle='#1c2433';c.font='bold 13px system-ui';c.fillText('Lo que lee la IA: '+guess+(guess===d?' ✓':' ✗'),10+5*cs+20,60);c.fillText('Acierto de la IA a este ruido: '+(ia*100).toFixed(0)+' %',10+5*cs+20,86);c.font='12px system-ui';c.fillStyle='#6b778c';c.fillText('(la IA se entrenó en tu navegador)',10+5*cs+20,108)}}}});
+const SAYS=['LA CASA ES SEGURA','ENVIAR DATOS A LA NUBE','CLAVE DE ACCESO CAMBIADA','ALERTA EN SECTOR NORTE','TEMPERATURA DENTRO DE RANGO','NODO FOG ACTIVO','REPORTE DIARIO ENVIADO','PUERTA PRINCIPAL ABIERTA'];
+let cipher={sub:null,cnt:{},hist:[],n:0};
+function ciphInit(){const a='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),p=[...a].sort(()=>Math.random()-.5);cipher={sub:Object.fromEntries(a.map((c,i)=>[c,p[i]])),cnt:{},hist:[],n:0}}ciphInit();
+SC.push({g:3,id:'cip',tech:'ML como arma (RNN)',title:'El ML como arma: un modelo aprende a descifrar un cifrado débil',slide:'El ML como arma → sistemas con RNN que buscan descifrar comunicaciones',
+ problem:'Un nodo fog manda mensajes con un <b>cifrado débil</b> (sustitución fija de letras). Un atacante intercepta mensajes y aprende pares «texto cifrado ↔ texto claro» (por ejemplo, cabeceras conocidas). En la diapositiva se habla de <b>RNN</b>; aquí usamos una <b>tabla de frecuencias aprendida</b>, una analogía mucho más sencilla de lo que aprende una red.',
+ why:'Un cifrado con patrones fijos <b>se aprende</b>; uno fuerte (clave distinta cada vez) no deja patrones que aprender. La defensa es <b>criptografía fuerte</b>, no esconder el algoritmo.',data:'mensajes cifrados interceptados',
+ arch:{dev:[['📡','Sensor'],['🏠','Hogar'],['🕵','Atacante']],link:'Radio abierta',pre:'Cifra el mensaje\nantes de enviar',model:'Modelo del atacante\n(aprende el patrón)',act:'Rota a cifrado\nfuerte',mem:'Mensajes\ninterceptados',c0:'Gestión de claves',c1:'Auditoría criptográfica'},
+ btns:[['🔓 Interceptar (cifrado débil)',0,'btn fog'],['🔒 Interceptar (cifrado fuerte)',1,'btn" style="background:#a02020'],['↺ Atacante olvida',2,'btn ghost']],
+ run(k){if(k===2){ciphInit();return{pos:false,ok:true,lab:'↺ el atacante olvidó lo aprendido',why:'Nuevo cifrado débil con otra tabla.',draw:()=>{}}}
+  const msg=SAYS[Math.floor(Math.random()*SAYS.length)].replace(/ /g,'_'),letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ';let ct='',guess='';
+  for(const ch of msg){if(ch==='_'){ct+='_';guess+='_';continue}const c=k?letters[Math.floor(Math.random()*26)]:cipher.sub[ch];ct+=c;const row=cipher.cnt[c]||{};let best='E',bv=0;for(const p in row)if(row[p]>bv){bv=row[p];best=p}guess+=best;(cipher.cnt[c]=cipher.cnt[c]||{})[ch]=(cipher.cnt[c][ch]||0)+1}
+  const tot=msg.replace(/_/g,'').length,ok=[...msg].filter((c,i)=>c!=='_'&&guess[i]===c).length,acc=ok/tot;cipher.n+=tot;cipher.hist.push(acc);const pos=acc>=.7&&!k;
+  return{pos,ok:true,lab:pos?`🚨 el atacante leyó el ${(acc*100).toFixed(0)} % del mensaje`:k?`🔒 cifrado fuerte: el atacante acierta ${(acc*100).toFixed(0)} % (azar ≈ 4 %)`:`✅ el atacante aún acierta solo ${(acc*100).toFixed(0)} %`,why:`Letras aprendidas hasta ahora: <b>${cipher.n}</b>. ${k?'Con clave distinta cada vez no hay patrón que aprender.':'Cada mensaje débil interceptado le enseña más del patrón: sigue interceptando y verás cómo sube hasta casi 100 %.'}`,feat:`<div class="note">Cifrado: ${k?'fuerte (aleatorio)':'débil (sustitución fija)'}</div>`,draw:(c,W,H)=>{c.font='bold 13px system-ui';c.fillStyle='#3a475f';c.textAlign='left';c.fillText('Texto claro:',6,18);c.fillText('Cifrado:',6,60);c.fillText('Lo que lee el atacante:',6,102);c.font='bold 16px ui-monospace,monospace';[...msg].forEach((ch,i)=>{const x=8+i*14;c.fillStyle='#1c2433';c.fillText(ch,x,38);c.fillStyle='#6b778c';c.fillText(ct[i],x,80);c.fillStyle=ch==='_'?'#1c2433':guess[i]===ch?'#2a9455':RED;c.fillText(guess[i],x,122)});
+   const h=cipher.hist,y0=H*.58,hh=H*.34;c.font='11px system-ui';c.fillStyle='#3a475f';c.fillText('Acierto del atacante por mensaje interceptado →',6,y0-6);c.strokeStyle='#e3e8f2';c.strokeRect(6,y0,W-12,hh);c.beginPath();h.forEach((v,i)=>{const x=6+i/Math.max(h.length-1,1)*(W-12),y=y0+hh-v*hh;i?c.lineTo(x,y):c.moveTo(x,y)});c.strokeStyle=RED;c.lineWidth=2.5;c.stroke()}}}});
+const DET={w:[1,1],b:-.9},TREE=(x)=>x[0]>.5||x[1]>.4;
+SC.push({g:3,id:'eva',tech:'ML como blanco: evasión',title:'El ML como blanco: el atacante aprende el detector y halla una entrada que lo elude',slide:'El ML como blanco → los modelos se pueden eludir; el atacante aprende cómo funciona el detector y halla una entrada',
+ problem:'El fog tiene un detector de malware (SVM lineal sobre 2 señales). Un atacante no ve el modelo, pero puede <b>sondearlo</b>: acerca poco a poco su muestra al terreno «normal» (búsqueda por bisección) hasta que el detector deja de alertar. Prueba con y sin un <b>segundo detector independiente</b>.',
+ why:'Una sola barrera aprendida puede ser <b>explorada y burlada</b> consultándola. Defensa en profundidad en el fog: varios detectores distintos y limitar las consultas.',data:'muestras de tráfico del atacante',
+ arch:{dev:[['😈','Atacante'],['🦠','Malware'],['📡','Dispositivo']],link:'Internet',pre:'Extrae 2 señales\nde la muestra',model:'SVM + (opcional)\nregla del 2.º detector',act:'Bloquea la muestra\ny alerta',mem:'Registro de\nconsultas',c0:'Alertas',c1:'Reentrenamiento'},
+ ctl:`<label class="inl"><input type="checkbox" id="ens"> Segundo detector independiente (ensamble)</label><label>Consultas permitidas: <b id="qV">8</b><input type="range" id="q" min="2" max="12" value="8"></label>`,
+ btns:[['🦠 Muestra maliciosa directa',0,'btn fog'],['🕵 Atacante sondea el detector',1,'btn" style="background:#a02020']],
+ run(k){const m=gv([.75,.7],[.08,.08]),f=p=>DET.w[0]*p[0]+DET.w[1]*p[1]+DET.b,C=[.2,.15],ens=$('#ens').checked,Q=+$('#q').value;let lo=0,hi=1,path=[[...m,0,true]],qn=0,found=null;
+  const lab=t=>{const p=[m[0]+(C[0]-m[0])*t,m[1]+(C[1]-m[1])*t];const flag=f(p)>0||(ens&&TREE(p));return{p,flag}};
+  if(!k){const fl=f(m)>0;return{pos:fl,ok:fl,lab:fl?'🚨 malware detectado':'⚠ pasó sin detectar',why:`Sin sondeo, la muestra cae del lado «malicioso» (f = ${f(m).toFixed(2)}).`,feat:'',draw:(c,W,H)=>drawEva(c,W,H,m,[],ens)}}
+  while(qn<Q){const t=(lo+hi)/2,r=lab(t);qn++;path.push([...r.p,t,r.flag]);if(r.flag)lo=t;else{hi=t;found=r.p}}
+  const ev=found&&hi<1,pw=found?(1-hi)*100:0,pos=!!ev;
+  return{pos,ok:true,lab:ev?`⚠ EVASIÓN lograda en ${qn} consultas (conserva ${pw.toFixed(0)} % del ataque)`:`🛡 el detector resiste: ${ens?'el 2.º detector sigue alertando':'no halló entrada válida'}`,why:`El atacante hace <b>${qn} consultas</b> acercando la muestra al terreno normal: ${path.slice(1).map(p=>p[3]?'🔴':'🟢').join(' ')}. ${ev?`Encontró una muestra que el detector <b>no marca</b>. Sin que nadie tocara el modelo: solo le <b>preguntó</b>.`:`Con el segundo detector (regla distinta: pps>0.5 o puertos>0.4) cualquier muestra intermedia sigue marcándose.`}`,feat:'',draw:(c,W,H)=>drawEva(c,W,H,m,path,ens,found)}}});
+function drawEva(c,W,H,m,path,ens,found){const pad=34,X=v=>pad+v*(W-pad-10),Y=v=>H-pad-v*(H-pad-10);c.font='11px system-ui';c.fillStyle='#3a475f';c.textAlign='center';c.fillText('señal 1 →',W/2,H-6);c.save();c.translate(11,H/2);c.rotate(-Math.PI/2);c.fillText('señal 2 →',0,0);c.restore();const N=24;for(let i=0;i<N;i++)for(let j=0;j<N;j++){const a=(i+.5)/N,b=(j+.5)/N,flag=DET.w[0]*a+DET.w[1]*b+DET.b>0||(ens&&TREE([a,b]));c.fillStyle=flag?'rgba(214,69,69,.12)':'rgba(79,91,213,.1)';c.fillRect(X(i/N),Y((j+1)/N),X(1/N)-X(0)+1,Y(0)-Y(1/N)+1)}
+  c.beginPath();c.moveTo(X(0),Y(.9));c.lineTo(X(.9),Y(0));c.strokeStyle=TEAL;c.lineWidth=3;c.stroke();if(ens){c.setLineDash([5,4]);c.beginPath();c.moveTo(X(.5),Y(0));c.lineTo(X(.5),Y(1));c.moveTo(X(0),Y(.4));c.lineTo(X(1),Y(.4));c.strokeStyle=ORG;c.lineWidth=2;c.stroke();c.setLineDash([])}
+  const dot=(p,col,r=7)=>{c.beginPath();c.arc(X(p[0]),Y(p[1]),r,0,7);c.fillStyle=col;c.fill();c.strokeStyle='#fff';c.lineWidth=1.5;c.stroke()};if(path.length>1){c.beginPath();c.moveTo(X(m[0]),Y(m[1]));path.slice(1).forEach(p=>c.lineTo(X(p[0]),Y(p[1])));c.strokeStyle='#8b96b0';c.setLineDash([4,3]);c.stroke();c.setLineDash([])}path.slice(1).forEach(p=>dot(p,p[3]?RED:'#2a9455',5));dot(m,'#222',8);c.fillStyle='#222';c.textAlign='left';c.fillText('muestra original',X(m[0])+10,Y(m[1])-8);if(found){dot(found,'#2a9455',9);c.fillStyle='#2a9455';c.fillText('pasa sin alerta',X(found[0])+10,Y(found[1])+14)}}
+let leakDB=null;function leakInit(){const r=rng(31);leakDB=Array.from({length:12},()=>gv([.5,.5],[.22,.22],r))}leakInit();
+SC.push({g:3,id:'leak',tech:'ML como blanco: fuga de datos',title:'El ML como blanco: el modelo delata qué registros usó para entrenar',slide:'El ML como blanco → los datos privados de entrenamiento pueden filtrarse',
+ problem:'Un modelo de salud entrenado con 12 pacientes responde con una <b>confianza</b>. Como memorizó sus datos, responde con confianza altísima a los pacientes que <b>sí estaban</b> en el entrenamiento. Un atacante que solo ve la confianza deduce <b>quién fue paciente</b> (inferencia de pertenencia).',
+ why:'El libro advierte que los datos privados de entrenamiento pueden filtrarse. En el fog: <b>no exponer la confianza exacta</b> y limitar el sobreajuste.',data:'consultas al modelo de salud',
+ arch:{dev:[['🕵','Atacante'],['🧑‍⚕️','Médico'],['📱','App']],link:'API del fog',pre:'Recibe la consulta\ndel registro',model:'Modelo de salud\n(memoriza ejemplos)',act:'Devuelve la\nconfianza',mem:'Registro de\nconsultas',c0:'Auditoría de privacidad',c1:'Reentrenamiento'},
+ ctl:`<label class="inl"><input type="checkbox" id="lm"> Mitigación: devolver solo una confianza redondeada/ruidosa</label>`,
+ btns:[['🧪 Consultar un registro NO usado',0,'btn fog'],['⚠ Consultar un registro USADO',1,'btn" style="background:#a02020']],
+ run(k){let q,d0;if(k)q=leakDB[Math.floor(Math.random()*leakDB.length)];else q=gv([.5,.5],[.22,.22]);d0=Math.min(...leakDB.map(p=>Math.hypot(p[0]-q[0],p[1]-q[1])));let conf=Math.exp(-d0*d0/(2*.05*.05));const mit=$('#lm').checked;if(mit)conf=clamp(.55+.2*gauss(Math.random),0,1);const guess=conf>.5,leak=guess===!!k&&k;
+  return{pos:!!leak,ok:guess===!!k,lab:leak?'🚨 FUGA: el atacante deduce que es paciente':k?'🛡 el atacante no puede afirmarlo':guess?'⚠ falsa sospecha del atacante':'✅ el atacante concluye «no estaba»',why:`Confianza devuelta: <b>${(conf*100).toFixed(0)} %</b>. El atacante dice «miembro» si la confianza supera 50 %. ${mit?'Con la <b>mitigación</b> la confianza ya no depende de si el registro estaba: el atacante acierta como lanzando una moneda.':'Sin mitigación, los registros usados dan ~100 % y los demás ~0 %: <b>se distinguen perfectamente</b>.'}`,feat:`<div class="fbar"><span>Confianza del modelo</span><div class="b"><i style="width:${conf*100}%;background:${conf>.5?RED:TEAL}"></i></div><b>${(conf*100).toFixed(0)} %</b></div>`,draw:(c,W,H)=>{const pad=30,X=v=>pad+v*(W-pad-10),Y=v=>H-pad-v*(H-pad-10);c.font='11px system-ui';c.fillStyle='#3a475f';c.textAlign='center';c.fillText('característica 1 →',W/2,H-6);leakDB.forEach(p=>{c.beginPath();c.arc(X(p[0]),Y(p[1]),6,0,7);c.fillStyle=BLUE;c.fill()});c.beginPath();c.arc(X(q[0]),Y(q[1]),9,0,7);c.strokeStyle=RED;c.lineWidth=3;c.stroke();c.fillStyle=RED;c.textAlign='left';c.fillText(k?'registro usado':'registro nuevo',X(q[0])+12,Y(q[1])-8);c.fillStyle='#6b778c';c.fillText('● pacientes del entrenamiento',pad,14)}}}});
+let scaleN=1000;
+SC.push({g:3,id:'esc',tech:'Escala y heterogeneidad',title:'La escala: crecen sensores, datos y variedad de dispositivos',slide:'La escala → crecen los sensores, los datos y su heterogeneidad; hacen falta nuevas arquitecturas de IoT',
+ problem:'Un parque industrial añade sensores sin parar y de <b>muchos tipos</b>. La nube tiene una capacidad de ingesta fija (<b>5 000 mensajes/s</b>). Con ML en el fog (filtrado y normalización local) a la nube solo sube una fracción.',
+ why:'La escala obliga a <b>repartir la inteligencia</b>: sin fog la nube se satura y debe entender cada formato. Es el argumento de «hacen falta nuevas arquitecturas de IoT».',data:'mensajes por segundo de todos los sensores',
+ arch:{dev:[['🌡️','Sensores tipo A'],['📷','Cámaras tipo B'],['⚙️','Máquinas tipo C']],link:'Mezcla de protocolos',pre:'Normaliza formatos\ny filtra',model:'ML local\n(anomalías y resumen)',act:'Actúa localmente\nsobre lo urgente',mem:'Resúmenes\nlocales',c0:'Ingesta global (5 000 msg/s)',c1:'Análisis de largo plazo'},
+ ctl:`<label>Tipos de dispositivo distintos: <b id="tpV">3</b><input type="range" id="tp" min="1" max="20" value="3"></label><label class="inl"><input type="checkbox" id="ff" checked> Con ML en el fog</label>`,
+ btns:[['📈 Añadir ×2 sensores',1,'btn fog'],['🔄 Recalcular',0,'btn ghost'],['↺ Empezar con 1 000',2,'btn ghost']],
+ run(k){if(k===2)scaleN=1000;if(k===1)scaleN=Math.min(scaleN*2,512000);const tp=+$('#tp').value,ff=$('#ff').checked,rate=scaleN*1,adapt=1+tp*.04,cloud=ff?rate*.04:rate*adapt,load=cloud/5000*100,pos=load>100;
+  return{pos,ok:true,lab:pos?`🚨 NUBE SATURADA: ${load.toFixed(0)} % de su capacidad`:`✅ la nube aguanta: ${load.toFixed(0)} %`,why:`<b>${scaleN.toLocaleString('es')}</b> sensores · <b>${tp}</b> tipos de dispositivo. ${ff?`Con ML en el fog solo sube ≈ <b>4 %</b> de los mensajes (${cloud.toFixed(0)} msg/s).`:`Sin fog, todo sube (${rate.toLocaleString('es')} msg/s) y la nube además debe interpretar ${tp} formatos (+${((adapt-1)*100).toFixed(0)} % de coste).`}`,feat:'',draw:(c,W,H)=>{const pad=40,mx=Math.max(load,130);c.font='11px system-ui';c.fillStyle='#3a475f';c.textAlign='left';c.fillText('Carga de la ingesta en la nube (% de capacidad)',6,14);const bh=H*.4,y0=H-30;c.fillStyle=load>100?RED:TEAL;c.fillRect(pad,y0-load/mx*bh*2.2,80,load/mx*bh*2.2);c.fillStyle='#1c2433';c.textAlign='center';c.font='bold 13px system-ui';c.fillText(load.toFixed(0)+' %',pad+40,y0-load/mx*bh*2.2-6);c.font='11px system-ui';c.fillText(ff?'con fog':'sin fog',pad+40,y0+14);c.strokeStyle=RED;c.setLineDash([6,4]);c.beginPath();c.moveTo(pad-10,y0-100/mx*bh*2.2);c.lineTo(W-10,y0-100/mx*bh*2.2);c.stroke();c.setLineDash([]);c.fillStyle=RED;c.textAlign='left';c.fillText('capacidad 100 %',pad+100,y0-100/mx*bh*2.2-5)}}}});
+// ---- GRUPO 4
+SC.push(mkVec({g:4,id:'lat',tech:'SVM',title:'Un atacante toma un nodo fog y desde ahí busca controlar a los demás',slide:'El atacante toma un nodo fog y desde ahí busca controlar a los demás',
+ problem:'Un nodo fog queda comprometido. Para <b>moverse lateralmente</b> empieza a mandar muchas peticiones a sus vecinos y a pedir <b>privilegios cada vez más altos</b>. Cada nodo vecino vigila a sus pares con una <b>SVM</b> sobre esas dos señales.',
+ why:'Como el fog es descentralizado, la confianza entre nodos es un punto débil. Que <b>cada nodo vigile a los demás</b> evita que una sola intrusión se extienda a toda la red.',data:'peticiones entre nodos y privilegios solicitados',
+ arch:{dev:[['🛰️','Nodo fog A'],['😈','Nodo comprometido'],['🛰️','Nodo fog C']],link:'Malla fog-fog',pre:'Observa el tráfico\nentre nodos pares',model:'SVM lineal\n(comportamiento entre pares)',act:'Aísla al nodo\ny revoca su certificado',mem:'Lista de\nnodos confiables',c0:'Alerta al administrador',c1:'Actualiza políticas de la malla'},
+ feats:[['Peticiones entre nodos','/min',0,100],['Privilegios solicitados','',0,10]],reg:{n:[[.2,.12],[.08,.07]],a:[[.72,.78],[.1,.1]]},model:{t:'svm',w:[1.2,1.2],b:-1.1},
+ lab:{pos:'🚨 MOVIMIENTO LATERAL',neg:'✅ nodo par se comporta bien'}}));
+const GROUPS={1:['① Amenaza → técnica','Las técnicas que responden a cada amenaza','Ransomware y fraude → CNN · Comportamiento anómalo → SVM · Phishing → red feedforward · Intrusiones → perceptrón multicapa · Privacidad de datos heterogéneos → regresión lineal · Privacidad del historial médico → KNN.'],2:['② Dos estudios','Dos estudios que midieron resultados','Barcelona: pronóstico de tráfico con deep learning, fog mejor que nube. DRTHIS: ransomware en la capa fog con LSTM + CNN. Las cifras de los estudios no se reproducen: son ejemplos didácticos.'],3:['③ Riesgos del ML','El machine learning también abre riesgos','El ML como arma (CAPTCHA, descifrado), el ML como blanco (evasión, fuga de datos) y la escala.'],4:['④ Nodo comprometido y ataques','El atacante toma un nodo fog','Y el glosario de los ataques de la lista: DoS, DDoS, Sybil, suplantación, jamming, malware y phishing.']};
+const ATK=[['DoS','Una sola fuente inunda de peticiones para agotar un servicio.','MLP (③ intrusiones, botón «DoS»)'],['DDoS','Muchas fuentes a la vez hacen lo mismo.','MLP (botón «DDoS») · Árbol / Random Forest en el otro artefacto'],['Sybil','Un nodo falso aparenta ser muchas identidades.','K-means (artefacto anterior)'],['Suplantación','Un atacante se hace pasar por un nodo o usuario legítimo.','MLP (botón «Suplantación») · Random Forest / KNN (artefacto anterior)'],['Jamming','Interferencia deliberada de la radio para tumbar el enlace.','Aprendizaje por refuerzo (artefacto anterior)'],['Malware','Software malicioso en un dispositivo; incluye el ransomware.','CNN (① ransomware) · SVM (comportamiento anómalo)'],['Phishing','Engaño por correo o enlace para robar credenciales.','Red feedforward (① phishing)']];
+/* ===== ESTADO y FLUJO ===== */
+let cur={g:1,i:0},ST,busy=false,auto=null,last=null,CS=null;
+const list=()=>SC.filter(s=>s.g===cur.g),sc=()=>list()[cur.i];
+const resetStats=()=>ST={ev:0,cloud:0,ok:0,mem:0};
+function stats(){$('#sEv').textContent=ST.ev;$('#sCl').textContent=ST.cloud;$('#sSav').textContent=ST.ev?Math.max(0,Math.round((1-ST.cloud/ST.ev)*100))+' %':'–';$('#sAc').textContent=ST.ev?Math.round(ST.ok/ST.ev*100)+' %':'–'}
+function hi(ids){$$('.nd').forEach(n=>n.classList.remove('on'));ids.forEach(i=>{const e=$('#n_'+i);if(e)e.classList.add('on')})}
+function fly(a,b,col,ms=520,arc=0){return new Promise(res=>{const g=$('#pkts'),c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('r',8);c.setAttribute('fill',col);c.setAttribute('stroke','#fff');c.setAttribute('stroke-width','2.5');g.appendChild(c);const p=PX[a],q=PX[b],cx=(p[0]+q[0])/2,cy=(p[1]+q[1])/2-arc,t0=performance.now();(function f(t){const k=clamp((t-t0)/ms,0,1),u=1-k;c.setAttribute('cx',u*u*p[0]+2*u*k*cx+k*k*q[0]);c.setAttribute('cy',u*u*p[1]+2*u*k*cy+k*k*q[1]);if(k<1)requestAnimationFrame(f);else{c.remove();res()}})(t0)})}
+function drawView(){const cv=$('#mv');if(!cv||!last)return;const s=setup(cv);if(!s)return;if(last.res.draw)last.res.draw(s[0],s[1],s[2])}
+async function runEvent(kind){if(busy)return;busy=true;const S=sc(),res=S.run(kind);last={S,res};const d='d'+Math.floor(Math.random()*3);
+  hi([d]);sfx.sensor();await fly(d,'pre','#d9780a');hi(['pre']);sfx.pre();await sleep(220);await fly('pre','model','#d9780a',400);hi(['model']);sfx.think();await sleep(480);
+  const v=$('#verdict');v.className='verdict '+(res.pos?'pos':'neg');v.innerHTML=`${res.lab}<div style="font-weight:400;font-size:14px;margin-top:4px">${res.why}</div>`;$('#feat').innerHTML=res.feat||'';drawView();ST.ev++;
+  if(res.pos){hi(['model','act']);sfx.alarm();await fly('model','act','#d64545',450);$('#n_act').classList.add('bad');await sleep(250);$('#n_act').classList.remove('bad');hi(['model','c0']);await fly('model','c0','#d64545',700);sfx.cloud();ST.cloud++}
+  else{hi(['model','mem']);sfx.good();await fly('model','mem','#2a9455',480,95);sfx.store();ST.mem++;if(ST.mem%5===0){hi(['mem','c1']);await fly('mem','c1','#4f5bd5',700);sfx.cloud();ST.cloud++}}
+  if(res.ok)ST.ok++;stats();hi([]);busy=false}
+async function tour(){if(busy)return;busy=true;const S=sc(),a=S.arch,steps=[[['d0','d1','d2'],`Los dispositivos (${a.dev.map(d=>d[1]).join(', ')}) generan datos: ${S.data}.`,sfx.sensor],[['pre'],`Por ${a.link} llegan al fog, que hace esto: ${a.pre.replace(/\n/g,' ')}.`,sfx.pre],[['model'],`Aquí corre ${S.tech}: ${a.model.replace(/\n/g,' ')}. Decide en el propio fog.`,sfx.think],[['act'],`Si detecta la amenaza, el fog ejecuta: ${a.act.replace(/\n/g,' ')}.`,sfx.alarm],[['mem','c1'],`Lo normal se resume y se guarda localmente (${a.mem.replace(/\n/g,' ')}); a la nube solo viajan resúmenes.`,sfx.store],[['c0','c1'],`En la nube quedan: ${a.c0.toLowerCase()} y ${a.c1.toLowerCase()}.`,sfx.cloud]];
+  for(let i=0;i<steps.length;i++){hi(steps[i][0]);steps[i][2]();$('#tour').innerHTML=`<b>Paso ${i+1} de ${steps.length}.</b> ${steps[i][1]}`;say(steps[i][1]);await sleep(Math.max(3600,steps[i][1].length*62))}hi([]);busy=false}
+function renderPanel(){const S=sc();resetStats();last=null;if(S.id==='cip')ciphInit();if(S.id==='esc')scaleN=1000;
+  const tagTxt='💡 Ejemplo ilustrativo del concepto';
+  $('#panel').innerHTML=`<h3>${S.title}</h3><div class="quote">📑 <b>Concepto de la diapositiva:</b> ${S.slide}</div><p><b>El problema.</b> ${S.problem}</p><div class="note" style="margin:6px 0">💡 <b>Por qué en el fog:</b> ${S.why}</div>
+  <div class="viz"><svg viewBox="0 0 760 525" class="gsvg" id="arch">${archSvg(S.arch)}</svg>
+  <div class="ctrls">${S.btns.map((b,i)=>`<button class="${b[2]}" data-k="${b[1]}">${b[0]}</button>`).join('')}<label class="inl"><input type="checkbox" id="bAuto"> Automático</label><button class="btn ghost" id="bTour">🧭 Recorrido narrado</button><button class="btn ghost" id="bRst">↺ Reiniciar</button></div>
+  ${S.ctl?`<div class="ctrls">${S.ctl}</div>`:''}<div class="tour" id="tour">Pulsa <b>«Recorrido narrado»</b> para ver y oír la arquitectura, o genera eventos y mira cómo decide el modelo.</div></div>
+  <div class="stats"><div class="stat"><b id="sEv">0</b><span>eventos procesados</span></div><div class="stat"><b id="sCl">0</b><span>mensajes enviados a la nube</span></div><div class="stat"><b id="sSav">–</b><span>tráfico a la nube ahorrado</span></div><div class="stat"><b id="sAc">–</b><span>aciertos / efecto esperado</span></div></div>
+  <div class="verdict" id="verdict">Genera un evento para ver la decisión del fog.</div>
+  <div class="twocol"><div><b>Evento actual</b><div id="feat"></div></div><div><b>🧠 Cómo decide: ${S.tech}</b><canvas class="cv short" id="mv" style="height:300px"></canvas></div></div>`;
+  $$('.ctrls button[data-k]').forEach(b=>b.onclick=()=>runEvent(+b.dataset.k));
+  $$('input[type=range]',$('#panel')).forEach(r=>{const v=$('#'+r.id+'V');r.oninput=()=>{if(v)v.textContent=r.id==='pn'?(+r.value).toFixed(2):r.value}});
+  $('#bAuto').onchange=e=>{clearInterval(auto);if(e.target.checked)auto=setInterval(()=>{if(!busy){const ks=S.btns.map(b=>b[1]).filter(k=>k<2||S.id==='drt'||S.id==='mlp');runEvent(ks[Math.floor(Math.random()*ks.length)])}},2000)};
+  $('#bTour').onclick=tour;$('#bRst').onclick=()=>{if(busy)return;clearInterval(auto);renderPanel()};stats()}
+function renderTop(){$('#tabs').innerHTML=Object.keys(GROUPS).map(g=>`<button data-g="${g}" class="${+g===cur.g?'on':''}">${GROUPS[g][0]}</button>`).join('');$$('#tabs button').forEach(b=>b.onclick=()=>{if(busy)return;clearInterval(auto);cur={g:+b.dataset.g,i:0};renderTop()});
+  const G=GROUPS[cur.g];$('#ttl').textContent=G[1];$('#sub').textContent=G[2];
+  $('#glos').innerHTML=cur.g===4?`<section class="lesson"><h3>📖 Glosario: los ataques de la lista y dónde verlos</h3><table class="gl" style="width:100%;border-collapse:collapse;font-size:14px">${ATK.map(a=>`<tr><td style="font-weight:700;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap">${a[0]}</td><td style="padding:6px 8px;border-bottom:1px solid var(--line)">${a[1]}</td><td style="padding:6px 8px;border-bottom:1px solid var(--line);color:#6b778c">${a[2]}</td></tr>`).join('')}</table></section>`:'';
+  $('#exs').innerHTML=list().map((s,i)=>`<button class="exc ${i===cur.i?'on':''}" data-i="${i}"><b>${s.title}</b><span>${s.arch.dev.map(d=>d[0]).join(' ')} → 🌫 → ☁ · ${s.tech}</span></button>`).join('');
+  $$('#exs button').forEach(b=>b.onclick=()=>{if(busy)return;clearInterval(auto);cur.i=+b.dataset.i;$$('#exs button').forEach((x,j)=>x.classList.toggle('on',j===cur.i));renderPanel()});renderPanel()}
+window.addEventListener('resize',drawView);renderTop();
+</script></body></html>
